@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock } from 'lucide-react';
+import { Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ function Login() {
   }
 
   const inputClass =
-    'bg-[#1A1A1A] border border-[#333] rounded px-4 py-3 text-sm w-full placeholder-[#666] focus:outline-none focus:border-[#F2C230] transition-colors';
+    'bg-[#1A1A1A] border border-[#333] rounded px-4 py-3 text-sm w-full text-[#F5F5F0] placeholder-[#666] focus:outline-none focus:border-[#F2C230] transition-colors';
 
   return (
     <div className="min-h-screen bg-[#0D0D0D] flex items-center justify-center px-6">
@@ -46,19 +47,32 @@ function Login() {
           <input
             type="email"
             placeholder="Email"
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
             className={inputClass}
           />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className={inputClass}
-          />
+
+          <div className="relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className={`${inputClass} pr-11`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#999] hover:text-[#F5F5F0] transition-colors"
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
+
           <button
             type="submit"
             className="w-full bg-[#F2C230] text-black font-bold uppercase py-3 rounded hover:bg-[#C6FF3D] transition-colors"
