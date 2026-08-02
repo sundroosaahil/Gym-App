@@ -6,6 +6,7 @@ const rateLimit = require('express-rate-limit');
 const Admin = require('../models/Admin');
 const requireAuth = require('../middleware/requireAuth');
 
+
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
@@ -32,11 +33,12 @@ router.post('/login', loginLimiter, async (req, res) => {
       { expiresIn: '7d' }
     );
 
-   const isProduction = process.env.NODE_ENV === 'production';
+  
+const isProduction = process.env.NODE_ENV === 'production';
 
 res.cookie('token', token, {
   httpOnly: true,
-  sameSite: isProduction ? 'none' : 'strict',
+  sameSite: 'lax',
   secure: isProduction,
   maxAge: 7 * 24 * 60 * 60 * 1000
 });
