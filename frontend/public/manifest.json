@@ -3,7 +3,7 @@
   "short_name": "Bodyworks",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FFFFFF",
+  "background_color": "#0D0D0D",
   "theme_color": "#0D0D0D",
   "icons": [
     {

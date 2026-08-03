@@ -6,8 +6,8 @@ const Admin = require('./models/Admin');
 async function createAdmin() {
   await mongoose.connect(process.env.MONGO_URI);
 
-  const email = 'admin1@bodyworks.com';
-  const plainPassword = 'bodyworksadmin1';
+  const email = 'admin2@bodyworks.com';
+  const plainPassword = 'bodyworksadmin2';
 
   const passwordHash = await bcrypt.hash(plainPassword, 10);
 
