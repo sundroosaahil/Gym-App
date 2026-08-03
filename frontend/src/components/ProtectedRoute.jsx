@@ -1,11 +1,12 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import LoadingScreen from './LoadingScreen';
 
 function ProtectedRoute({ children }) {
   const { isLoggedIn, checkingAuth } = useAuth();
 
   if (checkingAuth) {
-    return <p>Checking login status...</p>;
+    return <LoadingScreen />;
   }
 
   if (!isLoggedIn) {

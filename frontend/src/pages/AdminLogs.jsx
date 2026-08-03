@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import api from '../api/axiosConfig';
+import LoadingScreen from '../components/LoadingScreen';
 
 function AdminLogs() {
   const [logs, setLogs] = useState([]);
@@ -20,7 +21,7 @@ function AdminLogs() {
       });
   }, []);
 
-  if (loading) return <p className="p-8 text-[#F5F5F0]">Loading...</p>;
+  if (loading) return <LoadingScreen />;
   if (error) return <p className="p-8 text-red-400">{error}</p>;
 
   return (
