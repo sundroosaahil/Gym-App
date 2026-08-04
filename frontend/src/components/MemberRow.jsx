@@ -84,7 +84,7 @@ function MemberRow({ member, onUpdated }) {
       }`}>
         <td className="px-4 py-3 font-mono text-[#999]">{member.gymCode}</td>
         <td className="px-4 py-3 font-semibold">{member.name}</td>
-        <td className="px-4 py-3 text-[#999]">{member.phone}</td>
+        <td className="px-4 py-3 text-[#999]">{member.phone || '—'}</td>
         <td className="px-4 py-3"><StatusBadge status={member.status} /></td>
         <td className="px-4 py-3 text-[#999]">{member.daysPastExpiry}</td>
         <td className="px-4 py-3">
@@ -205,7 +205,6 @@ function MemberRow({ member, onUpdated }) {
                 <input
                   value={editData.phone}
                   onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
-                  required
                   className={editInputClass}
                 />
               </div>

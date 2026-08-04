@@ -16,6 +16,7 @@ function AdminDashboard() {
   const [search, setSearch] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const { logout } = useAuth();
+  const [hideInactive, setHideInactive] = useState(true);
 
   function fetchMembers() {
     setLoading(true);
@@ -51,22 +52,24 @@ function AdminDashboard() {
     { key: 'renewals', label: 'Renewals' }
   ];
 
-  const statusFiltered =
-    filter === 'all'
-      ? members
-      : filter === 'renewals'
-      ? [...members].sort((a, b) => b.daysPastExpiry - a.daysPastExpiry)
-      : members.filter((m) => m.status === filter);
+ const statusFiltered =
+      filter === 'all'
+        ? members
+        : filter === 'renewals'
+        ? [...members]
+            .filter((m) => !hideInactive || m.status !== 'inactive')
+            .sort((a, b) => b.daysPastExpiry - a.daysPastExpiry)
+        : members.filter((m) => m.status === filter);
 
   const searchTerm = search.trim().toLowerCase();
 
-  const filteredMembers = searchTerm
-    ? statusFiltered.filter((m) =>
-        m.name.toLowerCase().includes(searchTerm) ||
-        m.gymCode.toLowerCase().includes(searchTerm) ||
-        m.phone.includes(searchTerm)
-      )
-    : statusFiltered;
+const filteredMembers = searchTerm
+  ? statusFiltered.filter((m) =>
+      m.name.toLowerCase().includes(searchTerm) ||
+      m.gymCode.toLowerCase().includes(searchTerm) ||
+      (m.phone && m.phone.includes(searchTerm))
+    )
+  : statusFiltered;
 
   const statCards = [
     { label: 'Active', value: counts.active, icon: Users, color: '#C6FF3D' },
@@ -144,21 +147,42 @@ function AdminDashboard() {
           />
         )}
 
-        <div className="flex gap-2 flex-wrap mb-4 mt-8">
-          {filters.map(({ key, label }) => (
-            <button
-              key={key}
-              onClick={() => setFilter(key)}
-              className={`px-4 py-2 rounded text-sm font-bold uppercase tracking-wide transition-colors ${
-                filter === key
-                  ? 'bg-[#F2C230] text-black'
-                  : 'bg-[#1A1A1A] text-[#999] hover:text-[#F5F5F0]'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+<div className="flex flex-wrap items-center justify-between gap-3 mb-4 mt-8">
+  <div className="flex gap-2 flex-wrap">
+    {filters.map(({ key, label }) => (
+      <button
+        key={key}
+        onClick={() => setFilter(key)}
+        className={`px-4 py-2 rounded text-sm font-bold uppercase tracking-wide transition-colors ${
+          filter === key
+            ? 'bg-[#F2C230] text-black'
+            : 'bg-[#1A1A1A] text-[#999] hover:text-[#F5F5F0]'
+        }`}
+      >
+        {label}
+      </button>
+    ))}
+  </div>
+
+  {filter === 'renewals' && (
+    <label className="flex items-center gap-2 cursor-pointer select-none">
+      <span className="text-xs text-[#999] uppercase tracking-wide">Hide Inactive</span>
+      <button
+        type="button"
+        onClick={() => setHideInactive(!hideInactive)}
+        className={`relative w-11 h-6 rounded-full transition-colors ${
+          hideInactive ? 'bg-[#C6FF3D]' : 'bg-[#333]'
+        }`}
+      >
+        <span
+          className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+            hideInactive ? 'translate-x-5' : 'translate-x-0'
+          }`}
+        />
+      </button>
+    </label>
+  )}
+</div>
 
         {/* Desktop table */}
         <div className="hidden md:block bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg overflow-hidden">

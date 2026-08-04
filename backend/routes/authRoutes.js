@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 const Admin = require('../models/Admin');
 const requireAuth = require('../middleware/requireAuth');
-
+const logAction = require('../utils/logAction');
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -33,15 +33,16 @@ router.post('/login', loginLimiter, async (req, res) => {
       { expiresIn: '7d' }
     );
 
-  
-const isProduction = process.env.NODE_ENV === 'production';
+    const isProduction = process.env.NODE_ENV === 'production';
 
-res.cookie('token', token, {
-  httpOnly: true,
-  sameSite: isProduction ? 'none' : 'strict',
-  secure: isProduction,
-  maxAge: 7 * 24 * 60 * 60 * 1000
-});
+    res.cookie('token', token, {
+      httpOnly: true,
+      sameSite: isProduction ? 'none' : 'strict',
+      secure: isProduction,
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    await logAction('Logged In', '', admin.email);
 
     res.json({ message: 'Logged in successfully' });
 
@@ -51,6 +52,17 @@ res.cookie('token', token, {
 });
 
 router.post('/logout', (req, res) => {
+  const token = req.cookies.token;
+
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      logAction('Logged Out', '', decoded.email);
+    } catch (error) {
+      // token invalid/expired — nothing meaningful to log
+    }
+  }
+
   res.clearCookie('token');
   res.json({ message: 'Logged out successfully' });
 });

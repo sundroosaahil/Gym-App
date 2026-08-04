@@ -15,8 +15,8 @@ const memberSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    required: true,
-    unique: true
+    unique: true,
+    sparse: true
   },
   amountPaid: {
     type: Number,

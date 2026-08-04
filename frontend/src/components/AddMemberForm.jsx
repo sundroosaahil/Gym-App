@@ -85,10 +85,9 @@ function AddMemberForm({ onMemberAdded }) {
         />
         <input
           name="phone"
-          placeholder="Phone"
+          placeholder="Phone (Optional)"
           value={formData.phone}
           onChange={handleChange}
-          required
           className={inputClass}
         />
         <input
