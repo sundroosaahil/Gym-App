@@ -14,8 +14,8 @@ export function AuthProvider({ children }) {
       .finally(() => setCheckingAuth(false));
   }, []);
 
-  async function login(email, password) {
-    await api.post('/auth/login', { email, password });
+  async function login(email, password, deviceModel) {
+    await api.post('/auth/login', { email, password, deviceModel });
     setIsLoggedIn(true);
   }
 

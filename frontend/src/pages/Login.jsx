@@ -3,6 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
+async function getClientDeviceModel() {
+  if (navigator.userAgentData?.getHighEntropyValues) {
+    try {
+      const { model } = await navigator.userAgentData.getHighEntropyValues(['model']);
+      return model || null;
+    } catch {
+      return null;
+    }
+  }
+  return null; // Safari/Firefox don't support this API — backend falls back to UA parsing
+}
+
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -16,7 +28,8 @@ function Login() {
     setError(null);
 
     try {
-      await login(email, password);
+      const deviceModel = await getClientDeviceModel();
+      await login(email, password, deviceModel);
       navigate('/admin');
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed');

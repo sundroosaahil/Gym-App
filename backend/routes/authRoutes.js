@@ -16,7 +16,7 @@ const loginLimiter = rateLimit({
 
 router.post('/login', loginLimiter, async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, deviceModel } = req.body;
 
     const admin = await Admin.findOne({ email });
     if (!admin) {
@@ -43,7 +43,7 @@ router.post('/login', loginLimiter, async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
-    const device = getDeviceInfo(req.headers['user-agent']);
+    const device = getDeviceInfo(req.headers['user-agent'], deviceModel);
     await logAction('Logged In', device, admin.email);
 
     res.json({ message: 'Logged in successfully' });
@@ -53,14 +53,15 @@ router.post('/login', loginLimiter, async (req, res) => {
   }
 });
 
-router.post('/logout', (req, res) => {
+router.post('/logout', async (req, res) => {
   const token = req.cookies.token;
+  const { deviceModel } = req.body || {};
 
   if (token) {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const device = getDeviceInfo(req.headers['user-agent']);
-      logAction('Logged Out', device, decoded.email);
+      const device = getDeviceInfo(req.headers['user-agent'], deviceModel);
+      await logAction('Logged Out', device, decoded.email);
     } catch (error) {
       // token invalid/expired — nothing meaningful to log
     }
