@@ -6,6 +6,7 @@ import StatusBadge from './StatusBadge';
 import ConfirmDialog from './ConfirmDialog';
 
 function MemberCard({ member, onUpdated }) {
+  const [expanded, setExpanded] = useState(false);
   const [showMarkPaid, setShowMarkPaid] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -13,12 +14,10 @@ function MemberCard({ member, onUpdated }) {
   const [customDays, setCustomDays] = useState('');
   const [amountPaid, setAmountPaid] = useState('');
   const [error, setError] = useState(null);
-  const [expanded, setExpanded] = useState(false);
 
   const [editData, setEditData] = useState({
     name: member.name,
     residence: member.residence || '',
-    phone: member.phone,
     amountPaid: member.amountPaid
   });
   const [editError, setEditError] = useState(null);
@@ -59,7 +58,6 @@ function MemberCard({ member, onUpdated }) {
       await api.put(`/members/${member._id}`, {
         name: editData.name,
         residence: editData.residence,
-        phone: editData.phone,
         amountPaid: Number(editData.amountPaid)
       });
       setShowEdit(false);
@@ -80,34 +78,30 @@ function MemberCard({ member, onUpdated }) {
 
   return (
     <div className={`bg-[#1A1A1A] border rounded-lg p-4 ${
-  member.status === 'pending' ? 'border-orange-500/50' : 'border-[#2A2A2A]'
-}`}>
-  <div
-    onClick={() => setExpanded(!expanded)}
-    className="cursor-pointer"
-  >
-    <div className="flex justify-between items-start mb-2">
-      <div>
-        <p className="font-semibold">{member.name}</p>
-        <p className="text-xs text-[#999] font-mono">{member.gymCode}</p>
+      member.status === 'pending' ? 'border-orange-500/50' : 'border-[#2A2A2A]'
+    }`}>
+      <div onClick={() => setExpanded(!expanded)} className="cursor-pointer">
+        <div className="flex justify-between items-start mb-2">
+          <div>
+            <p className="font-semibold">{member.name}</p>
+            <p className="text-xs text-[#999] font-mono">{member.gymCode}</p>
+          </div>
+          <StatusBadge status={member.status} />
+        </div>
+
+        <p className="text-sm text-[#999] mb-1">{member.residence || '—'}</p>
+        <p className="text-sm text-[#999] mb-3">Days past: {member.daysPastExpiry}</p>
+
+        {expanded && (
+          <div className="text-sm text-[#999] space-y-1 mb-3 pb-3 border-b border-[#2A2A2A]">
+            <p>Start Date: {new Date(member.startDate).toLocaleDateString()}</p>
+            <p>End Date: {new Date(member.endDate).toLocaleDateString()}</p>
+            <p>Amount Paid: ₹{member.amountPaid}</p>
+          </div>
+        )}
       </div>
-      <StatusBadge status={member.status} />
-    </div>
 
-    <p className="text-sm text-[#999] mb-1">{member.phone || '—'}</p>
-    <p className="text-sm text-[#999] mb-3">Days past: {member.daysPastExpiry}</p>
-
-    {expanded && (
-      <div className="text-sm text-[#999] space-y-1 mb-3 pb-3 border-b border-[#2A2A2A]">
-        <p>Residence: {member.residence || '—'}</p>
-        <p>Start Date: {new Date(member.startDate).toLocaleDateString()}</p>
-        <p>End Date: {new Date(member.endDate).toLocaleDateString()}</p>
-        <p>Amount Paid: ₹{member.amountPaid}</p>
-      </div>
-    )}
-  </div>
-
-  <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
+      <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
         <button
           onClick={() => setShowMarkPaid(!showMarkPaid)}
           className="bg-[#F2C230] text-black text-xs font-bold uppercase px-3 py-1.5 rounded hover:bg-[#C6FF3D] transition-colors"
@@ -206,14 +200,6 @@ function MemberCard({ member, onUpdated }) {
             <input
               value={editData.residence}
               onChange={(e) => setEditData({ ...editData, residence: e.target.value })}
-              className={editInputClass}
-            />
-          </div>
-          <div>
-            <label className="block text-xs text-[#999] uppercase mb-1">Phone</label>
-            <input
-              value={editData.phone}
-              onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
               className={editInputClass}
             />
           </div>

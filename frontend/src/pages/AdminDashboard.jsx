@@ -66,8 +66,7 @@ function AdminDashboard() {
 const filteredMembers = searchTerm
   ? statusFiltered.filter((m) =>
       m.name.toLowerCase().includes(searchTerm) ||
-      m.gymCode.toLowerCase().includes(searchTerm) ||
-      (m.phone && m.phone.includes(searchTerm))
+      m.gymCode.toLowerCase().includes(searchTerm) 
     )
   : statusFiltered;
 
@@ -107,7 +106,7 @@ const filteredMembers = searchTerm
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#666]" />
           <input
             type="text"
-            placeholder="Search by name, code, or phone"
+            placeholder="Search by name, code..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-[#1A1A1A] border-2 border-[#333] rounded-lg pl-12 pr-4 py-3.5 text-base placeholder-[#666] focus:outline-none focus:border-[#F2C230] transition-colors"
@@ -191,7 +190,7 @@ const filteredMembers = searchTerm
               <tr>
                 <th className="px-4 py-3">Code</th>
                 <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">Phone</th>
+                <th className="px-4 py-3">Residence</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Days Past</th>
                 <th className="px-4 py-3">Actions</th>

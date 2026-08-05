@@ -17,7 +17,6 @@ function MemberRow({ member, onUpdated }) {
   const [editData, setEditData] = useState({
     name: member.name,
     residence: member.residence || '',
-    phone: member.phone,
     amountPaid: member.amountPaid
   });
   const [editError, setEditError] = useState(null);
@@ -58,7 +57,6 @@ function MemberRow({ member, onUpdated }) {
       await api.put(`/members/${member._id}`, {
         name: editData.name,
         residence: editData.residence,
-        phone: editData.phone,
         amountPaid: Number(editData.amountPaid)
       });
       setShowEdit(false);
@@ -84,7 +82,7 @@ function MemberRow({ member, onUpdated }) {
       }`}>
         <td className="px-4 py-3 font-mono text-[#999]">{member.gymCode}</td>
         <td className="px-4 py-3 font-semibold">{member.name}</td>
-        <td className="px-4 py-3 text-[#999]">{member.phone || '—'}</td>
+        <td className="px-4 py-3 text-[#999]">{member.residence || '—'}</td>
         <td className="px-4 py-3"><StatusBadge status={member.status} /></td>
         <td className="px-4 py-3 text-[#999]">{member.daysPastExpiry}</td>
         <td className="px-4 py-3">
@@ -197,14 +195,6 @@ function MemberRow({ member, onUpdated }) {
                 <input
                   value={editData.residence}
                   onChange={(e) => setEditData({ ...editData, residence: e.target.value })}
-                  className={editInputClass}
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-[#999] uppercase mb-1">Phone</label>
-                <input
-                  value={editData.phone}
-                  onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
                   className={editInputClass}
                 />
               </div>

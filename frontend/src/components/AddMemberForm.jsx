@@ -7,7 +7,6 @@ function AddMemberForm({ onMemberAdded }) {
   const [formData, setFormData] = useState({
     name: '',
     residence: '',
-    phone: '',
     amountPaid: '',
     startDate: '',
     durationChoice: '30',
@@ -33,7 +32,6 @@ function AddMemberForm({ onMemberAdded }) {
       await api.post('/members', {
         name: formData.name,
         residence: formData.residence,
-        phone: formData.phone,
         amountPaid: Number(formData.amountPaid),
         startDate: formData.startDate,
         durationDays
@@ -42,7 +40,6 @@ function AddMemberForm({ onMemberAdded }) {
       setFormData({
         name: '',
         residence: '',
-        phone: '',
         amountPaid: '',
         startDate: '',
         durationChoice: '30',
@@ -56,7 +53,7 @@ function AddMemberForm({ onMemberAdded }) {
   }
 
   const inputClass =
-    'bg-[#1A1A1A] border border-[#333] rounded px-3 py-2 text-sm w-full placeholder-[#666] focus:outline-none focus:border-[#F2C230]';
+    'bg-[#1A1A1A] border border-[#333] rounded px-3 py-2 text-sm w-full text-[#F5F5F0] placeholder-[#666] focus:outline-none focus:border-[#F2C230]';
 
   return (
     <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg p-6">
@@ -80,13 +77,6 @@ function AddMemberForm({ onMemberAdded }) {
           name="residence"
           placeholder="Residence"
           value={formData.residence}
-          onChange={handleChange}
-          className={inputClass}
-        />
-        <input
-          name="phone"
-          placeholder="Phone (Optional)"
-          value={formData.phone}
           onChange={handleChange}
           className={inputClass}
         />

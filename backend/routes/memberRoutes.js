@@ -9,7 +9,7 @@ router.use(requireAuth);
 
 router.post('/', async (req, res) => {
   try {
-    const { name, residence, phone, amountPaid, startDate, durationDays } = req.body;
+    const { name, residence, amountPaid, startDate, durationDays } = req.body;
 
     const lastMember = await Member.findOne().sort({ gymCode: -1 });
 
@@ -27,9 +27,6 @@ router.post('/', async (req, res) => {
       gymCode,
       name,
       residence,
-      // omit phone entirely if blank, so the sparse unique index
-      // doesn't collide with other members who also have no phone
-      ...(phone ? { phone } : {}),
       amountPaid,
       startDate: start,
       endDate: end
@@ -80,20 +77,9 @@ router.get('/:id', async (req, res) => {
 // UPDATE a member
 router.put('/:id', async (req, res) => {
   try {
-    const updateData = { ...req.body };
-
-    // Treat an empty phone string as "no phone" — unset the field entirely
-    // (rather than storing ""), so the sparse unique index doesn't collide
-    // with other members whose phone was also cleared
-    const updateOps = { $set: updateData };
-    if (updateData.phone === '') {
-      delete updateData.phone;
-      updateOps.$unset = { phone: '' };
-    }
-
     const updatedMember = await Member.findByIdAndUpdate(
       req.params.id,
-      updateOps,
+      req.body,
       { new: true, runValidators: true }
     );
     if (!updatedMember) {

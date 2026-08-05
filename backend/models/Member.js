@@ -13,10 +13,6 @@ const memberSchema = new mongoose.Schema({
   residence: {
     type: String
   },
-  phone: {
-    type: String,
-    sparse: true
-  },
   amountPaid: {
     type: Number,
     required: true
