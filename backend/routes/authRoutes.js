@@ -6,6 +6,7 @@ const rateLimit = require('express-rate-limit');
 const Admin = require('../models/Admin');
 const requireAuth = require('../middleware/requireAuth');
 const logAction = require('../utils/logAction');
+const { getDeviceInfo } = require('../utils/deviceInfo');
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -42,7 +43,8 @@ router.post('/login', loginLimiter, async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
-    await logAction('Logged In', '', admin.email);
+    const device = getDeviceInfo(req.headers['user-agent']);
+    await logAction('Logged In', device, admin.email);
 
     res.json({ message: 'Logged in successfully' });
 
@@ -57,7 +59,8 @@ router.post('/logout', (req, res) => {
   if (token) {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      logAction('Logged Out', '', decoded.email);
+      const device = getDeviceInfo(req.headers['user-agent']);
+      logAction('Logged Out', device, decoded.email);
     } catch (error) {
       // token invalid/expired — nothing meaningful to log
     }
