@@ -19,8 +19,8 @@ export function AuthProvider({ children }) {
     setIsLoggedIn(true);
   }
 
-  async function logout() {
-    await api.post('/auth/logout');
+  async function logout(deviceModel) {
+    await api.post('/auth/logout', { deviceModel });
     setIsLoggedIn(false);
   }
 

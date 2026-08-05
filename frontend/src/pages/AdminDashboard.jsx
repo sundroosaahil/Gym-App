@@ -8,6 +8,18 @@ import MemberCard from '../components/MemberCard';
 import LoadingScreen from '../components/LoadingScreen';
 import { useAuth } from '../context/AuthContext';
 
+async function getClientDeviceModel() {
+  if (navigator.userAgentData?.getHighEntropyValues) {
+    try {
+      const { model } = await navigator.userAgentData.getHighEntropyValues(['model']);
+      return model || null;
+    } catch {
+      return null;
+    }
+  }
+  return null; // Safari/Firefox don't support this API — backend falls back to UA parsing
+}
+
 function AdminDashboard() {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,6 +46,11 @@ function AdminDashboard() {
   useEffect(() => {
     fetchMembers();
   }, []);
+
+  async function handleLogout() {
+    const deviceModel = await getClientDeviceModel();
+    await logout(deviceModel);
+  }
 
   if (loading) return <LoadingScreen />;
   if (error) return <p className="p-8 text-red-400">{error}</p>;
@@ -93,7 +110,7 @@ const filteredMembers = searchTerm
               <span className="hidden sm:inline">Activity Log</span>
             </Link>
             <button
-              onClick={logout}
+              onClick={handleLogout}
               className="flex items-center gap-2 text-sm text-[#999] hover:text-[#F5F5F0] transition-colors"
             >
               <LogOut className="w-4 h-4" />
