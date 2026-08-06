@@ -89,14 +89,18 @@ function AddMemberForm({ onMemberAdded }) {
           required
           className={inputClass}
         />
-        <input
-          name="startDate"
-          type="date"
-          value={formData.startDate}
-          onChange={handleChange}
-          required
-          className={inputClass}
-        />
+        <div className="flex flex-col gap-1">
+  <label htmlFor="startDate" className="text-sm text-gray-400">
+    Start Date
+  </label>
+  <input
+    id="startDate"
+    type="date"
+    value={startDate}
+    onChange={(e) => setStartDate(e.target.value)}
+    className={inputClass} // keep your existing input styling
+  />
+</div>
         <select
           name="durationChoice"
           value={formData.durationChoice}
