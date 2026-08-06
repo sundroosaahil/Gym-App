@@ -95,10 +95,11 @@ function AddMemberForm({ onMemberAdded }) {
   </label>
   <input
     id="startDate"
+    name="startDate"
     type="date"
-    value={startDate}
-    onChange={(e) => setStartDate(e.target.value)}
-    className={inputClass} // keep your existing input styling
+    value={formData.startDate}
+    onChange={handleChange}
+    className={inputClass}
   />
 </div>
         <select
