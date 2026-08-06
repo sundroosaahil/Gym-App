@@ -85,6 +85,7 @@ function MemberRow({ member, onUpdated }) {
         <td className="px-4 py-3 text-[#999]">{member.residence || '—'}</td>
         <td className="px-4 py-3"><StatusBadge status={member.status} /></td>
         <td className="px-4 py-3 text-[#999]">{member.daysPastExpiry}</td>
+        <td className="px-4 py-3 text-[#999]">₹{member.amountPaid}</td>
         <td className="px-4 py-3">
           <div className="flex flex-wrap gap-2">
             <button
@@ -128,7 +129,7 @@ function MemberRow({ member, onUpdated }) {
 
       {showMarkPaid && (
         <tr className="bg-[#111]">
-          <td colSpan="6" className="px-4 py-4">
+          <td colSpan="7" className="px-4 py-4">
             <form onSubmit={handleMarkPaid} className="flex flex-wrap items-end gap-3">
               {error && <p className="text-red-400 text-sm w-full">{error}</p>}
               <div>
@@ -178,7 +179,7 @@ function MemberRow({ member, onUpdated }) {
 
       {showEdit && (
         <tr className="bg-[#111]">
-          <td colSpan="6" className="px-4 py-4">
+          <td colSpan="7" className="px-4 py-4">
             <form onSubmit={handleEditSubmit} className="flex flex-wrap items-end gap-3">
               {editError && <p className="text-red-400 text-sm w-full">{editError}</p>}
               <div>
