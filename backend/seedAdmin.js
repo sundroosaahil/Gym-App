@@ -24,3 +24,4 @@ async function createAdmin() {
 }
 
 createAdmin();
+// To run this script, use the command: node SeedAdmin.js
