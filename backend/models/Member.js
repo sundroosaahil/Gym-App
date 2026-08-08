@@ -13,6 +13,12 @@ const memberSchema = new mongoose.Schema({
   residence: {
     type: String
   },
+  phone: {
+    type: String
+    // Not required at the DB level on purpose: existing members don't have
+    // this yet. The Add Member form requires it going forward, and old
+    // members get backfilled whenever someone edits them.
+  },
   amountPaid: {
     type: Number,
     required: true

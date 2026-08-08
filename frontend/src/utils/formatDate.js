@@ -1,8 +1,9 @@
 export function formatDate(dateString) {
+
   return new Date(dateString).toLocaleDateString('en-GB', {
-    day: 'numeric',
+    day: "numeric",
     month: 'long',
     year: 'numeric'
+    
   });
 }
-// hi saahil

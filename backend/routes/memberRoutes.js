@@ -9,7 +9,7 @@ router.use(requireAuth);
 
 router.post('/', async (req, res) => {
   try {
-    const { name, residence, amountPaid, startDate, durationDays } = req.body;
+    const { name, residence, phone, amountPaid, startDate, durationDays } = req.body;
 
     const lastMember = await Member.findOne().sort({ gymCode: -1 });
 
@@ -27,6 +27,7 @@ router.post('/', async (req, res) => {
       gymCode,
       name,
       residence,
+      phone,
       amountPaid,
       startDate: start,
       endDate: end

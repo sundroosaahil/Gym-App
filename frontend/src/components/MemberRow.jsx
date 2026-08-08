@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, MessageCircle } from 'lucide-react';
 import api from '../api/axiosConfig';
 import { durationOptions } from '../constants/durationOptions';
 import StatusBadge from './StatusBadge';
 import ConfirmDialog from './ConfirmDialog';
 import { formatDate } from '../utils/formatDate';
+import { buildWhatsAppReminderLink } from '../utils/sendWhatsAppReminder';
 
 function MemberRow({ member, onUpdated }) {
   const [showMarkPaid, setShowMarkPaid] = useState(false);
@@ -18,9 +19,13 @@ function MemberRow({ member, onUpdated }) {
   const [editData, setEditData] = useState({
     name: member.name,
     residence: member.residence || '',
+    phone: member.phone || '',
     amountPaid: member.amountPaid
   });
   const [editError, setEditError] = useState(null);
+
+  const showReminderButton =
+    (member.status === 'pending' || member.status === 'inactive') && member.phone;
 
   async function handleMarkPaid(e) {
     e.preventDefault();
@@ -58,6 +63,7 @@ function MemberRow({ member, onUpdated }) {
       await api.put(`/members/${member._id}`, {
         name: editData.name,
         residence: editData.residence,
+        phone: editData.phone.replace(/\D/g, ''),
         amountPaid: Number(editData.amountPaid)
       });
       setShowEdit(false);
@@ -91,6 +97,17 @@ function MemberRow({ member, onUpdated }) {
         <td className="px-4 py-3 text-[#999]">₹{member.amountPaid}</td>
         <td className="px-4 py-3">
           <div className="flex flex-wrap gap-2">
+            {showReminderButton && (
+              <a
+                href={buildWhatsAppReminderLink(member)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-[#25D366]/15 text-[#25D366] border border-[#25D366]/40 p-1.5 rounded hover:bg-[#25D366]/25 transition-colors"
+                title="Send WhatsApp Reminder"
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+              </a>
+            )}
             <button
               onClick={() => setShowMarkPaid(!showMarkPaid)}
               className="bg-[#F2C230] text-black text-xs font-bold uppercase px-3 py-1.5 rounded hover:bg-[#C6FF3D] transition-colors"
@@ -199,6 +216,16 @@ function MemberRow({ member, onUpdated }) {
                 <input
                   value={editData.residence}
                   onChange={(e) => setEditData({ ...editData, residence: e.target.value })}
+                  className={editInputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-[#999] uppercase mb-1">Phone</label>
+                <input
+                  type="tel"
+                  value={editData.phone}
+                  onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
+                  placeholder="919876543210"
                   className={editInputClass}
                 />
               </div>

@@ -7,6 +7,7 @@ function AddMemberForm({ onMemberAdded }) {
   const [formData, setFormData] = useState({
     name: '',
     residence: '',
+    phone: '',
     amountPaid: '',
     startDate: '',
     durationChoice: '30',
@@ -28,10 +29,15 @@ function AddMemberForm({ onMemberAdded }) {
         ? Number(formData.customDays)
         : Number(formData.durationChoice);
 
+    // Strip anything that isn't a digit (spaces, dashes, +) so what we
+    // store is already in the exact format wa.me links need later.
+    const cleanedPhone = formData.phone.replace(/\D/g, '');
+
     try {
       await api.post('/members', {
         name: formData.name,
         residence: formData.residence,
+        phone: cleanedPhone,
         amountPaid: Number(formData.amountPaid),
         startDate: formData.startDate,
         durationDays
@@ -40,6 +46,7 @@ function AddMemberForm({ onMemberAdded }) {
       setFormData({
         name: '',
         residence: '',
+        phone: '',
         amountPaid: '',
         startDate: '',
         durationChoice: '30',
@@ -78,6 +85,15 @@ function AddMemberForm({ onMemberAdded }) {
           placeholder="Residence"
           value={formData.residence}
           onChange={handleChange}
+          className={inputClass}
+        />
+        <input
+          name="phone"
+          type="tel"
+          placeholder="Phone (e.g. 919876543210)"
+          value={formData.phone}
+          onChange={handleChange}
+          required
           className={inputClass}
         />
         <input
