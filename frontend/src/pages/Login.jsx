@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Eye, EyeOff } from 'lucide-react';
+import { Lock, Eye, EyeOff, Dumbbell } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 async function getClientDeviceModel() {
@@ -20,12 +20,14 @@ function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError(null);
+    setIsLoading(true);
 
     try {
       const deviceModel = await getClientDeviceModel();
@@ -33,6 +35,8 @@ function Login() {
       navigate('/admin');
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed');
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -64,6 +68,7 @@ function Login() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            disabled={isLoading}
             className={inputClass}
           />
 
@@ -75,11 +80,13 @@ function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              disabled={isLoading}
               className={`${inputClass} pr-11`}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
+              disabled={isLoading}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-[#999] hover:text-[#F5F5F0] transition-colors"
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -88,9 +95,17 @@ function Login() {
 
           <button
             type="submit"
-            className="w-full bg-[#F2C230] text-black font-bold uppercase py-3 rounded hover:bg-[#C6FF3D] transition-colors"
+            disabled={isLoading}
+            className="w-full bg-[#F2C230] text-black font-bold uppercase py-3 rounded hover:bg-[#C6FF3D] transition-colors disabled:opacity-90 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            Log In
+            {isLoading ? (
+              <>
+                <Dumbbell className="w-4 h-4 animate-dumbbell-pulse" />
+                Logging In...
+              </>
+            ) : (
+              'Log In'
+            )}
           </button>
         </form>
       </div>
