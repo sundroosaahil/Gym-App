@@ -209,6 +209,8 @@ const filteredMembers = searchTerm
                 <th className="px-4 py-3">Name</th>
                 <th className="px-4 py-3">Residence</th>
                 <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Start Date</th>
+                <th className="px-4 py-3">End Date</th>
                 <th className="px-4 py-3">Days Past</th>
                 <th className="px-4 py-3">Amount Paid</th>
                 <th className="px-4 py-3">Actions</th>
@@ -217,7 +219,7 @@ const filteredMembers = searchTerm
             <tbody>
               {filteredMembers.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-4 py-8 text-center text-[#666]">
+                  <td colSpan="9" className="px-4 py-8 text-center text-[#666]">
                     No members found.
                   </td>
                 </tr>

@@ -4,6 +4,7 @@ import api from '../api/axiosConfig';
 import { durationOptions } from '../constants/durationOptions';
 import StatusBadge from './StatusBadge';
 import ConfirmDialog from './ConfirmDialog';
+import { formatDate } from '../utils/formatDate';
 
 function MemberRow({ member, onUpdated }) {
   const [showMarkPaid, setShowMarkPaid] = useState(false);
@@ -84,6 +85,8 @@ function MemberRow({ member, onUpdated }) {
         <td className="px-4 py-3 font-semibold">{member.name}</td>
         <td className="px-4 py-3 text-[#999]">{member.residence || '—'}</td>
         <td className="px-4 py-3"><StatusBadge status={member.status} /></td>
+        <td className="px-4 py-3 text-[#999]">{formatDate(member.startDate)}</td>
+        <td className="px-4 py-3 text-[#999]">{formatDate(member.endDate)}</td>
         <td className="px-4 py-3 text-[#999]">{member.daysPastExpiry}</td>
         <td className="px-4 py-3 text-[#999]">₹{member.amountPaid}</td>
         <td className="px-4 py-3">
@@ -129,7 +132,7 @@ function MemberRow({ member, onUpdated }) {
 
       {showMarkPaid && (
         <tr className="bg-[#111]">
-          <td colSpan="7" className="px-4 py-4">
+          <td colSpan="9" className="px-4 py-4">
             <form onSubmit={handleMarkPaid} className="flex flex-wrap items-end gap-3">
               {error && <p className="text-red-400 text-sm w-full">{error}</p>}
               <div>
@@ -179,7 +182,7 @@ function MemberRow({ member, onUpdated }) {
 
       {showEdit && (
         <tr className="bg-[#111]">
-          <td colSpan="7" className="px-4 py-4">
+          <td colSpan="9" className="px-4 py-4">
             <form onSubmit={handleEditSubmit} className="flex flex-wrap items-end gap-3">
               {editError && <p className="text-red-400 text-sm w-full">{editError}</p>}
               <div>
