@@ -4,6 +4,7 @@ import api from '../api/axiosConfig';
 import { durationOptions } from '../constants/durationOptions';
 import StatusBadge from './StatusBadge';
 import ConfirmDialog from './ConfirmDialog';
+import { formatDate } from '../utils/formatDate';
 
 function MemberCard({ member, onUpdated }) {
   const [expanded, setExpanded] = useState(false);
@@ -98,8 +99,8 @@ function MemberCard({ member, onUpdated }) {
       {expanded && (
         <div onClick={(e) => e.stopPropagation()}>
           <div className="text-sm text-[#999] space-y-1 mt-3 mb-4 pt-3 border-t border-[#2A2A2A]">
-            <p>Start Date: {new Date(member.startDate).toLocaleDateString()}</p>
-            <p>End Date: {new Date(member.endDate).toLocaleDateString()}</p>
+            <p>Start Date: {formatDate(member.startDate)}</p>
+            <p>End Date: {formatDate(member.endDate)}</p>
             <p>Amount Paid: ₹{member.amountPaid}</p>
           </div>
 
