@@ -6,6 +6,7 @@ import StatusBadge from './StatusBadge';
 import ConfirmDialog from './ConfirmDialog';
 import { formatDate } from '../utils/formatDate';
 import { buildWhatsAppReminderLink } from '../utils/sendWhatsAppReminder';
+import { toFullPhone, toLocalPhone } from '../utils/formatPhone';
 
 function MemberCard({ member, onUpdated }) {
   const [expanded, setExpanded] = useState(false);
@@ -20,7 +21,7 @@ function MemberCard({ member, onUpdated }) {
   const [editData, setEditData] = useState({
     name: member.name,
     residence: member.residence || '',
-    phone: member.phone || '',
+    phone: toLocalPhone(member.phone),
     amountPaid: member.amountPaid
   });
   const [editError, setEditError] = useState(null);
@@ -64,7 +65,7 @@ function MemberCard({ member, onUpdated }) {
       await api.put(`/members/${member._id}`, {
         name: editData.name,
         residence: editData.residence,
-        phone: editData.phone.replace(/\D/g, ''),
+        phone: toFullPhone(editData.phone),
         amountPaid: Number(editData.amountPaid)
       });
       setShowEdit(false);
@@ -116,7 +117,7 @@ function MemberCard({ member, onUpdated }) {
                 href={buildWhatsAppReminderLink(member)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-[#25D366]/15 text-[#25D366] border border-[#25D366]/40 flex items-center justify-center gap-2 text-sm font-bold uppercase py-3 rounded hover:bg-[#25D366]/25 transition-colors col-span-2"
+                className="bg-[#25D366] text-white flex items-center justify-center gap-2 text-sm font-bold uppercase py-3 rounded hover:bg-[#20BD5A] transition-colors col-span-2"
               >
                 <MessageCircle className="w-4 h-4" />
                 Send Reminder
@@ -227,13 +228,22 @@ function MemberCard({ member, onUpdated }) {
               </div>
               <div>
                 <label className="block text-xs text-[#999] uppercase mb-1">Phone</label>
-                <input
-                  type="tel"
-                  value={editData.phone}
-                  onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
-                  placeholder="919876543210"
-                  className={editInputClass}
-                />
+                <div className="flex">
+                  <span className="flex items-center bg-[#0D0D0D] border border-r-0 border-[#333] rounded-l px-3 text-sm text-[#999]">
+                    +91
+                  </span>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={10}
+                    value={editData.phone}
+                    onChange={(e) =>
+                      setEditData({ ...editData, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })
+                    }
+                    placeholder="9876543210"
+                    className="bg-[#0D0D0D] border border-[#333] rounded-r px-3 py-2 text-sm w-full"
+                  />
+                </div>
               </div>
               <div>
                 <label className="block text-xs text-[#999] uppercase mb-1">Amount Paid</label>

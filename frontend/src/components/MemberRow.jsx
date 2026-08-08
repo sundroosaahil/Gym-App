@@ -6,6 +6,7 @@ import StatusBadge from './StatusBadge';
 import ConfirmDialog from './ConfirmDialog';
 import { formatDate } from '../utils/formatDate';
 import { buildWhatsAppReminderLink } from '../utils/sendWhatsAppReminder';
+import { toFullPhone, toLocalPhone } from '../utils/formatPhone';
 
 function MemberRow({ member, onUpdated }) {
   const [showMarkPaid, setShowMarkPaid] = useState(false);
@@ -19,7 +20,7 @@ function MemberRow({ member, onUpdated }) {
   const [editData, setEditData] = useState({
     name: member.name,
     residence: member.residence || '',
-    phone: member.phone || '',
+    phone: toLocalPhone(member.phone),
     amountPaid: member.amountPaid
   });
   const [editError, setEditError] = useState(null);
@@ -63,7 +64,7 @@ function MemberRow({ member, onUpdated }) {
       await api.put(`/members/${member._id}`, {
         name: editData.name,
         residence: editData.residence,
-        phone: editData.phone.replace(/\D/g, ''),
+        phone: toFullPhone(editData.phone),
         amountPaid: Number(editData.amountPaid)
       });
       setShowEdit(false);
@@ -102,7 +103,7 @@ function MemberRow({ member, onUpdated }) {
                 href={buildWhatsAppReminderLink(member)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-[#25D366]/15 text-[#25D366] border border-[#25D366]/40 p-1.5 rounded hover:bg-[#25D366]/25 transition-colors"
+                className="bg-[#25D366] text-white p-1.5 rounded hover:bg-[#20BD5A] transition-colors"
                 title="Send WhatsApp Reminder"
               >
                 <MessageCircle className="w-3.5 h-3.5" />
@@ -221,13 +222,22 @@ function MemberRow({ member, onUpdated }) {
               </div>
               <div>
                 <label className="block text-xs text-[#999] uppercase mb-1">Phone</label>
-                <input
-                  type="tel"
-                  value={editData.phone}
-                  onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
-                  placeholder="919876543210"
-                  className={editInputClass}
-                />
+                <div className="flex">
+                  <span className="flex items-center bg-[#0D0D0D] border border-r-0 border-[#333] rounded-l px-3 text-sm text-[#999]">
+                    +91
+                  </span>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={10}
+                    value={editData.phone}
+                    onChange={(e) =>
+                      setEditData({ ...editData, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })
+                    }
+                    placeholder="9876543210"
+                    className="bg-[#111] border border-[#333] rounded-r px-3 py-2 text-sm w-full"
+                  />
+                </div>
               </div>
               <div>
                 <label className="block text-xs text-[#999] uppercase mb-1">Amount Paid</label>

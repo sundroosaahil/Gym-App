@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import api from '../api/axiosConfig';
 import { durationOptions } from '../constants/durationOptions';
+import { toFullPhone } from '../utils/formatPhone';
 
 function AddMemberForm({ onMemberAdded }) {
   const [formData, setFormData] = useState({
@@ -17,6 +18,11 @@ function AddMemberForm({ onMemberAdded }) {
 
   function handleChange(e) {
     const { name, value } = e.target;
+    if (name === 'phone') {
+      const digitsOnly = value.replace(/\D/g, '').slice(0, 10);
+      setFormData((prev) => ({ ...prev, phone: digitsOnly }));
+      return;
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
   }
 
@@ -29,9 +35,9 @@ function AddMemberForm({ onMemberAdded }) {
         ? Number(formData.customDays)
         : Number(formData.durationChoice);
 
-    // Strip anything that isn't a digit (spaces, dashes, +) so what we
-    // store is already in the exact format wa.me links need later.
-    const cleanedPhone = formData.phone.replace(/\D/g, '');
+    // formData.phone is just the 10-digit local number the staff typed —
+    // toFullPhone adds the +91 country code before it's stored/sent.
+    const cleanedPhone = toFullPhone(formData.phone);
 
     try {
       await api.post('/members', {
@@ -87,15 +93,22 @@ function AddMemberForm({ onMemberAdded }) {
           onChange={handleChange}
           className={inputClass}
         />
-        <input
-          name="phone"
-          type="tel"
-          placeholder="Phone (e.g. 919876543210)"
-          value={formData.phone}
-          onChange={handleChange}
-          required
-          className={inputClass}
-        />
+        <div className="flex">
+          <span className="flex items-center bg-[#111] border border-r-0 border-[#333] rounded-l px-3 text-sm text-[#999]">
+            +91
+          </span>
+          <input
+            name="phone"
+            type="tel"
+            inputMode="numeric"
+            maxLength={10}
+            placeholder="9876543210"
+            value={formData.phone}
+            onChange={handleChange}
+            required
+            className="bg-[#1A1A1A] border border-[#333] rounded-r px-3 py-2 text-sm w-full text-[#F5F5F0] placeholder-[#666] focus:outline-none focus:border-[#F2C230]"
+          />
+        </div>
         <input
           name="amountPaid"
           type="number"
