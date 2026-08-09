@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import api from '../api/axiosConfig';
@@ -8,6 +8,8 @@ function AdminLogs() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [actionFilter, setActionFilter] = useState('all');
+  const [adminFilter, setAdminFilter] = useState('all');
 
   useEffect(() => {
     api.get('/logs')
@@ -20,6 +22,27 @@ function AdminLogs() {
         setLoading(false);
       });
   }, []);
+
+  // Built from whatever logs actually came back, so this dropdown never
+  // goes out of sync with the real action strings the backend writes.
+  const actionOptions = useMemo(
+    () => ['all', ...new Set(logs.map((log) => log.action))],
+    [logs]
+  );
+
+  const adminOptions = useMemo(
+    () => ['all', ...new Set(logs.map((log) => log.adminEmail))],
+    [logs]
+  );
+
+  const filteredLogs = logs.filter((log) => {
+    const matchesAction = actionFilter === 'all' || log.action === actionFilter;
+    const matchesAdmin = adminFilter === 'all' || log.adminEmail === adminFilter;
+    return matchesAction && matchesAdmin;
+  });
+
+  const selectClass =
+    'bg-[#1A1A1A] border border-[#333] rounded px-3 py-2 text-sm text-[#F5F5F0] focus:outline-none focus:border-[#F2C230]';
 
   if (loading) return <LoadingScreen />;
   if (error) return <p className="p-8 text-red-400">{error}</p>;
@@ -35,15 +58,49 @@ function AdminLogs() {
           Back to Dashboard
         </Link>
 
-        <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight mb-6">
+        <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight mb-2">
           Admin Activity Log
         </h1>
+        <p className="text-xs text-[#666] mb-6">Logs are automatically deleted after 30 days.</p>
 
-        {logs.length === 0 ? (
-          <p className="text-[#666]">No activity yet.</p>
+        {logs.length > 0 && (
+          <div className="flex flex-wrap gap-3 mb-6">
+            <div>
+              <label className="block text-xs text-[#999] uppercase mb-1">Action</label>
+              <select
+                value={actionFilter}
+                onChange={(e) => setActionFilter(e.target.value)}
+                className={selectClass}
+              >
+                {actionOptions.map((action) => (
+                  <option key={action} value={action}>
+                    {action === 'all' ? 'All Actions' : action}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-[#999] uppercase mb-1">Admin</label>
+              <select
+                value={adminFilter}
+                onChange={(e) => setAdminFilter(e.target.value)}
+                className={selectClass}
+              >
+                {adminOptions.map((admin) => (
+                  <option key={admin} value={admin}>
+                    {admin === 'all' ? 'All Admins' : admin}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+
+        {filteredLogs.length === 0 ? (
+          <p className="text-[#666]">No activity matches these filters.</p>
         ) : (
           <div className="space-y-2">
-            {logs.map((log) => (
+            {filteredLogs.map((log) => (
               <div
                 key={log._id}
                 className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg p-4"
