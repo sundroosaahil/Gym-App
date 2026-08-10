@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Clock, XCircle, LogOut, Search, FileText } from 'lucide-react';
+import { Users, Clock, XCircle, LogOut, Search, FileText, Loader2 } from 'lucide-react';
 import api from '../api/axiosConfig';
 import AddMemberForm from '../components/AddMemberForm';
 import MemberRow from '../components/MemberRow';
@@ -17,7 +17,7 @@ async function getClientDeviceModel() {
       return null;
     }
   }
-  return null; // Safari/Firefox don't support this API — backend falls back to UA parsing
+  return null;
 }
 
 function AdminDashboard() {
@@ -27,6 +27,7 @@ function AdminDashboard() {
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { logout } = useAuth();
   const [hideInactive, setHideInactive] = useState(true);
 
@@ -48,8 +49,13 @@ function AdminDashboard() {
   }, []);
 
   async function handleLogout() {
-    const deviceModel = await getClientDeviceModel();
-    await logout(deviceModel);
+    setIsLoggingOut(true);
+    try {
+      const deviceModel = await getClientDeviceModel();
+      await logout(deviceModel);
+    } catch (err) {
+      setIsLoggingOut(false); // only reset on failure — on success the page redirects away anyway
+    }
   }
 
   if (loading) return <LoadingScreen />;
@@ -111,10 +117,17 @@ const filteredMembers = searchTerm
             </Link>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 text-sm text-[#999] hover:text-[#F5F5F0] transition-colors"
+              disabled={isLoggingOut}
+              className="flex items-center gap-2 text-sm text-[#999] hover:text-[#F5F5F0] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <LogOut className="w-4 h-4" />
-              <span className="hidden sm:inline">Log Out</span>
+              {isLoggingOut ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <LogOut className="w-4 h-4" />
+              )}
+              <span className="hidden sm:inline">
+                {isLoggingOut ? 'Logging Out...' : 'Log Out'}
+              </span>
             </button>
           </div>
         </div>

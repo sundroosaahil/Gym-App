@@ -1,5 +1,18 @@
 const mongoose = require('mongoose');
 
+const receiptSchema = new mongoose.Schema({
+  receiptNo: {
+    type: String,
+  },
+  amount: {
+    type: Number
+  },
+  date: {
+    type: Date,
+    default: Date.now
+  }
+}, { _id: false });
+
 const memberSchema = new mongoose.Schema({
   gymCode: {
     type: String,
@@ -15,9 +28,6 @@ const memberSchema = new mongoose.Schema({
   },
   phone: {
     type: String
-    // Not required at the DB level on purpose: existing members don't have
-    // this yet. The Add Member form requires it going forward, and old
-    // members get backfilled whenever someone edits them.
   },
   amountPaid: {
     type: Number,
@@ -36,6 +46,7 @@ const memberSchema = new mongoose.Schema({
     enum: ['continuing', 'not_renewing'],
     default: 'continuing'
   },
+  receipts: [receiptSchema],
   contactLog: [
     {
       note: String,

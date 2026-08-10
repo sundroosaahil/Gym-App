@@ -12,7 +12,8 @@ function AddMemberForm({ onMemberAdded }) {
     amountPaid: '',
     startDate: '',
     durationChoice: '30',
-    customDays: ''
+    customDays: '',
+    receiptNo: ''
   });
   const [error, setError] = useState(null);
 
@@ -35,8 +36,6 @@ function AddMemberForm({ onMemberAdded }) {
         ? Number(formData.customDays)
         : Number(formData.durationChoice);
 
-    // formData.phone is just the 10-digit local number the staff typed —
-    // toFullPhone adds the +91 country code before it's stored/sent.
     const cleanedPhone = toFullPhone(formData.phone);
 
     try {
@@ -46,7 +45,8 @@ function AddMemberForm({ onMemberAdded }) {
         phone: cleanedPhone,
         amountPaid: Number(formData.amountPaid),
         startDate: formData.startDate,
-        durationDays
+        durationDays,
+        ...(formData.receiptNo.trim() && { receiptNo: formData.receiptNo.trim() })
       });
 
       setFormData({
@@ -56,7 +56,8 @@ function AddMemberForm({ onMemberAdded }) {
         amountPaid: '',
         startDate: '',
         durationChoice: '30',
-        customDays: ''
+        customDays: '',
+        receiptNo: ''
       });
 
       onMemberAdded();
@@ -155,6 +156,14 @@ function AddMemberForm({ onMemberAdded }) {
             className={inputClass}
           />
         )}
+
+        <input
+          name="receiptNo"
+          placeholder="Receipt No. (optional)"
+          value={formData.receiptNo}
+          onChange={handleChange}
+          className={inputClass}
+        />
 
         <button
           type="submit"

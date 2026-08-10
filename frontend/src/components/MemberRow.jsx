@@ -15,13 +15,20 @@ function MemberRow({ member, onUpdated }) {
   const [durationChoice, setDurationChoice] = useState('30');
   const [customDays, setCustomDays] = useState('');
   const [amountPaid, setAmountPaid] = useState('');
+  const [markPaidReceiptNo, setMarkPaidReceiptNo] = useState('');
   const [error, setError] = useState(null);
+
+  const latestReceiptNo =
+    member.receipts && member.receipts.length > 0
+      ? member.receipts[member.receipts.length - 1].receiptNo
+      : null;
 
   const [editData, setEditData] = useState({
     name: member.name,
     residence: member.residence || '',
     phone: toLocalPhone(member.phone),
-    amountPaid: member.amountPaid
+    amountPaid: member.amountPaid,
+    receiptNo: latestReceiptNo || ''
   });
   const [editError, setEditError] = useState(null);
 
@@ -36,11 +43,13 @@ function MemberRow({ member, onUpdated }) {
     try {
       await api.put(`/members/${member._id}/mark-paid`, {
         durationDays,
-        amountPaid: Number(amountPaid)
+        amountPaid: Number(amountPaid),
+        ...(markPaidReceiptNo.trim() && { receiptNo: markPaidReceiptNo.trim() })
       });
       setShowMarkPaid(false);
       setAmountPaid('');
       setCustomDays('');
+      setMarkPaidReceiptNo('');
       onUpdated();
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to mark paid');
@@ -65,7 +74,8 @@ function MemberRow({ member, onUpdated }) {
         name: editData.name,
         residence: editData.residence,
         phone: toFullPhone(editData.phone),
-        amountPaid: Number(editData.amountPaid)
+        amountPaid: Number(editData.amountPaid),
+        ...(editData.receiptNo.trim() && { receiptNo: editData.receiptNo.trim() })
       });
       setShowEdit(false);
       onUpdated();
@@ -95,7 +105,10 @@ function MemberRow({ member, onUpdated }) {
         <td className="px-4 py-3 text-[#999]">{formatDate(member.startDate)}</td>
         <td className="px-4 py-3 text-[#999]">{formatDate(member.endDate)}</td>
         <td className="px-4 py-3 text-[#999]">{member.daysPastExpiry}</td>
-        <td className="px-4 py-3 text-[#999]">₹{member.amountPaid}</td>
+        <td className="px-4 py-3 text-[#999]">
+          ₹{member.amountPaid}
+          <div className="text-xs text-[#666]">Rcpt: {latestReceiptNo || '—'}</div>
+        </td>
         <td className="px-4 py-3">
           <div className="flex flex-wrap gap-2">
             {showReminderButton && (
@@ -187,6 +200,16 @@ function MemberRow({ member, onUpdated }) {
                   className="bg-[#1A1A1A] border border-[#333] rounded px-3 py-2 text-sm w-28"
                 />
               </div>
+              <div>
+                <label className="block text-xs text-[#999] uppercase mb-1">Receipt No.</label>
+                <input
+                  type="text"
+                  value={markPaidReceiptNo}
+                  onChange={(e) => setMarkPaidReceiptNo(e.target.value)}
+                  placeholder="optional"
+                  className="bg-[#1A1A1A] border border-[#333] rounded px-3 py-2 text-sm w-28"
+                />
+              </div>
               <button
                 type="submit"
                 className="bg-[#C6FF3D] text-black text-sm font-bold uppercase px-4 py-2 rounded hover:bg-[#F2C230] transition-colors"
@@ -246,6 +269,15 @@ function MemberRow({ member, onUpdated }) {
                   value={editData.amountPaid}
                   onChange={(e) => setEditData({ ...editData, amountPaid: e.target.value })}
                   required
+                  className={editInputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-[#999] uppercase mb-1">Receipt No.</label>
+                <input
+                  value={editData.receiptNo}
+                  onChange={(e) => setEditData({ ...editData, receiptNo: e.target.value })}
+                  placeholder="optional"
                   className={editInputClass}
                 />
               </div>

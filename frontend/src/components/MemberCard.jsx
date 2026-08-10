@@ -16,13 +16,20 @@ function MemberCard({ member, onUpdated }) {
   const [durationChoice, setDurationChoice] = useState('30');
   const [customDays, setCustomDays] = useState('');
   const [amountPaid, setAmountPaid] = useState('');
+  const [markPaidReceiptNo, setMarkPaidReceiptNo] = useState('');
   const [error, setError] = useState(null);
+
+  const latestReceiptNo =
+    member.receipts && member.receipts.length > 0
+      ? member.receipts[member.receipts.length - 1].receiptNo
+      : null;
 
   const [editData, setEditData] = useState({
     name: member.name,
     residence: member.residence || '',
     phone: toLocalPhone(member.phone),
-    amountPaid: member.amountPaid
+    amountPaid: member.amountPaid,
+    receiptNo: latestReceiptNo || ''
   });
   const [editError, setEditError] = useState(null);
 
@@ -37,11 +44,13 @@ function MemberCard({ member, onUpdated }) {
     try {
       await api.put(`/members/${member._id}/mark-paid`, {
         durationDays,
-        amountPaid: Number(amountPaid)
+        amountPaid: Number(amountPaid),
+        ...(markPaidReceiptNo.trim() && { receiptNo: markPaidReceiptNo.trim() })
       });
       setShowMarkPaid(false);
       setAmountPaid('');
       setCustomDays('');
+      setMarkPaidReceiptNo('');
       onUpdated();
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to mark paid');
@@ -66,7 +75,8 @@ function MemberCard({ member, onUpdated }) {
         name: editData.name,
         residence: editData.residence,
         phone: toFullPhone(editData.phone),
-        amountPaid: Number(editData.amountPaid)
+        amountPaid: Number(editData.amountPaid),
+        ...(editData.receiptNo.trim() && { receiptNo: editData.receiptNo.trim() })
       });
       setShowEdit(false);
       onUpdated();
@@ -109,6 +119,7 @@ function MemberCard({ member, onUpdated }) {
             <p>Start Date: {formatDate(member.startDate)}</p>
             <p>End Date: {formatDate(member.endDate)}</p>
             <p>Amount Paid: ₹{member.amountPaid}</p>
+            <p>Receipt No: {latestReceiptNo || '—'}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-2 mb-2">
@@ -197,6 +208,16 @@ function MemberCard({ member, onUpdated }) {
                   className="bg-[#111] border border-[#333] rounded px-3 py-2 text-sm w-24"
                 />
               </div>
+              <div>
+                <label className="block text-xs text-[#999] uppercase mb-1">Receipt No.</label>
+                <input
+                  type="text"
+                  value={markPaidReceiptNo}
+                  onChange={(e) => setMarkPaidReceiptNo(e.target.value)}
+                  placeholder="optional"
+                  className="bg-[#111] border border-[#333] rounded px-3 py-2 text-sm w-28"
+                />
+              </div>
               <button
                 type="submit"
                 className="bg-[#C6FF3D] text-black text-sm font-bold uppercase px-4 py-2 rounded hover:bg-[#F2C230] transition-colors"
@@ -252,6 +273,15 @@ function MemberCard({ member, onUpdated }) {
                   value={editData.amountPaid}
                   onChange={(e) => setEditData({ ...editData, amountPaid: e.target.value })}
                   required
+                  className={editInputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-[#999] uppercase mb-1">Receipt No.</label>
+                <input
+                  value={editData.receiptNo}
+                  onChange={(e) => setEditData({ ...editData, receiptNo: e.target.value })}
+                  placeholder="optional"
                   className={editInputClass}
                 />
               </div>

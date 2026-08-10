@@ -9,7 +9,7 @@ router.use(requireAuth);
 
 router.post('/', async (req, res) => {
   try {
-    const { name, residence, phone, amountPaid, startDate, durationDays } = req.body;
+    const { name, residence, phone, amountPaid, startDate, durationDays, receiptNo } = req.body;
 
     const lastMember = await Member.findOne().sort({ gymCode: -1 });
 
@@ -30,7 +30,8 @@ router.post('/', async (req, res) => {
       phone,
       amountPaid,
       startDate: start,
-      endDate: end
+      endDate: end,
+      receipts: receiptNo ? [{ receiptNo, amount: amountPaid }] : []
     });
 
     await member.save();
@@ -75,19 +76,32 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// UPDATE a member
+// UPDATE a member (correction, not a new payment)
 router.put('/:id', async (req, res) => {
   try {
-    const updatedMember = await Member.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
-    if (!updatedMember) {
+    const { name, residence, phone, amountPaid, receiptNo } = req.body;
+
+    const member = await Member.findById(req.params.id);
+    if (!member) {
       return res.status(404).json({ error: 'Member not found' });
     }
-    await logAction('Edited Member', `${updatedMember.name} (${updatedMember.gymCode})`, req.adminEmail);
-    res.json(updatedMember);
+
+    member.name = name;
+    member.residence = residence;
+    member.phone = phone;
+    member.amountPaid = amountPaid;
+
+    if (receiptNo) {
+      if (member.receipts.length > 0) {
+        member.receipts[member.receipts.length - 1].receiptNo = receiptNo;
+      } else {
+        member.receipts.push({ receiptNo, amount: amountPaid });
+      }
+    }
+
+    await member.save();
+    await logAction('Edited Member', `${member.name} (${member.gymCode})`, req.adminEmail);
+    res.json(member);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -110,7 +124,7 @@ router.delete('/:id', async (req, res) => {
 // Mark member as paid — extend membership
 router.put('/:id/mark-paid', async (req, res) => {
   try {
-    const { durationDays, amountPaid } = req.body;
+    const { durationDays, amountPaid, receiptNo } = req.body;
     const member = await Member.findById(req.params.id);
 
     if (!member) {
@@ -129,10 +143,14 @@ router.put('/:id/mark-paid', async (req, res) => {
     member.amountPaid = amountPaid;
     member.renewalIntent = 'continuing';
 
+    if (receiptNo) {
+      member.receipts.push({ receiptNo, amount: amountPaid });
+    }
+
     await member.save();
     await logAction(
       'Marked Paid',
-      `${member.name} (${member.gymCode}) — ₹${amountPaid}, ${durationDays} days`,
+      `${member.name} (${member.gymCode}) — ₹${amountPaid}, ${durationDays} days${receiptNo ? `, Receipt #${receiptNo}` : ''}`,
       req.adminEmail
     );
     res.json(member);
