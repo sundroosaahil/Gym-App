@@ -124,7 +124,12 @@ router.delete('/:id', async (req, res) => {
 // Mark member as paid — extend membership
 router.put('/:id/mark-paid', async (req, res) => {
   try {
-    const { durationDays, amountPaid, receiptNo } = req.body;
+    const { durationDays, amountPaid, receiptNo, mode } = req.body;
+
+    if (!mode || !['reset', 'renewal'].includes(mode)) {
+      return res.status(400).json({ error: 'mode is required and must be "reset" or "renewal"' });
+    }
+
     const member = await Member.findById(req.params.id);
 
     if (!member) {
@@ -133,7 +138,10 @@ router.put('/:id/mark-paid', async (req, res) => {
 
     const today = new Date();
     const currentEnd = new Date(member.endDate);
-    const baseDate = currentEnd > today ? currentEnd : today;
+
+    // reset   -> new cycle starts today (member didn't use the gym during the gap)
+    // renewal -> new cycle starts from old due date (recovers days already used, or extends an active member cleanly)
+    const baseDate = mode === 'renewal' ? currentEnd : today;
 
     const newEndDate = new Date(baseDate);
     newEndDate.setDate(newEndDate.getDate() + Number(durationDays));
@@ -150,7 +158,7 @@ router.put('/:id/mark-paid', async (req, res) => {
     await member.save();
     await logAction(
       'Marked Paid',
-      `${member.name} (${member.gymCode}) — ₹${amountPaid}, ${durationDays} days${receiptNo ? `, Receipt #${receiptNo}` : ''}`,
+      `${member.name} (${member.gymCode}) — ₹${amountPaid}, ${durationDays} days, mode: ${mode}${receiptNo ? `, Receipt #${receiptNo}` : ''}`,
       req.adminEmail
     );
     res.json(member);

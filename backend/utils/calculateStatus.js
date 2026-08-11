@@ -5,7 +5,7 @@ function calculateStatus(member) {
   const daysPastExpiry = Math.floor((today - endDate) / msPerDay);
 
   if (member.renewalIntent === 'not_renewing') {
-    return { status: 'inactive', daysPastExpiry };
+    return { status: 'not_renewing', daysPastExpiry };
   }
 
   if (daysPastExpiry < 0) {

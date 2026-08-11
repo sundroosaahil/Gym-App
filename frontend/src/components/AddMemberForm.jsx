@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Loader2, Check } from 'lucide-react';
 import api from '../api/axiosConfig';
 import { durationOptions } from '../constants/durationOptions';
 import { toFullPhone } from '../utils/formatPhone';
@@ -16,6 +16,7 @@ function AddMemberForm({ onMemberAdded }) {
     receiptNo: ''
   });
   const [error, setError] = useState(null);
+  const [submitStatus, setSubmitStatus] = useState('idle'); // 'idle' | 'submitting' | 'success'
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -29,7 +30,9 @@ function AddMemberForm({ onMemberAdded }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (submitStatus !== 'idle') return; // guard against double-submit
     setError(null);
+    setSubmitStatus('submitting');
 
     const durationDays =
       formData.durationChoice === 'custom'
@@ -49,20 +52,24 @@ function AddMemberForm({ onMemberAdded }) {
         ...(formData.receiptNo.trim() && { receiptNo: formData.receiptNo.trim() })
       });
 
-      setFormData({
-        name: '',
-        residence: '',
-        phone: '',
-        amountPaid: '',
-        startDate: '',
-        durationChoice: '30',
-        customDays: '',
-        receiptNo: ''
-      });
-
-      onMemberAdded();
+      setSubmitStatus('success');
+      setTimeout(() => {
+        setFormData({
+          name: '',
+          residence: '',
+          phone: '',
+          amountPaid: '',
+          startDate: '',
+          durationChoice: '30',
+          customDays: '',
+          receiptNo: ''
+        });
+        setSubmitStatus('idle');
+        onMemberAdded();
+      }, 700);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to add member');
+      setSubmitStatus('idle');
     }
   }
 
@@ -167,9 +174,26 @@ function AddMemberForm({ onMemberAdded }) {
 
         <button
           type="submit"
-          className="md:col-span-3 bg-[#F2C230] text-black font-bold uppercase py-2.5 rounded hover:bg-[#C6FF3D] transition-colors"
+          disabled={submitStatus !== 'idle'}
+          className={`md:col-span-3 font-bold uppercase py-2.5 rounded transition-colors flex items-center justify-center gap-2 ${
+            submitStatus === 'success'
+              ? 'bg-green-500 text-white'
+              : 'bg-[#F2C230] text-black hover:bg-[#C6FF3D]'
+          } ${submitStatus === 'submitting' ? 'opacity-70 cursor-not-allowed' : ''}`}
         >
-          Add Member
+          {submitStatus === 'submitting' && (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Adding...
+            </>
+          )}
+          {submitStatus === 'success' && (
+            <>
+              <Check className="w-4 h-4" />
+              Added!
+            </>
+          )}
+          {submitStatus === 'idle' && 'Add Member'}
         </button>
       </form>
     </div>

@@ -64,7 +64,7 @@ function AdminDashboard() {
   const counts = {
     active: members.filter((m) => m.status === 'active').length,
     pending: members.filter((m) => m.status === 'pending').length,
-    inactive: members.filter((m) => m.status === 'inactive').length
+    inactive: members.filter((m) => m.status === 'inactive' || m.status === 'not_renewing').length
   };
 
   const filters = [
@@ -80,8 +80,10 @@ function AdminDashboard() {
         ? members
         : filter === 'renewals'
         ? [...members]
-            .filter((m) => !hideInactive || m.status !== 'inactive')
+            .filter((m) => !hideInactive || (m.status !== 'inactive' && m.status !== 'not_renewing'))
             .sort((a, b) => b.daysPastExpiry - a.daysPastExpiry)
+        : filter === 'inactive'
+        ? members.filter((m) => m.status === 'inactive' || m.status === 'not_renewing')
         : members.filter((m) => m.status === filter);
 
   const searchTerm = search.trim().toLowerCase();

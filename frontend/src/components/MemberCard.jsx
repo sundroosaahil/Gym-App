@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pencil, Trash2, MessageCircle } from 'lucide-react';
+import { Pencil, Trash2, MessageCircle, Loader2, Check } from 'lucide-react';
 import api from '../api/axiosConfig';
 import { durationOptions } from '../constants/durationOptions';
 import StatusBadge from './StatusBadge';
@@ -17,6 +17,8 @@ function MemberCard({ member, onUpdated }) {
   const [customDays, setCustomDays] = useState('');
   const [amountPaid, setAmountPaid] = useState('');
   const [markPaidReceiptNo, setMarkPaidReceiptNo] = useState('');
+  const [mode, setMode] = useState('renewal');
+  const [markPaidStatus, setMarkPaidStatus] = useState('idle'); // 'idle' | 'submitting' | 'success'
   const [error, setError] = useState(null);
 
   const latestReceiptNo =
@@ -38,22 +40,30 @@ function MemberCard({ member, onUpdated }) {
 
   async function handleMarkPaid(e) {
     e.preventDefault();
+    if (markPaidStatus !== 'idle') return; // guard against double-submit
     setError(null);
+    setMarkPaidStatus('submitting');
     const durationDays =
       durationChoice === 'custom' ? Number(customDays) : Number(durationChoice);
     try {
       await api.put(`/members/${member._id}/mark-paid`, {
         durationDays,
         amountPaid: Number(amountPaid),
+        mode,
         ...(markPaidReceiptNo.trim() && { receiptNo: markPaidReceiptNo.trim() })
       });
-      setShowMarkPaid(false);
-      setAmountPaid('');
-      setCustomDays('');
-      setMarkPaidReceiptNo('');
-      onUpdated();
+      setMarkPaidStatus('success');
+      setTimeout(() => {
+        setShowMarkPaid(false);
+        setAmountPaid('');
+        setCustomDays('');
+        setMarkPaidReceiptNo('');
+        setMarkPaidStatus('idle');
+        onUpdated();
+      }, 700);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to mark paid');
+      setMarkPaidStatus('idle');
     }
   }
 
@@ -175,6 +185,29 @@ function MemberCard({ member, onUpdated }) {
             <form onSubmit={handleMarkPaid} className="mt-3 pt-3 border-t border-[#2A2A2A] flex flex-wrap items-end gap-3">
               {error && <p className="text-red-400 text-sm w-full">{error}</p>}
               <div>
+                <label className="block text-xs text-[#999] uppercase mb-1">Start Date</label>
+                <div className="flex gap-1 bg-[#111] border border-[#333] rounded p-1">
+                  <button
+                    type="button"
+                    onClick={() => setMode('renewal')}
+                    className={`px-3 py-1.5 text-sm rounded transition-colors ${
+                      mode === 'renewal' ? 'bg-[#F2C230] text-black font-bold' : 'text-[#999] hover:text-[#F5F5F0]'
+                    }`}
+                  >
+                    Due Date
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMode('reset')}
+                    className={`px-3 py-1.5 text-sm rounded transition-colors ${
+                      mode === 'reset' ? 'bg-[#F2C230] text-black font-bold' : 'text-[#999] hover:text-[#F5F5F0]'
+                    }`}
+                  >
+                    Today
+                  </button>
+                </div>
+              </div>
+              <div>
                 <label className="block text-xs text-[#999] uppercase mb-1">Duration</label>
                 <select
                   value={durationChoice}
@@ -220,9 +253,26 @@ function MemberCard({ member, onUpdated }) {
               </div>
               <button
                 type="submit"
-                className="bg-[#C6FF3D] text-black text-sm font-bold uppercase px-4 py-2 rounded hover:bg-[#F2C230] transition-colors"
+                disabled={markPaidStatus !== 'idle'}
+                className={`text-sm font-bold uppercase px-4 py-2 rounded transition-colors flex items-center justify-center gap-2 min-w-[110px] ${
+                  markPaidStatus === 'success'
+                    ? 'bg-green-500 text-white'
+                    : 'bg-[#C6FF3D] text-black hover:bg-[#F2C230]'
+                } ${markPaidStatus === 'submitting' ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
-                Confirm
+                {markPaidStatus === 'submitting' && (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Saving...
+                  </>
+                )}
+                {markPaidStatus === 'success' && (
+                  <>
+                    <Check className="w-4 h-4" />
+                    Done!
+                  </>
+                )}
+                {markPaidStatus === 'idle' && 'Confirm'}
               </button>
             </form>
           )}
