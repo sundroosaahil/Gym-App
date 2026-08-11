@@ -10,6 +10,10 @@ const logRoutes = require('./routes/logRoutes');
 
 const app = express();
 
+// Render sits one proxy in front of us — trust that single hop only.
+// Must come before any middleware (like rate limiters) that reads req.ip.
+app.set('trust proxy', 1);
+
 const allowedOrigin = process.env.NODE_ENV === 'production'
   ? process.env.FRONTEND_URL
   : 'http://localhost:5173';
