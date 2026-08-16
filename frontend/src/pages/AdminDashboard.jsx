@@ -83,7 +83,9 @@ function AdminDashboard() {
             .filter((m) => !hideInactive || (m.status !== 'inactive' && m.status !== 'not_renewing'))
             .sort((a, b) => b.daysPastExpiry - a.daysPastExpiry)
         : filter === 'inactive'
-        ? members.filter((m) => m.status === 'inactive' || m.status === 'not_renewing')
+        ? members
+            .filter((m) => m.status === 'inactive' || m.status === 'not_renewing')
+            .sort((a, b) => a.daysPastExpiry - b.daysPastExpiry)
         : members.filter((m) => m.status === filter);
 
   const searchTerm = search.trim().toLowerCase();
