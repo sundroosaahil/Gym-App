@@ -63,6 +63,32 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Check for existing member(s) with the same name AND residence (case-insensitive).
+// Used by the Add Member form to warn the admin before creating a duplicate.
+// Matching on name alone would false-positive on common names in different
+// areas (e.g. two "Saahil"s — one Kashmir, one Delhi); matching on phone
+// doesn't work since many members share placeholder numbers.
+// Must be defined before GET /:id, or Express treats "check-duplicate" as an id.
+router.get('/check-duplicate', async (req, res) => {
+  try {
+    const { name, residence } = req.query;
+    const trimmedResidence = typeof residence === 'string' ? residence.trim() : '';
+    if (typeof name !== 'string' || !name.trim() || !trimmedResidence) {
+      // Can't disambiguate without a residence — skip rather than flooding
+      // the admin with false positives from every same-named, no-address member.
+      return res.json({ matches: [] });
+    }
+
+    const matches = await Member.find({ name: name.trim(), residence: trimmedResidence })
+      .collation({ locale: 'en', strength: 2 }) // case-insensitive exact match, no regex
+      .select('name gymCode residence');
+
+    res.json({ matches });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // GET one member by ID
 router.get('/:id', async (req, res) => {
   try {

@@ -18,6 +18,17 @@ router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { email, password, deviceModel } = req.body;
 
+    // Type + length guard — closes NoSQL operator injection on `email`
+    // (rejects objects like { "$ne": null }) and stops oversized `password`
+    // strings from being fed into bcrypt (long-password DoS).
+    if (
+      typeof email !== 'string' ||
+      typeof password !== 'string' ||
+      password.length > 128
+    ) {
+      return res.status(400).json({ error: 'Invalid email or password' });
+    }
+
     const admin = await Admin.findOne({ email });
     if (!admin) {
       return res.status(401).json({ error: 'Invalid email or password' });
@@ -38,7 +49,7 @@ router.post('/login', loginLimiter, async (req, res) => {
 
     res.cookie('token', token, {
       httpOnly: true,
-      sameSite: isProduction ? 'none' : 'strict',
+     sameSite: 'lax',
       secure: isProduction,
       maxAge: 7 * 24 * 60 * 60 * 1000
     });

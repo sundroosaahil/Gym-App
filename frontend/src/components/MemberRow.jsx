@@ -18,6 +18,7 @@ function MemberRow({ member, onUpdated }) {
   const [markPaidReceiptNo, setMarkPaidReceiptNo] = useState('');
   const [mode, setMode] = useState('renewal');
   const [markPaidStatus, setMarkPaidStatus] = useState('idle'); // 'idle' | 'submitting' | 'success'
+  const [notRenewingStatus, setNotRenewingStatus] = useState('idle'); // 'idle' | 'submitting' | 'success'
   const [error, setError] = useState(null);
 
   const latestReceiptNo =
@@ -67,8 +68,18 @@ function MemberRow({ member, onUpdated }) {
   }
 
   async function handleNotRenewing() {
-    await api.put(`/members/${member._id}/not-renewing`);
-    onUpdated();
+    if (notRenewingStatus !== 'idle') return; // guard against double-submit
+    setNotRenewingStatus('submitting');
+    try {
+      await api.put(`/members/${member._id}/not-renewing`);
+      setNotRenewingStatus('success');
+      setTimeout(() => {
+        setNotRenewingStatus('idle');
+        onUpdated();
+      }, 700);
+    } catch (err) {
+      setNotRenewingStatus('idle');
+    }
   }
 
   async function handleReactivate() {
@@ -121,52 +132,71 @@ function MemberRow({ member, onUpdated }) {
         </td>
         <td className="px-4 py-3">
           <div className="flex flex-wrap gap-2">
-            {showReminderButton && (
-              <a
-                href={buildWhatsAppReminderLink(member)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-[#25D366] text-white p-1.5 rounded hover:bg-[#20BD5A] transition-colors"
-                title="Send WhatsApp Reminder"
-              >
-                <MessageCircle className="w-3.5 h-3.5" />
-              </a>
-            )}
-            <button
-              onClick={() => setShowMarkPaid(!showMarkPaid)}
-              className="bg-[#F2C230] text-black text-xs font-bold uppercase px-3 py-1.5 rounded hover:bg-[#C6FF3D] transition-colors"
-            >
-              Mark Paid
-            </button>
             {member.renewalIntent === 'not_renewing' ? (
               <button
                 onClick={handleReactivate}
-                className="bg-[#2A2A2A] text-[#F5F5F0] text-xs font-bold uppercase px-3 py-1.5 rounded hover:bg-[#333] transition-colors"
+                className="bg-[#2A2A2A] text-[#F5F5F0] text-xs font-bold uppercase px-3 py-1.5 rounded hover:bg-[#333] active:scale-95 transition-all"
               >
                 Reactivate
               </button>
             ) : (
-              <button
-                onClick={handleNotRenewing}
-                className="bg-transparent border border-red-500/40 text-red-400 text-xs font-bold uppercase px-3 py-1.5 rounded hover:bg-red-500/10 transition-colors"
-              >
-                Not Renewing
-              </button>
+              <>
+                {showReminderButton && (
+                  <a
+                    href={buildWhatsAppReminderLink(member)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-[#25D366] text-white p-1.5 rounded hover:bg-[#20BD5A] transition-colors"
+                    title="Send WhatsApp Reminder"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                  </a>
+                )}
+                <button
+                  onClick={() => setShowMarkPaid(!showMarkPaid)}
+                  className="bg-[#F2C230] text-black text-xs font-bold uppercase px-3 py-1.5 rounded hover:bg-[#C6FF3D] transition-colors"
+                >
+                  Mark Paid
+                </button>
+                <button
+                  onClick={handleNotRenewing}
+                  disabled={notRenewingStatus !== 'idle'}
+                  className={`text-xs font-bold uppercase px-3 py-1.5 rounded flex items-center justify-center gap-1.5 transition-all active:scale-95 ${
+                    notRenewingStatus === 'success'
+                      ? 'bg-red-500/20 border border-red-500 text-red-300'
+                      : 'bg-transparent border border-red-500/40 text-red-400 hover:bg-red-500/10'
+                  } ${notRenewingStatus === 'submitting' ? 'opacity-70 cursor-not-allowed' : ''}`}
+                >
+                  {notRenewingStatus === 'submitting' && (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      Marking...
+                    </>
+                  )}
+                  {notRenewingStatus === 'success' && (
+                    <>
+                      <Check className="w-3.5 h-3.5" />
+                      Done
+                    </>
+                  )}
+                  {notRenewingStatus === 'idle' && 'Not Renewing'}
+                </button>
+                <button
+                  onClick={() => setShowEdit(!showEdit)}
+                  className="bg-[#2A2A2A] text-[#F5F5F0] p-1.5 rounded hover:bg-[#333] transition-colors"
+                  title="Edit"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="bg-transparent border border-red-500/40 text-red-400 p-1.5 rounded hover:bg-red-500/10 transition-colors"
+                  title="Delete"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </>
             )}
-            <button
-              onClick={() => setShowEdit(!showEdit)}
-              className="bg-[#2A2A2A] text-[#F5F5F0] p-1.5 rounded hover:bg-[#333] transition-colors"
-              title="Edit"
-            >
-              <Pencil className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={() => setShowDeleteConfirm(true)}
-              className="bg-transparent border border-red-500/40 text-red-400 p-1.5 rounded hover:bg-red-500/10 transition-colors"
-              title="Delete"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
           </div>
         </td>
       </tr>

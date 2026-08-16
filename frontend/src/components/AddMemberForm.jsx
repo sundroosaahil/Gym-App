@@ -17,6 +17,7 @@ function AddMemberForm({ onMemberAdded }) {
   });
   const [error, setError] = useState(null);
   const [submitStatus, setSubmitStatus] = useState('idle'); // 'idle' | 'submitting' | 'success'
+  const [duplicateMatches, setDuplicateMatches] = useState([]);
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -25,7 +26,28 @@ function AddMemberForm({ onMemberAdded }) {
       setFormData((prev) => ({ ...prev, phone: digitsOnly }));
       return;
     }
+    if (name === 'name' || name === 'residence') {
+      setDuplicateMatches([]); // stale warning — clear until re-checked on blur
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
+  }
+
+  async function handleDuplicateCheck() {
+    const trimmedName = formData.name.trim();
+    const trimmedResidence = formData.residence.trim();
+    if (!trimmedName || !trimmedResidence) {
+      setDuplicateMatches([]);
+      return;
+    }
+    try {
+      const res = await api.get('/members/check-duplicate', {
+        params: { name: trimmedName, residence: trimmedResidence }
+      });
+      setDuplicateMatches(res.data.matches || []);
+    } catch (err) {
+      // Non-critical — if the check itself fails, don't block the admin from adding
+      setDuplicateMatches([]);
+    }
   }
 
   async function handleSubmit(e) {
@@ -64,6 +86,7 @@ function AddMemberForm({ onMemberAdded }) {
           customDays: '',
           receiptNo: ''
         });
+        setDuplicateMatches([]);
         setSubmitStatus('idle');
         onMemberAdded();
       }, 700);
@@ -86,21 +109,32 @@ function AddMemberForm({ onMemberAdded }) {
       {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
 
       <form onSubmit={handleSubmit} className="grid md:grid-cols-3 gap-4">
-        <input
-          name="name"
-          placeholder="Name"
-          value={formData.name}
-          onChange={handleChange}
-          required
-          className={inputClass}
-        />
-        <input
-          name="residence"
-          placeholder="Residence"
-          value={formData.residence}
-          onChange={handleChange}
-          className={inputClass}
-        />
+        <div>
+          <input
+            name="name"
+            placeholder="Name"
+            value={formData.name}
+            onChange={handleChange}
+            onBlur={handleDuplicateCheck}
+            required
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <input
+            name="residence"
+            placeholder="Residence"
+            value={formData.residence}
+            onChange={handleChange}
+            onBlur={handleDuplicateCheck}
+            className={inputClass}
+          />
+          {duplicateMatches.length > 0 && (
+            <p className="text-yellow-400 text-xs mt-1">
+              ⚠ Already exists: {duplicateMatches.map((m) => `${m.name} (${m.gymCode})`).join(', ')}
+            </p>
+          )}
+        </div>
         <div className="flex">
           <span className="flex items-center bg-[#111] border border-r-0 border-[#333] rounded-l px-3 text-sm text-[#999]">
             +91
