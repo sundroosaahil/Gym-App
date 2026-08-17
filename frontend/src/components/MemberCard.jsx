@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pencil, Trash2, MessageCircle, Loader2, Check } from 'lucide-react';
+import { Pencil, Trash2, MessageCircle, Loader2, Check, UserX } from 'lucide-react';
 import api from '../api/axiosConfig';
 import { durationOptions } from '../constants/durationOptions';
 import StatusBadge from './StatusBadge';
@@ -35,9 +35,26 @@ function MemberCard({ member, onUpdated }) {
     receiptNo: latestReceiptNo || ''
   });
   const [editError, setEditError] = useState(null);
+  const [remindMessage, setRemindMessage] = useState(null);
 
-  const showReminderButton =
-    (member.status === 'pending' || member.status === 'inactive') && member.phone;
+  const hasPhone = Boolean(member.phone);
+
+  function handleRemindClick() {
+    if (member.status === 'active') {
+      showRemindMessage('This member is active no reminder needed.');
+      return;
+    }
+    if (!hasPhone) {
+      showRemindMessage('No phone number added for this member.');
+      return;
+    }
+    window.open(buildWhatsAppReminderLink(member), '_blank', 'noopener,noreferrer');
+  }
+
+  function showRemindMessage(msg) {
+    setRemindMessage(msg);
+    setTimeout(() => setRemindMessage(null), 2500);
+  }
 
   async function handleMarkPaid(e) {
     e.preventDefault();
@@ -153,17 +170,19 @@ function MemberCard({ member, onUpdated }) {
               </button>
             ) : (
               <>
-                {showReminderButton && (
-                  <a
-                    href={buildWhatsAppReminderLink(member)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-[#25D366] text-white flex items-center justify-center gap-2 text-sm font-bold uppercase py-3 rounded hover:bg-[#20BD5A] transition-colors col-span-2"
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    Send Reminder
-                  </a>
-                )}
+                <button
+                  onClick={handleRemindClick}
+                  className={`col-span-2 flex items-center justify-center gap-2 text-sm font-bold uppercase py-3 rounded border transition-colors ${
+                    member.status === 'active'
+                      ? 'border-[#333] text-[#555] hover:bg-[#2A2A2A]/50'
+                      : !hasPhone
+                      ? 'border-red-500/40 text-red-400 hover:bg-red-500/10'
+                      : 'border-[#25D366]/40 text-[#25D366] hover:bg-[#25D366]/10'
+                  }`}
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Remind
+                </button>
                 <button
                   onClick={() => setShowMarkPaid(!showMarkPaid)}
                   className="bg-[#F2C230] text-black text-sm font-bold uppercase py-3 rounded hover:bg-[#C6FF3D] transition-colors"
@@ -175,8 +194,8 @@ function MemberCard({ member, onUpdated }) {
                   disabled={notRenewingStatus !== 'idle'}
                   className={`text-sm font-bold uppercase py-3 rounded flex items-center justify-center gap-2 transition-all active:scale-95 ${
                     notRenewingStatus === 'success'
-                      ? 'bg-red-500/20 border border-red-500 text-red-300'
-                      : 'bg-transparent border border-red-500/40 text-red-400 hover:bg-red-500/10'
+                      ? 'bg-gray-500/30 border border-gray-400 text-gray-200'
+                      : 'bg-transparent border border-gray-500/40 text-gray-400 hover:bg-gray-500/10'
                   } ${notRenewingStatus === 'submitting' ? 'opacity-70 cursor-not-allowed' : ''}`}
                 >
                   {notRenewingStatus === 'submitting' && (
@@ -191,7 +210,12 @@ function MemberCard({ member, onUpdated }) {
                       Done
                     </>
                   )}
-                  {notRenewingStatus === 'idle' && 'Not Renewing'}
+                  {notRenewingStatus === 'idle' && (
+                    <>
+                      <UserX className="w-4 h-4" />
+                      Not Renewing
+                    </>
+                  )}
                 </button>
                 <button
                   onClick={() => setShowEdit(!showEdit)}
@@ -210,6 +234,10 @@ function MemberCard({ member, onUpdated }) {
               </>
             )}
           </div>
+
+          {remindMessage && (
+            <p className="text-xs text-[#999] mb-2">{remindMessage}</p>
+          )}
 
           {showMarkPaid && (
             <form onSubmit={handleMarkPaid} className="mt-3 pt-3 border-t border-[#2A2A2A] flex flex-wrap items-end gap-3">

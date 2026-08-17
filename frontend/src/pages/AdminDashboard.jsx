@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Clock, XCircle, LogOut, Search, FileText, Loader2 } from 'lucide-react';
+import { Users, Clock, XCircle, LogOut, Search, FileText, Loader2, ChevronDown } from 'lucide-react';
 import api from '../api/axiosConfig';
 import AddMemberForm from '../components/AddMemberForm';
 import MemberRow from '../components/MemberRow';
 import MemberCard from '../components/MemberCard';
-import LoadingScreen from '../components/LoadingScreen';
+import SkeletonCard from '../components/SkeletonCard';
+import SkeletonRow from '../components/SkeletonRow';
+import EmptyState from '../components/EmptyState';
 import { useAuth } from '../context/AuthContext';
 
 async function getClientDeviceModel() {
@@ -22,8 +24,9 @@ async function getClientDeviceModel() {
 
 function AdminDashboard() {
   const [members, setMembers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // true only until the first successful load
   const [error, setError] = useState(null);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
@@ -32,15 +35,21 @@ function AdminDashboard() {
   const [hideInactive, setHideInactive] = useState(true);
 
   function fetchMembers() {
-    setLoading(true);
+    // Only the very first load should show a loading state — every refetch
+    // after that (add/edit/mark-paid/etc. via onUpdated) happens quietly in
+    // the background so the whole dashboard doesn't flash back to a splash
+    // screen every time an admin taps a button.
+    if (!hasLoadedOnce) setLoading(true);
     api.get('/members')
       .then((response) => {
         setMembers(response.data);
         setLoading(false);
+        setHasLoadedOnce(true);
       })
       .catch((err) => {
         setError('Failed to load members');
         setLoading(false);
+        setHasLoadedOnce(true);
       });
   }
 
@@ -58,7 +67,6 @@ function AdminDashboard() {
     }
   }
 
-  if (loading) return <LoadingScreen />;
   if (error) return <p className="p-8 text-red-400">{error}</p>;
 
   const counts = {
@@ -181,20 +189,17 @@ const filteredMembers = searchTerm
         )}
 
 <div className="flex flex-wrap items-center justify-between gap-3 mb-4 mt-8">
-  <div className="flex gap-2 flex-wrap">
-    {filters.map(({ key, label }) => (
-      <button
-        key={key}
-        onClick={() => setFilter(key)}
-        className={`px-4 py-2 rounded text-sm font-bold uppercase tracking-wide transition-colors ${
-          filter === key
-            ? 'bg-[#F2C230] text-black'
-            : 'bg-[#1A1A1A] text-[#999] hover:text-[#F5F5F0]'
-        }`}
-      >
-        {label}
-      </button>
-    ))}
+  <div className="relative">
+    <select
+      value={filter}
+      onChange={(e) => setFilter(e.target.value)}
+      className="appearance-none bg-[#1A1A1A] text-[#F5F5F0] text-sm font-bold uppercase tracking-wide border border-[#333] rounded px-4 py-2 pr-9 cursor-pointer hover:border-[#555] transition-colors focus:outline-none focus:border-[#F2C230]"
+    >
+      {filters.map(({ key, label }) => (
+        <option key={key} value={key}>{label}</option>
+      ))}
+    </select>
+    <ChevronDown className="w-4 h-4 text-[#999] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
   </div>
 
   {filter === 'renewals' && (
@@ -218,26 +223,31 @@ const filteredMembers = searchTerm
 </div>
 
         {/* Desktop table */}
-        <div className="hidden md:block bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg overflow-hidden">
-          <table className="w-full text-left">
+        <div className="hidden md:block bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg overflow-x-auto">
+          <table className="w-full text-left border-collapse">
             <thead className="bg-[#111] text-[#999] text-xs uppercase tracking-wide">
               <tr>
-                <th className="px-4 py-3">Code</th>
-                <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">Residence</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Start Date</th>
-                <th className="px-4 py-3">End Date</th>
-                <th className="px-4 py-3">Days Past</th>
-                <th className="px-4 py-3">Amount Paid</th>
-                <th className="px-4 py-3">Actions</th>
+                <th className="border border-[#2A2A2A] px-4 py-3">Code</th>
+                <th className="border border-[#2A2A2A] px-4 py-3">Name</th>
+                <th className="border border-[#2A2A2A] px-4 py-3">Residence</th>
+                <th className="border border-[#2A2A2A] px-4 py-3">Status</th>
+                <th className="border border-[#2A2A2A] px-4 py-3">Start Date</th>
+                <th className="border border-[#2A2A2A] px-4 py-3">End Date</th>
+                <th className="border border-[#2A2A2A] px-4 py-3">Days Past</th>
+                <th className="border border-[#2A2A2A] px-4 py-3">Amount Paid</th>
               </tr>
             </thead>
             <tbody>
-              {filteredMembers.length === 0 ? (
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
+              ) : filteredMembers.length === 0 ? (
                 <tr>
-                  <td colSpan="9" className="px-4 py-8 text-center text-[#666]">
-                    No members found.
+                  <td colSpan="8">
+                    <EmptyState
+                      icon={Users}
+                      title="No members found"
+                      message={search ? 'Try a different search.' : 'Add your first member to get started.'}
+                    />
                   </td>
                 </tr>
               ) : (
@@ -251,8 +261,14 @@ const filteredMembers = searchTerm
 
         {/* Mobile cards */}
         <div className="md:hidden space-y-3">
-          {filteredMembers.length === 0 ? (
-            <p className="text-center text-[#666] py-8">No members found.</p>
+          {loading ? (
+            Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
+          ) : filteredMembers.length === 0 ? (
+            <EmptyState
+              icon={Users}
+              title="No members found"
+              message={search ? 'Try a different search.' : 'Add your first member to get started.'}
+            />
           ) : (
             filteredMembers.map((member) => (
               <MemberCard key={member._id} member={member} onUpdated={fetchMembers} />

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pencil, Trash2, MessageCircle, Loader2, Check } from 'lucide-react';
+import { Pencil, Trash2, MessageCircle, Loader2, Check, IndianRupee, UserX } from 'lucide-react';
 import api from '../api/axiosConfig';
 import { durationOptions } from '../constants/durationOptions';
 import StatusBadge from './StatusBadge';
@@ -34,9 +34,26 @@ function MemberRow({ member, onUpdated }) {
     receiptNo: latestReceiptNo || ''
   });
   const [editError, setEditError] = useState(null);
+  const [remindMessage, setRemindMessage] = useState(null);
 
-  const showReminderButton =
-    (member.status === 'pending' || member.status === 'inactive') && member.phone;
+  const hasPhone = Boolean(member.phone);
+
+  function handleRemindClick() {
+    if (member.status === 'active') {
+      showRemindMessage('This member is active no reminder needed.');
+      return;
+    }
+    if (!hasPhone) {
+      showRemindMessage('No phone number added for this member.');
+      return;
+    }
+    window.open(buildWhatsAppReminderLink(member), '_blank', 'noopener,noreferrer');
+  }
+
+  function showRemindMessage(msg) {
+    setRemindMessage(msg);
+    setTimeout(() => setRemindMessage(null), 2500);
+  }
 
   async function handleMarkPaid(e) {
     e.preventDefault();
@@ -116,94 +133,112 @@ function MemberRow({ member, onUpdated }) {
 
   return (
     <>
-      <tr className={`border-t border-[#2A2A2A] hover:bg-[#222] transition-colors ${
+      <tr className={`${
         member.status === 'pending' ? 'bg-orange-500/5' : ''
       }`}>
-        <td className="px-4 py-3 font-mono text-[#999]">{member.gymCode}</td>
-        <td className="px-4 py-3 font-semibold">{member.name}</td>
-        <td className="px-4 py-3 text-[#999]">{member.residence || '—'}</td>
-        <td className="px-4 py-3"><StatusBadge status={member.status} /></td>
-        <td className="px-4 py-3 text-[#999]">{formatDate(member.startDate)}</td>
-        <td className="px-4 py-3 text-[#999]">{formatDate(member.endDate)}</td>
-        <td className="px-4 py-3 text-[#999]">{member.daysPastExpiry}</td>
-        <td className="px-4 py-3 text-[#999]">
+        <td className="border border-[#2A2A2A] px-4 py-3 font-mono text-[#999]">{member.gymCode}</td>
+        <td className="border border-[#2A2A2A] px-4 py-3 font-semibold">{member.name}</td>
+        <td className="border border-[#2A2A2A] px-4 py-3 text-[#999]">{member.residence || '—'}</td>
+        <td className="border border-[#2A2A2A] px-4 py-3"><StatusBadge status={member.status} /></td>
+        <td className="border border-[#2A2A2A] px-4 py-3 text-[#999]">{formatDate(member.startDate)}</td>
+        <td className="border border-[#2A2A2A] px-4 py-3 text-[#999]">{formatDate(member.endDate)}</td>
+        <td className="border border-[#2A2A2A] px-4 py-3 text-[#999]">{member.daysPastExpiry}</td>
+        <td className="border border-[#2A2A2A] px-4 py-3 text-[#999]">
           ₹{member.amountPaid}
           <div className="text-xs text-[#666]">Rcpt: {latestReceiptNo || '—'}</div>
         </td>
-        <td className="px-4 py-3">
-          <div className="flex flex-wrap gap-2">
+      </tr>
+
+      <tr>
+        <td colSpan="8" className="border border-t-0 border-[#2A2A2A] border-b-2 border-b-[#333] px-4 py-3">
+          <div className="flex items-stretch gap-2">
             {member.renewalIntent === 'not_renewing' ? (
               <button
                 onClick={handleReactivate}
-                className="bg-[#2A2A2A] text-[#F5F5F0] text-xs font-bold uppercase px-3 py-1.5 rounded hover:bg-[#333] active:scale-95 transition-all"
+                className="flex-1 bg-[#2A2A2A] text-[#F5F5F0] text-sm font-bold uppercase py-2.5 rounded hover:bg-[#333] active:scale-95 transition-all"
               >
                 Reactivate
               </button>
             ) : (
               <>
-                {showReminderButton && (
-                  <a
-                    href={buildWhatsAppReminderLink(member)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-[#25D366] text-white p-1.5 rounded hover:bg-[#20BD5A] transition-colors"
-                    title="Send WhatsApp Reminder"
-                  >
-                    <MessageCircle className="w-3.5 h-3.5" />
-                  </a>
-                )}
+                <button
+                  onClick={handleRemindClick}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded border text-sm font-bold uppercase transition-colors ${
+                    member.status === 'active'
+                      ? 'border-[#333] text-[#555] hover:bg-[#2A2A2A]/50'
+                      : !hasPhone
+                      ? 'border-red-500/40 text-red-400 hover:bg-red-500/10'
+                      : 'border-[#25D366]/40 text-[#25D366] hover:bg-[#25D366]/10'
+                  }`}
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Remind
+                </button>
                 <button
                   onClick={() => setShowMarkPaid(!showMarkPaid)}
-                  className="bg-[#F2C230] text-black text-xs font-bold uppercase px-3 py-1.5 rounded hover:bg-[#C6FF3D] transition-colors"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded border border-[#F2C230]/40 text-[#F2C230] text-sm font-bold uppercase hover:bg-[#F2C230]/10 transition-colors"
                 >
+                  <IndianRupee className="w-4 h-4" />
                   Mark Paid
                 </button>
                 <button
                   onClick={handleNotRenewing}
                   disabled={notRenewingStatus !== 'idle'}
-                  className={`text-xs font-bold uppercase px-3 py-1.5 rounded flex items-center justify-center gap-1.5 transition-all active:scale-95 ${
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded border text-sm font-bold uppercase transition-all active:scale-95 ${
                     notRenewingStatus === 'success'
-                      ? 'bg-red-500/20 border border-red-500 text-red-300'
-                      : 'bg-transparent border border-red-500/40 text-red-400 hover:bg-red-500/10'
+                      ? 'border-gray-400 bg-gray-500/30 text-gray-200'
+                      : 'border-gray-500/40 text-gray-400 hover:bg-gray-500/10'
                   } ${notRenewingStatus === 'submitting' ? 'opacity-70 cursor-not-allowed' : ''}`}
                 >
                   {notRenewingStatus === 'submitting' && (
                     <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                       Marking...
                     </>
                   )}
                   {notRenewingStatus === 'success' && (
                     <>
-                      <Check className="w-3.5 h-3.5" />
+                      <Check className="w-4 h-4" />
                       Done
                     </>
                   )}
-                  {notRenewingStatus === 'idle' && 'Not Renewing'}
+                  {notRenewingStatus === 'idle' && (
+                    <>
+                      <UserX className="w-4 h-4" />
+                      Not Renewing
+                    </>
+                  )}
                 </button>
                 <button
                   onClick={() => setShowEdit(!showEdit)}
-                  className="bg-[#2A2A2A] text-[#F5F5F0] p-1.5 rounded hover:bg-[#333] transition-colors"
-                  title="Edit"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded border border-[#333] text-[#999] text-sm font-bold uppercase hover:bg-[#2A2A2A] hover:text-[#F5F5F0] transition-colors"
                 >
-                  <Pencil className="w-3.5 h-3.5" />
+                  <Pencil className="w-4 h-4" />
+                  Edit
                 </button>
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="bg-transparent border border-red-500/40 text-red-400 p-1.5 rounded hover:bg-red-500/10 transition-colors"
-                  title="Delete"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded border border-red-500/40 text-red-400 text-sm font-bold uppercase hover:bg-red-500/10 transition-colors"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <Trash2 className="w-4 h-4" />
+                  Delete
                 </button>
               </>
             )}
           </div>
+          {remindMessage && (
+            <p className="text-xs text-[#999] mt-2">{remindMessage}</p>
+          )}
         </td>
+      </tr>
+
+      <tr>
+        <td colSpan="8" className="h-2 bg-[#0D0D0D] p-0 border-0"></td>
       </tr>
 
       {showMarkPaid && (
         <tr className="bg-[#111]">
-          <td colSpan="9" className="px-4 py-4">
+          <td colSpan="8" className="px-4 py-4">
             <form onSubmit={handleMarkPaid} className="flex flex-wrap items-end gap-3">
               {error && <p className="text-red-400 text-sm w-full">{error}</p>}
               <div>
@@ -303,7 +338,7 @@ function MemberRow({ member, onUpdated }) {
 
       {showEdit && (
         <tr className="bg-[#111]">
-          <td colSpan="9" className="px-4 py-4">
+          <td colSpan="8" className="px-4 py-4">
             <form onSubmit={handleEditSubmit} className="flex flex-wrap items-end gap-3">
               {editError && <p className="text-red-400 text-sm w-full">{editError}</p>}
               <div>
