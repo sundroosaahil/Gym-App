@@ -105,7 +105,7 @@ function PublicHome() {
                   <span
                     key={i}
                     className="text-transparent text-[6rem] md:text-[7rem] font-black uppercase leading-none px-8"
-                    style={{ WebkitTextStroke: '2px rgba(242,194,48,0.3)' }}
+                    style={{ WebkitTextStroke: '2px rgba(242,194,48,0.9)' }}
                   >
                     Bodyworks Gym
                   </span>
@@ -124,7 +124,7 @@ function PublicHome() {
                   <span
                     key={i}
                     className="text-transparent text-[5rem] md:text-[6rem] font-black uppercase leading-none px-8"
-                    style={{ WebkitTextStroke: '2px rgba(242,194,48,0.25)' }}
+                    style={{ WebkitTextStroke: '2px rgba(242,194,48,0.8)' }}
                   >
                     Bodyworks Gym
                   </span>
@@ -143,7 +143,7 @@ function PublicHome() {
                   <span
                     key={i}
                     className="text-transparent text-[5rem] md:text-[6rem] font-black uppercase leading-none px-8"
-                    style={{ WebkitTextStroke: '2px rgba(242,194,48,0.25)' }}
+                    style={{ WebkitTextStroke: '2px rgba(242,194,48,0.9)' }}
                   >
                     Bodyworks Gym
                   </span>
