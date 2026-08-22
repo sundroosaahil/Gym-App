@@ -1,7 +1,21 @@
 @import "tailwindcss";
 
-@theme {
+:root {
   --animate-dumbbell-pulse: dumbbell-pulse 0.6s ease-in-out infinite;
+  --animate-fade-up: fade-up 0.7s ease-out forwards;
+  --animate-marquee: marquee 22s linear infinite;
+}
+
+.animate-dumbbell-pulse {
+  animation: var(--animate-dumbbell-pulse);
+}
+
+.animate-fade-up {
+  animation: var(--animate-fade-up);
+}
+
+.animate-marquee {
+  animation: var(--animate-marquee);
 }
 
 @keyframes dumbbell-pulse {
@@ -10,5 +24,33 @@
   }
   50% {
     transform: scale(1.2) rotate(-10deg);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
