@@ -70,6 +70,7 @@ function PublicHome() {
   const [plansRef, plansInView] = useInView();
   const [mapRef, mapInView] = useInView();
   const [activeTab, setActiveTab] = useState('strength');
+  const [marqueePaused, setMarqueePaused] = useState(false);
 
   const activePlans = activeTab === 'strength' ? strengthPlans : strengthCardioPlans;
 
@@ -84,7 +85,7 @@ function PublicHome() {
         }}
       />
 
-           <section className="relative overflow-hidden">
+      <section className="relative overflow-hidden">
         <div
           className="absolute inset-0"
           style={{
@@ -92,19 +93,24 @@ function PublicHome() {
           }}
         />
 
-        {/* Continuous scrolling wordmark, pauses on hover */}
-                {/* Scrolling wordmark wall, pauses on hover */}
-        <div className="group absolute inset-0 flex flex-col justify-around overflow-hidden" aria-hidden="true">
+               {/* Scrolling wordmark wall, pauses on hover (desktop) or tap (mobile) */}
+        <div
+          className="absolute inset-0 flex flex-col justify-around overflow-hidden cursor-pointer"
+          aria-hidden="true"
+          onMouseEnter={() => setMarqueePaused(true)}
+          onMouseLeave={() => setMarqueePaused(false)}
+          onClick={() => setMarqueePaused((p) => !p)}
+        >
           <div
-            className="flex animate-marquee group-hover:[animation-play-state:paused] whitespace-nowrap opacity-[0.12]"
-            style={{ animationDuration: '24s' }}
+            className="flex animate-marquee whitespace-nowrap opacity-[0.14]"
+            style={{ animationDuration: '20s', animationPlayState: marqueePaused ? 'paused' : 'running' }}
           >
             {[0, 1].map((groupIdx) => (
               <div key={groupIdx} className="flex shrink-0">
                 {[0, 1, 2, 3].map((i) => (
                   <span
                     key={i}
-                    className="text-transparent text-[6rem] md:text-[7rem] font-black uppercase leading-none px-8"
+                    className="text-transparent text-[4rem] sm:text-[5.5rem] md:text-[6rem] lg:text-[7rem] font-black uppercase leading-none px-8"
                     style={{ WebkitTextStroke: '2px rgba(242,194,48,0.9)' }}
                   >
                     Bodyworks Gym
@@ -115,15 +121,15 @@ function PublicHome() {
           </div>
 
           <div
-            className="flex animate-marquee [animation-direction:reverse] group-hover:[animation-play-state:paused] whitespace-nowrap opacity-[0.08]"
-            style={{ animationDuration: '30s' }}
+            className="flex animate-marquee [animation-direction:reverse] whitespace-nowrap opacity-[0.09]"
+            style={{ animationDuration: '26s', animationPlayState: marqueePaused ? 'paused' : 'running' }}
           >
             {[0, 1].map((groupIdx) => (
               <div key={groupIdx} className="flex shrink-0">
                 {[0, 1, 2, 3].map((i) => (
                   <span
                     key={i}
-                    className="text-transparent text-[5rem] md:text-[6rem] font-black uppercase leading-none px-8"
+                    className="text-transparent text-[3.5rem] sm:text-[5rem] md:text-[6rem] font-black uppercase leading-none px-8"
                     style={{ WebkitTextStroke: '2px rgba(242,194,48,0.8)' }}
                   >
                     Bodyworks Gym
@@ -134,16 +140,35 @@ function PublicHome() {
           </div>
 
           <div
-            className="flex animate-marquee group-hover:[animation-play-state:paused] whitespace-nowrap opacity-[0.1]"
-            style={{ animationDuration: '18s' }}
+            className="flex animate-marquee whitespace-nowrap opacity-[0.11]"
+            style={{ animationDuration: '16s', animationPlayState: marqueePaused ? 'paused' : 'running' }}
           >
             {[0, 1].map((groupIdx) => (
               <div key={groupIdx} className="flex shrink-0">
                 {[0, 1, 2, 3].map((i) => (
                   <span
                     key={i}
-                    className="text-transparent text-[5rem] md:text-[6rem] font-black uppercase leading-none px-8"
+                    className="text-transparent text-[3rem] sm:text-[4.5rem] md:text-[5rem] font-black uppercase leading-none px-8"
                     style={{ WebkitTextStroke: '2px rgba(242,194,48,0.9)' }}
+                  >
+                    Bodyworks Gym
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
+
+          <div
+            className="flex animate-marquee [animation-direction:reverse] whitespace-nowrap opacity-[0.07]"
+            style={{ animationDuration: '34s', animationPlayState: marqueePaused ? 'paused' : 'running' }}
+          >
+            {[0, 1].map((groupIdx) => (
+              <div key={groupIdx} className="flex shrink-0">
+                {[0, 1, 2, 3].map((i) => (
+                  <span
+                    key={i}
+                    className="text-transparent text-[2.5rem] sm:text-[3.5rem] md:text-[4rem] font-black uppercase leading-none px-8"
+                    style={{ WebkitTextStroke: '2px rgba(242,194,48,0.75)' }}
                   >
                     Bodyworks Gym
                   </span>
@@ -202,13 +227,6 @@ function PublicHome() {
           plansInView ? 'opacity-100' : 'opacity-0 translate-y-6'
         }`}
       >
-        <div
-          className="absolute -left-16 top-10 w-64 h-64 opacity-[0.05] pointer-events-none"
-          style={{
-            backgroundImage: 'repeating-linear-gradient(45deg, #F2C230, #F2C230 14px, transparent 14px, transparent 28px)'
-          }}
-        />
-
         <h2 className="relative text-3xl font-black uppercase tracking-tight text-[#F2C230] mb-4 text-center">
           Membership Plans
         </h2>
