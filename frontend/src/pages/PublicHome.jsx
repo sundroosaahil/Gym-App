@@ -7,39 +7,22 @@ import ContactButton from '../components/ContactButton';
 import { useInView } from '../hooks/useInView';
 import { GYM_PHONE_DISPLAY, GYM_PHONE } from '../constants/gymInfo';
 
-const strengthPlans = [
-  { label: '1 Month', price: '₹1200' },
-  { label: '3 Months', price: '₹2800' },
-  { label: '6 Months', price: '₹5600' },
-  { label: '1 Year', price: '₹11200' }
+const durationTiers = [
+  { key: '1m', label: '1 Month', months: 1, discount: 0 },
+  { key: '3m', label: '3 Months', months: 3, discount: 0.2 },
+  { key: '6m', label: '6 Months', months: 6, discount: 0.3, popular: true },
+  { key: '1y', label: '1 Year', months: 12, discount: 0.35 }
 ];
 
-const strengthCardioPlans = [
-  { label: '1 Month', price: '₹1500' },
-  { label: '3 Months', price: '₹3700' },
-  { label: '6 Months', price: '₹7398', popular: true },
-  { label: '1 Year', price: '₹14796' }
-];
-
-function PlanCard({ plan }) {
-  return (
-    <div
-      className={`relative bg-[#1A1A1A] border-2 rounded p-6 text-center transition-all duration-300 hover:-translate-y-1 ${
-        plan.popular
-          ? 'border-[#C6FF3D] shadow-[0_0_25px_rgba(198,255,61,0.15)] hover:shadow-[0_0_35px_rgba(198,255,61,0.3)]'
-          : 'border-[#F2C230] hover:shadow-[0_0_25px_rgba(242,194,48,0.2)]'
-      }`}
-    >
-      {plan.popular && (
-        <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#C6FF3D] text-black text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full">
-          Most Popular
-        </span>
-      )}
-      <p className="text-[#C6FF3D] font-bold uppercase text-sm">{plan.label}</p>
-      <p className="text-[#F5F5F0] text-2xl font-black mt-2">{plan.price}</p>
-    </div>
-  );
+function buildPlans(monthlyRate) {
+  return durationTiers.map((tier) => ({
+    ...tier,
+    price: Math.round(monthlyRate * tier.months * (1 - tier.discount))
+  }));
 }
+
+const strengthPlans = buildPlans(1200);
+const strengthCardioPlans = buildPlans(1500);
 
 function PlanToggle({ active, onChange }) {
   const options = [
@@ -66,10 +49,56 @@ function PlanToggle({ active, onChange }) {
   );
 }
 
+function PricingDisplay({ plans, selectedIndex, onSelect }) {
+  const selected = plans[selectedIndex];
+
+  return (
+    <div className="max-w-2xl mx-auto">
+      <div className="relative grid grid-cols-4 bg-[#1A1A1A] border-2 border-[#F2C230] rounded-full p-1 mt-8">
+        <div
+          className="absolute inset-y-1 w-1/4 bg-[#F2C230] rounded-full transition-transform duration-300 ease-out"
+          style={{ transform: `translateX(${selectedIndex * 100}%)` }}
+        />
+        {plans.map((plan, i) => (
+          <button
+            key={plan.key}
+            onClick={() => onSelect(i)}
+            className={`relative z-10 py-3 text-xs sm:text-sm font-bold uppercase transition-colors ${
+              i === selectedIndex ? 'text-black' : 'text-[#F5F5F0] hover:text-[#F2C230]'
+            }`}
+          >
+            {plan.popular && (
+              <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] font-black uppercase text-[#F2C230] whitespace-nowrap">
+                ★ Popular
+              </span>
+            )}
+            {plan.label}
+          </button>
+        ))}
+      </div>
+
+      <div key={selected.key} className="animate-fade-up text-center mt-10">
+        <p className="text-6xl md:text-7xl font-black text-[#F5F5F0]">
+          ₹{selected.price.toLocaleString('en-IN')}
+        </p>
+        <p className="text-[#C6FF3D] font-semibold mt-2">
+          ₹{Math.round(selected.price / selected.months).toLocaleString('en-IN')} / month
+        </p>
+        {selected.discount > 0 && (
+          <span className="inline-block mt-3 bg-[#C6FF3D] text-black text-xs font-black uppercase px-3 py-1 rounded-full">
+            {Math.round(selected.discount * 100)}% off monthly rate
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function PublicHome() {
   const [plansRef, plansInView] = useInView();
   const [mapRef, mapInView] = useInView();
   const [activeTab, setActiveTab] = useState('strength');
+  const [durationIndex, setDurationIndex] = useState(0);
   const [marqueePaused, setMarqueePaused] = useState(false);
 
   const activePlans = activeTab === 'strength' ? strengthPlans : strengthCardioPlans;
@@ -93,7 +122,6 @@ function PublicHome() {
           }}
         />
 
-               {/* Scrolling wordmark wall, pauses on hover (desktop) or tap (mobile) */}
         <div
           className="absolute inset-0 flex flex-col justify-around overflow-hidden cursor-pointer"
           aria-hidden="true"
@@ -243,15 +271,9 @@ function PublicHome() {
           </ul>
         </div>
 
-        <div className="relative max-w-4xl mx-auto">
-          <PlanToggle active={activeTab} onChange={setActiveTab} />
+        <PlanToggle active={activeTab} onChange={setActiveTab} />
 
-          <div key={activeTab} className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-up">
-            {activePlans.map((plan) => (
-              <PlanCard key={plan.label} plan={plan} />
-            ))}
-          </div>
-        </div>
+        <PricingDisplay plans={activePlans} selectedIndex={durationIndex} onSelect={setDurationIndex} />
 
         <div className="relative flex justify-center mt-10">
           <ContactButton variant="button" />

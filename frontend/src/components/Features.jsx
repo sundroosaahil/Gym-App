@@ -1,72 +1,88 @@
-import { Dumbbell, Users, Snowflake, Lock, ShieldCheck, Award } from 'lucide-react';
-import { useInView } from '../hooks/useInView';
+import { useState } from 'react';
+import { Dumbbell, Users, Snowflake, Lock, ShieldCheck, Award, ChevronLeft, ChevronRight } from 'lucide-react';
+
+const images = ['/images/gym-1.jpg', '/images/gym-2.jpg', '/images/gym-3.jpg'];
 
 const features = [
-  { label: 'Advanced gym equipment', icon: Dumbbell },
-  { label: 'Friendly environment', icon: Users },
-  { label: 'Fully air conditioned', icon: Snowflake },
-  { label: 'Locker facility', icon: Lock },
-  { label: 'Trusted supplements', icon: ShieldCheck },
-  { label: 'Experienced trainers', icon: Award }
+  { label: 'Advanced gym equipment', icon: Dumbbell, image: images[0] },
+  { label: 'Friendly environment', icon: Users, image: images[1] },
+  { label: 'Fully air conditioned', icon: Snowflake, image: images[2] },
+  { label: 'Locker facility', icon: Lock, image: images[0] },
+  { label: 'Trusted supplements', icon: ShieldCheck, image: images[1] },
+  { label: 'Experienced trainers', icon: Award, image: images[2] }
 ];
 
 function Features() {
-  const [ref, inView] = useInView();
+  const [active, setActive] = useState(0);
+  const Active = features[active];
 
   return (
-    <section ref={ref} className="px-6 py-16 bg-[#1A1A1A]">
-      <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-10 items-start">
-        <div
-          className={`grid grid-cols-2 gap-3 transition-opacity duration-700 ${
-            inView ? 'opacity-100' : 'opacity-0 -translate-x-6'
+    <section className="relative h-[32rem] md:h-[36rem] overflow-hidden">
+      {features.map((f, i) => (
+        <img
+          key={f.label}
+          src={f.image}
+          alt=""
+          aria-hidden="true"
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
+            i === active ? 'opacity-100' : 'opacity-0'
           }`}
+        />
+      ))}
+
+      <div className="absolute inset-0 bg-black/70" />
+      <div
+        className="absolute inset-0"
+        style={{ background: 'radial-gradient(circle at 50% 30%, rgba(242,194,48,0.15), transparent 60%)' }}
+      />
+
+      <div className="relative h-full flex flex-col items-center justify-center px-6 text-center">
+        <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight mb-8">
+          <span className="text-transparent" style={{ WebkitTextStroke: '2px #F2C230' }}>
+            Why
+          </span>{' '}
+          <span className="text-[#F5F5F0]">Bodyworks</span>
+        </h2>
+
+        <div key={active} className="animate-fade-up flex flex-col items-center gap-4">
+          <Active.icon className="w-12 h-12 text-[#C6FF3D]" strokeWidth={1.5} />
+          <p className="text-2xl md:text-3xl font-bold text-[#F5F5F0]">{Active.label}</p>
+        </div>
+      </div>
+
+            <div className="absolute bottom-8 inset-x-0 flex items-center justify-center gap-6">
+        <button
+          onClick={() => setActive((active - 1 + features.length) % features.length)}
+          aria-label="Previous feature"
+          className="w-9 h-9 flex items-center justify-center rounded-full border-2 border-[#F5F5F0]/30 text-[#F5F5F0] hover:border-[#F2C230] hover:text-[#F2C230] transition-colors"
         >
-          <div className="col-span-2 overflow-hidden rounded">
-            <img
-              src="/images/gym-1.jpg"
-              alt="Bodyworks Gym cardio area"
-              className="w-full h-48 object-cover transition-transform duration-500 hover:scale-105"
-            />
-          </div>
-          <div className="overflow-hidden rounded">
-            <img
-              src="/images/gym-2.jpg"
-              alt="Bodyworks Gym weights floor"
-              className="w-full h-40 object-cover transition-transform duration-500 hover:scale-105"
-            />
-          </div>
-          <div className="overflow-hidden rounded">
-            <img
-              src="/images/gym-3.jpg"
-              alt="Bodyworks Gym interior"
-              className="w-full h-40 object-cover transition-transform duration-500 hover:scale-105"
-            />
-          </div>
-        </div>
+          <ChevronLeft className="w-5 h-5" />
+        </button>
 
-        <div>
-          <h2 className="text-4xl font-black uppercase tracking-tight leading-tight mb-8">
-            <span className="text-transparent" style={{ WebkitTextStroke: '2px #F2C230' }}>
-              Why
-            </span>{' '}
-            <span className="text-[#F5F5F0]">Bodyworks</span>
-          </h2>
-
-          <div className="grid grid-cols-2 gap-3">
-            {features.map(({ label, icon: Icon }, i) => (
-              <div
-                key={label}
-                className={`bg-black border-2 border-[#F2C230]/40 rounded-lg p-4 flex flex-col items-start gap-2 transition-all duration-500 hover:border-[#F2C230] hover:-translate-y-1 ${
-                  inView ? 'opacity-100' : 'opacity-0 translate-y-4'
+        <div className="flex items-center gap-2.5">
+          {features.map((f, i) => (
+            <button
+              key={f.label}
+              onClick={() => setActive(i)}
+              aria-label={`Show ${f.label}`}
+              className="p-1.5"
+            >
+              <span
+                className={`block rounded-full transition-all duration-300 ${
+                  i === active ? 'w-6 h-2.5 bg-[#F2C230]' : 'w-2.5 h-2.5 bg-[#F5F5F0]/40 hover:bg-[#F5F5F0]/70'
                 }`}
-                style={{ transitionDelay: inView ? `${i * 80}ms` : '0ms' }}
-              >
-                <Icon className="w-6 h-6 text-[#C6FF3D]" strokeWidth={2} />
-                <span className="text-[#F5F5F0] text-sm leading-snug">{label}</span>
-              </div>
-            ))}
-          </div>
+              />
+            </button>
+          ))}
         </div>
+
+        <button
+          onClick={() => setActive((active + 1) % features.length)}
+          aria-label="Next feature"
+          className="w-9 h-9 flex items-center justify-center rounded-full border-2 border-[#F5F5F0]/30 text-[#F5F5F0] hover:border-[#F2C230] hover:text-[#F2C230] transition-colors"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
       </div>
     </section>
   );
