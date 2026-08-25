@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Eye, EyeOff, Dumbbell, CheckCircle } from 'lucide-react';
+import { Lock, Eye, EyeOff, Dumbbell } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const ADMIN_HEADLINE = ['The', 'Engine Room'];
-const ADMIN_TAGLINE = 'Where the day-to-day gets done.';
+const ADMIN_HEADLINE = ['Front Desk'];
+const ADMIN_TAGLINE = 'Members, payments, and everything in between.';
 
 async function getClientDeviceModel() {
   if (navigator.userAgentData?.getHighEntropyValues) {
@@ -24,7 +24,6 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [loginSuccess, setLoginSuccess] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -36,11 +35,10 @@ function Login() {
     try {
       const deviceModel = await getClientDeviceModel();
       await login(email, password, deviceModel);
-      setIsLoading(false);
-      setLoginSuccess(true);
-      setTimeout(() => navigate('/admin'), 550);
+      navigate('/admin');
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed');
+    } finally {
       setIsLoading(false);
     }
   }
@@ -50,6 +48,7 @@ function Login() {
 
   return (
     <div className="min-h-screen bg-black lg:grid lg:grid-cols-2">
+      {/* Compact brand banner — phones and tablets (below lg) */}
       <div className="lg:hidden relative overflow-hidden">
         <div
           className="h-2 w-full"
@@ -88,6 +87,7 @@ function Login() {
         </div>
       </div>
 
+      {/* Full brand panel — lg and up */}
       <div className="relative hidden lg:flex flex-col justify-between overflow-hidden p-12">
         <div
           className="absolute inset-0"
@@ -131,6 +131,7 @@ function Login() {
         </p>
       </div>
 
+      {/* Form panel — every screen size */}
       <div className="flex items-center justify-center px-6 py-12 sm:py-16">
         <div className="w-full max-w-sm animate-fade-up opacity-0">
           <div className="mb-8 lg:mb-10">
@@ -152,7 +153,7 @@ function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              disabled={isLoading || loginSuccess}
+              disabled={isLoading}
               className={inputClass}
             />
 
@@ -164,13 +165,13 @@ function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                disabled={isLoading || loginSuccess}
+                disabled={isLoading}
                 className={`${inputClass} pr-11`}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                disabled={isLoading || loginSuccess}
+                disabled={isLoading}
                 className="absolute right-1 top-1/2 -translate-y-1/2 text-[#999] hover:text-[#F5F5F0] transition-colors"
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -179,19 +180,10 @@ function Login() {
 
             <button
               type="submit"
-              disabled={isLoading || loginSuccess}
-              className={`w-full font-bold uppercase py-3 rounded transition-all disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
-                loginSuccess
-                  ? 'bg-[#C6FF3D] text-black'
-                  : 'bg-[#F2C230] text-black hover:bg-[#C6FF3D] hover:-translate-y-0.5 disabled:opacity-90 disabled:translate-y-0'
-              }`}
+              disabled={isLoading}
+              className="w-full bg-[#F2C230] text-black font-bold uppercase py-3 rounded hover:bg-[#C6FF3D] hover:-translate-y-0.5 transition-all disabled:opacity-90 disabled:cursor-not-allowed disabled:translate-y-0 flex items-center justify-center gap-2"
             >
-              {loginSuccess ? (
-                <>
-                  <CheckCircle className="w-4 h-4" />
-                  Welcome back
-                </>
-              ) : isLoading ? (
+              {isLoading ? (
                 <>
                   <Dumbbell className="w-4 h-4 animate-dumbbell-pulse" />
                   Logging In...
