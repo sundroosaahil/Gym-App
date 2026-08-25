@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Dumbbell, Users, Snowflake, Lock, ShieldCheck, Award, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const images = ['/images/gym-1.jpg', '/images/gym-2.jpg', '/images/gym-3.jpg'];
@@ -12,12 +12,56 @@ const features = [
   { label: 'Experienced trainers', icon: Award, image: images[2] }
 ];
 
+// Ignore touch movement smaller than this — otherwise normal taps
+// or slight finger jitter get misread as swipes.
+const MIN_SWIPE_DISTANCE = 50;
+
 function Features() {
   const [active, setActive] = useState(0);
   const Active = features[active];
 
+  const touchStartX = useRef(null);
+  const touchEndX = useRef(null);
+
+  function goToPrev() {
+    setActive((current) => (current - 1 + features.length) % features.length);
+  }
+
+  function goToNext() {
+    setActive((current) => (current + 1) % features.length);
+  }
+
+  function handleTouchStart(e) {
+    touchEndX.current = null;
+    touchStartX.current = e.targetTouches[0].clientX;
+  }
+
+  function handleTouchMove(e) {
+    touchEndX.current = e.targetTouches[0].clientX;
+  }
+
+  function handleTouchEnd() {
+    if (touchStartX.current === null || touchEndX.current === null) return;
+
+    const distance = touchStartX.current - touchEndX.current;
+
+    if (distance > MIN_SWIPE_DISTANCE) {
+      goToNext();
+    } else if (distance < -MIN_SWIPE_DISTANCE) {
+      goToPrev();
+    }
+
+    touchStartX.current = null;
+    touchEndX.current = null;
+  }
+
   return (
-    <section className="relative h-[32rem] md:h-[36rem] overflow-hidden">
+    <section
+      className="relative h-[32rem] md:h-[36rem] overflow-hidden"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       {features.map((f, i) => (
         <img
           key={f.label}
@@ -52,7 +96,7 @@ function Features() {
 
             <div className="absolute bottom-8 inset-x-0 flex items-center justify-center gap-6">
         <button
-          onClick={() => setActive((active - 1 + features.length) % features.length)}
+          onClick={goToPrev}
           aria-label="Previous feature"
           className="w-9 h-9 flex items-center justify-center rounded-full border-2 border-[#F5F5F0]/30 text-[#F5F5F0] hover:border-[#F2C230] hover:text-[#F2C230] transition-colors"
         >
@@ -77,7 +121,7 @@ function Features() {
         </div>
 
         <button
-          onClick={() => setActive((active + 1) % features.length)}
+          onClick={goToNext}
           aria-label="Next feature"
           className="w-9 h-9 flex items-center justify-center rounded-full border-2 border-[#F5F5F0]/30 text-[#F5F5F0] hover:border-[#F2C230] hover:text-[#F2C230] transition-colors"
         >

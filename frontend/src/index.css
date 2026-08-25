@@ -19,6 +19,10 @@
   animation: var(--animate-marquee);
 }
 
+.hero-glow {
+  animation: hero-glow-pulse 5s ease-in-out infinite;
+}
+
 .member-card-pop-in {
   animation: var(--animate-pop-in);
   will-change: transform, opacity;
@@ -78,4 +82,15 @@
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+@keyframes hero-glow-pulse {
+  0%, 100% {
+    opacity: 0.7;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import MapSection from '../components/MapSection';
@@ -89,6 +89,138 @@ function PricingDisplay({ plans, selectedIndex, onSelect }) {
             {Math.round(selected.discount * 100)}% off monthly rate
           </span>
         )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * HeroPhoto — the owner's photo, treated so it feels grounded in the page
+ * instead of pasted on top of it.
+ *
+ * Two layers do the "grounding":
+ * 1. Two blurred, brand-colored glow blobs sit behind the photo.
+ * 2. A CSS mask fades the bottom of the photo into transparent, so there's
+ *    no hard rectangular edge — it dissolves into the black background.
+ *
+ * Interactivity is device-appropriate rather than one-size-fits-all:
+ * - Desktop (mouse): the photo tilts gently toward the cursor.
+ * - Touch (phone): there's no cursor, so instead the photo drifts a few
+ *   pixels as you scroll past it — real feedback tied to something the
+ *   user is actually doing, not a fake gimmick.
+ * Both are skipped entirely if the OS has "reduce motion" turned on.
+ */
+function HeroPhoto() {
+  const wrapRef = useRef(null);
+  const imgRef = useRef(null);
+
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    const img = imgRef.current;
+    if (!wrap || !img) return;
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) return;
+
+    const isFinePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    let rafId = null;
+
+    if (isFinePointer) {
+      // --- Desktop: cursor-driven tilt ---
+      const handleMouseMove = (e) => {
+        const rect = wrap.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width - 0.5; // -0.5 -> 0.5
+        const y = (e.clientY - rect.top) / rect.height - 0.5;
+
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(() => {
+          const rotateY = x * 10; // deg, left/right tilt
+          const rotateX = y * -8; // deg, up/down tilt
+          img.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+        });
+      };
+
+      const handleMouseLeave = () => {
+        if (rafId) cancelAnimationFrame(rafId);
+        img.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)';
+      };
+
+      wrap.addEventListener('mousemove', handleMouseMove);
+      wrap.addEventListener('mouseleave', handleMouseLeave);
+
+      return () => {
+        wrap.removeEventListener('mousemove', handleMouseMove);
+        wrap.removeEventListener('mouseleave', handleMouseLeave);
+        if (rafId) cancelAnimationFrame(rafId);
+      };
+    }
+
+    // --- Touch: scroll-linked drift ---
+    const handleScroll = () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const rect = wrap.getBoundingClientRect();
+        const progress = 1 - rect.top / window.innerHeight;
+        const clamped = Math.min(Math.max(progress, 0), 1);
+        const translateY = (clamped - 0.5) * 18; // -9px -> 9px
+        img.style.transform = `translateY(${translateY}px)`;
+      });
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={wrapRef}
+      className="relative z-10 flex w-full min-w-0 flex-col items-center md:items-end animate-fade-up opacity-0 pointer-events-auto"
+      style={{ animationDelay: '0.3s' }}
+    >
+      {/* Primary glow — sits behind the subject's chest/shoulders */}
+      <div
+        className="hero-glow absolute inset-0 z-0 pointer-events-none"
+        aria-hidden="true"
+        style={{
+          background: 'radial-gradient(circle at 50% 35%, rgba(255,255,255,0.22), transparent 62%)',
+          filter: 'blur(60px)',
+          transform: 'scale(0.9)'
+        }}
+      />
+      {/* Secondary glow — a restrained brand accent, offset for depth */}
+      <div
+        className="absolute inset-0 z-0 pointer-events-none"
+        aria-hidden="true"
+        style={{
+          background: 'radial-gradient(circle at 68% 62%, rgba(242,194,48,0.12), transparent 55%)',
+          filter: 'blur(60px)'
+        }}
+      />
+
+      <img
+        ref={imgRef}
+        src="/images/gym-hero.png"
+        alt="Bodyworks Gym owner"
+        className="relative z-10 -ml-16 w-200 max-w-none h-auto md:ml-0 md:w-208 md:-mr-12 will-change-transform transition-transform duration-200 ease-out"
+        style={{
+          filter: 'drop-shadow(0 20px 35px rgba(0,0,0,0.5))',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 62%, rgba(0,0,0,0.9) 73%, rgba(0,0,0,0.55) 87%, transparent 100%)',
+          maskImage: 'linear-gradient(to bottom, black 62%, rgba(0,0,0,0.9) 73%, rgba(0,0,0,0.55) 87%, transparent 100%)'
+        }}
+      />
+
+      <div className="absolute right-2 bottom-16 z-20 text-right md:relative md:right-auto md:bottom-auto md:-mt-20 md:mr-8">
+        <p className="text-2xl md:text-3xl font-black uppercase tracking-tight text-[#F5F5F0]">
+          Bhat Mudasir
+        </p>
+        <p className="mt-1 text-xs md:text-sm font-bold uppercase tracking-[0.2em] text-[#C6FF3D]">
+          Founder &amp; Head Coach
+        </p>
       </div>
     </div>
   );
@@ -232,17 +364,7 @@ function PublicHome() {
             </a>
           </div>
 
-          <div
-            className="flex justify-center md:justify-end animate-fade-up opacity-0"
-            style={{ animationDelay: '0.3s' }}
-          >
-            <img
-              src="/images/gym-hero.png"
-              alt="Bodyworks Gym"
-              className="w-96 md:w-[32rem] h-auto md:-mr-6"
-              style={{ filter: 'drop-shadow(0 10px 40px rgba(0,0,0,0.6))' }}
-            />
-          </div>
+          <HeroPhoto />
         </div>
       </section>
 
