@@ -25,12 +25,6 @@ function MapSection() {
             <p className="text-[#F5F5F0] text-sm leading-relaxed">{GYM_ADDRESS}</p>
           </div>
 
-          <div className="flex items-center gap-3 mb-6">
-            <Phone className="w-5 h-5 text-[#C6FF3D] shrink-0" />
-            <a href={`tel:+${GYM_PHONE}`} className="text-[#F5F5F0] text-sm hover:text-[#F2C230] transition-colors">
-              {GYM_PHONE_DISPLAY}
-            </a>
-          </div>
 
           <a
             href={directionsUrl}
