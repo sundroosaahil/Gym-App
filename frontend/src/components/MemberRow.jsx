@@ -12,6 +12,7 @@ function MemberRow({ member, onUpdated }) {
   const [showMarkPaid, setShowMarkPaid] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showActions, setShowActions] = useState(false);
   const [durationChoice, setDurationChoice] = useState('30');
   const [customDays, setCustomDays] = useState('');
   const [amountPaid, setAmountPaid] = useState('');
@@ -132,10 +133,11 @@ function MemberRow({ member, onUpdated }) {
     'bg-[#111] border border-[#333] rounded px-3 py-2 text-sm w-full';
 
   return (
-    <>
-      <tr className={`${
-        member.status === 'pending' ? 'bg-orange-500/5' : ''
-      }`}>
+    <tbody>
+      <tr
+        onClick={() => setShowActions(!showActions)}
+        className={`cursor-pointer ${member.status === 'pending' ? 'bg-orange-500/5' : ''}`}
+      >
         <td className="border border-[#2A2A2A] px-4 py-3 font-mono text-[#999]">{member.gymCode}</td>
         <td className="border border-[#2A2A2A] px-4 py-3 font-semibold">{member.name}</td>
         <td className="border border-[#2A2A2A] px-4 py-3 text-[#999]">{member.residence || '—'}</td>
@@ -147,10 +149,13 @@ function MemberRow({ member, onUpdated }) {
           ₹{member.amountPaid}
           <div className="text-xs text-[#666]">Rcpt: {latestReceiptNo || '—'}</div>
         </td>
+        <td className="border border-[#2A2A2A] px-3 py-2 text-center text-xs uppercase tracking-wide text-[#666]">
+          {showActions ? 'Actions below' : 'Click to take action'}
+        </td>
       </tr>
 
-      <tr>
-        <td colSpan="8" className="border border-t-0 border-[#2A2A2A] border-b-2 border-b-[#333] px-4 py-3">
+      <tr className={showActions ? '' : 'hidden'}>
+        <td colSpan="9" className="border border-t-0 border-[#2A2A2A] border-b-2 border-b-[#333] px-4 py-3">
           <div className="flex items-stretch gap-2">
             {member.renewalIntent === 'not_renewing' ? (
               <button
@@ -233,12 +238,12 @@ function MemberRow({ member, onUpdated }) {
       </tr>
 
       <tr>
-        <td colSpan="8" className="h-2 bg-[#0D0D0D] p-0 border-0"></td>
+        <td colSpan="9" className="h-2 bg-[#0D0D0D] p-0 border-0"></td>
       </tr>
 
       {showMarkPaid && (
         <tr className="bg-[#111]">
-          <td colSpan="8" className="px-4 py-4">
+          <td colSpan="9" className="px-4 py-4">
             <form onSubmit={handleMarkPaid} className="flex flex-wrap items-end gap-3">
               {error && <p className="text-red-400 text-sm w-full">{error}</p>}
               <div>
@@ -338,7 +343,7 @@ function MemberRow({ member, onUpdated }) {
 
       {showEdit && (
         <tr className="bg-[#111]">
-          <td colSpan="8" className="px-4 py-4">
+          <td colSpan="9" className="px-4 py-4">
             <form onSubmit={handleEditSubmit} className="flex flex-wrap items-end gap-3">
               {editError && <p className="text-red-400 text-sm w-full">{editError}</p>}
               <div>
@@ -417,7 +422,7 @@ function MemberRow({ member, onUpdated }) {
           onCancel={() => setShowDeleteConfirm(false)}
         />
       )}
-    </>
+    </tbody>
   );
 }
 

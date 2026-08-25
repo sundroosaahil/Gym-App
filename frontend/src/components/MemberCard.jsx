@@ -4,11 +4,13 @@ import api from '../api/axiosConfig';
 import { durationOptions } from '../constants/durationOptions';
 import StatusBadge from './StatusBadge';
 import ConfirmDialog from './ConfirmDialog';
+import { useInView } from '../hooks/useInView';
 import { formatDate } from '../utils/formatDate';
 import { buildWhatsAppReminderLink } from '../utils/sendWhatsAppReminder';
 import { toFullPhone, toLocalPhone } from '../utils/formatPhone';
 
 function MemberCard({ member, onUpdated }) {
+  const [ref, inView] = useInView();
   const [expanded, setExpanded] = useState(false);
   const [showMarkPaid, setShowMarkPaid] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
@@ -133,9 +135,12 @@ function MemberCard({ member, onUpdated }) {
     'bg-[#0D0D0D] border border-[#333] rounded px-3 py-2 text-sm w-full';
 
   return (
-    <div className={`bg-[#1A1A1A] border rounded-lg p-4 ${
-      member.status === 'pending' ? 'border-orange-500/50' : 'border-[#2A2A2A]'
-    }`}>
+    <div
+      ref={ref}
+      className={`bg-[#1A1A1A] border rounded-lg p-4 ${inView ? 'member-card-pop-in' : ''} ${
+        member.status === 'pending' ? 'border-orange-500/50' : 'border-[#2A2A2A]'
+      }`}
+    >
       {/* Collapsed view — always visible, tap to expand */}
       <div onClick={() => setExpanded(!expanded)} className="cursor-pointer">
         <div className="flex justify-between items-start mb-2">

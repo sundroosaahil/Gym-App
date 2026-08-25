@@ -4,6 +4,7 @@
   --animate-dumbbell-pulse: dumbbell-pulse 0.6s ease-in-out infinite;
   --animate-fade-up: fade-up 0.7s ease-out forwards;
   --animate-marquee: marquee 22s linear infinite;
+  --animate-pop-in: pop-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 .animate-dumbbell-pulse {
@@ -16,6 +17,22 @@
 
 .animate-marquee {
   animation: var(--animate-marquee);
+}
+
+.member-card-pop-in {
+  animation: var(--animate-pop-in);
+  will-change: transform, opacity;
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.85) translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 @keyframes dumbbell-pulse {

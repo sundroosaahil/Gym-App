@@ -106,23 +106,23 @@ const filteredMembers = searchTerm
   : statusFiltered;
 
   const statCards = [
-    { label: 'Active', value: counts.active, icon: Users, color: '#C6FF3D' },
-    { label: 'Pending', value: counts.pending, icon: Clock, color: '#F2C230' },
-    { label: 'Inactive', value: counts.inactive, icon: XCircle, color: '#EF4444' }
+    { label: 'Active', value: counts.active, icon: Users, color: '#C6FF3D', filterKey: 'active' },
+    { label: 'Pending', value: counts.pending, icon: Clock, color: '#F2C230', filterKey: 'pending' },
+    { label: 'Inactive', value: counts.inactive, icon: XCircle, color: '#EF4444', filterKey: 'inactive' }
   ];
 
   return (
-    <div className="min-h-screen bg-[#0D0D0D] text-[#F5F5F0]">
+    <div className="min-h-screen bg-black text-[#F5F5F0]">
       <div className="max-w-6xl mx-auto px-6 py-8">
 
-        <div className="flex justify-between items-center mb-4 gap-3">
+        <div className="flex justify-between items-center mb-6 gap-3">
           <h1 className="text-xl md:text-3xl font-black uppercase tracking-tight truncate">
             Admin Dashboard
           </h1>
           <div className="flex items-center gap-4 shrink-0">
             <Link
               to="/admin/logs"
-              className="flex items-center gap-2 text-sm text-[#999] hover:text-[#F5F5F0] transition-colors"
+              className="flex items-center gap-2 text-sm text-[#999] hover:text-[#F2C230] transition-colors"
             >
               <FileText className="w-4 h-4" />
               <span className="hidden sm:inline">Activity Log</span>
@@ -130,7 +130,7 @@ const filteredMembers = searchTerm
             <button
               onClick={handleLogout}
               disabled={isLoggingOut}
-              className="flex items-center gap-2 text-sm text-[#999] hover:text-[#F5F5F0] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 text-sm text-[#999] hover:text-[#F2C230] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isLoggingOut ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -156,25 +156,31 @@ const filteredMembers = searchTerm
         </div>
 
         <div className="grid grid-cols-3 gap-2 md:gap-4 mb-8">
-          {statCards.map(({ label, value, icon: Icon, color }) => (
-            <div
-              key={label}
-              className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg p-3 md:p-5 flex flex-col md:flex-row items-start md:items-center gap-1.5 md:gap-4 overflow-hidden"
-            >
-              <Icon style={{ color }} className="w-5 h-5 md:w-8 md:h-8 shrink-0" strokeWidth={2} />
-              <div className="min-w-0">
-                <p className="text-xl md:text-2xl font-black">{value}</p>
-                <p className="text-[10px] md:text-xs uppercase tracking-wide text-[#999] truncate">
-                  {label}
-                </p>
-              </div>
-            </div>
-          ))}
+          {statCards.map(({ label, value, icon: Icon, color, filterKey }) => {
+            const isSelected = filter === filterKey;
+            return (
+              <button
+                key={label}
+                type="button"
+                onClick={() => setFilter(isSelected ? 'all' : filterKey)}
+                style={{ borderColor: isSelected ? color : '#2A2A2A' }}
+                className="text-left bg-[#1A1A1A] border-2 rounded-lg p-3 md:p-5 flex flex-col md:flex-row items-start md:items-center gap-1.5 md:gap-4 overflow-hidden transition-all duration-300 hover:-translate-y-0.5"
+              >
+                <Icon style={{ color }} className="w-5 h-5 md:w-8 md:h-8 shrink-0" strokeWidth={2} />
+                <div className="min-w-0">
+                  <p className="text-xl md:text-2xl font-black">{value}</p>
+                  <p className="text-[10px] md:text-xs uppercase tracking-wide text-[#999] truncate">
+                    {label}
+                  </p>
+                </div>
+              </button>
+            );
+          })}
         </div>
 
         <button
           onClick={() => setShowAddForm(!showAddForm)}
-          className="bg-[#F2C230] text-black font-bold uppercase px-5 py-2.5 rounded hover:bg-[#C6FF3D] transition-colors mb-4"
+          className="bg-[#F2C230] text-black font-bold uppercase px-5 py-2.5 rounded hover:bg-[#C6FF3D] hover:-translate-y-0.5 transition-all mb-4"
         >
           {showAddForm ? 'Cancel' : '+ Add Member'}
         </button>
@@ -223,7 +229,7 @@ const filteredMembers = searchTerm
 </div>
 
         {/* Desktop table */}
-        <div className="hidden md:block bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg overflow-x-auto">
+        <div className="hidden md:block bg-[#1A1A1A] border border-[#F2C230]/20 rounded-lg overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead className="bg-[#111] text-[#999] text-xs uppercase tracking-wide">
               <tr>
@@ -235,14 +241,18 @@ const filteredMembers = searchTerm
                 <th className="border border-[#2A2A2A] px-4 py-3">End Date</th>
                 <th className="border border-[#2A2A2A] px-4 py-3">Days Past</th>
                 <th className="border border-[#2A2A2A] px-4 py-3">Amount Paid</th>
+                <th className="border border-[#2A2A2A] px-4 py-3">Actions</th>
               </tr>
             </thead>
-            <tbody>
-              {loading ? (
-                Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
-              ) : filteredMembers.length === 0 ? (
+            {loading && (
+              <tbody>
+                {Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)}
+              </tbody>
+            )}
+            {!loading && filteredMembers.length === 0 && (
+              <tbody>
                 <tr>
-                  <td colSpan="8">
+                    <td colSpan="9">
                     <EmptyState
                       icon={Users}
                       title="No members found"
@@ -250,12 +260,11 @@ const filteredMembers = searchTerm
                     />
                   </td>
                 </tr>
-              ) : (
-                filteredMembers.map((member) => (
-                  <MemberRow key={member._id} member={member} onUpdated={fetchMembers} />
-                ))
-              )}
-            </tbody>
+              </tbody>
+            )}
+            {!loading && filteredMembers.length > 0 && filteredMembers.map((member) => (
+              <MemberRow key={member._id} member={member} onUpdated={fetchMembers} />
+            ))}
           </table>
         </div>
 
