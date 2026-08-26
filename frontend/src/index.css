@@ -5,6 +5,7 @@
   --animate-fade-up: fade-up 0.7s ease-out forwards;
   --animate-marquee: marquee 22s linear infinite;
   --animate-pop-in: pop-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  --animate-glow-pulse: glow-pulse 5s ease-in-out infinite;
 }
 
 .animate-dumbbell-pulse {
@@ -20,7 +21,7 @@
 }
 
 .hero-glow {
-  animation: hero-glow-pulse 5s ease-in-out infinite;
+  animation: var(--animate-glow-pulse);
 }
 
 .member-card-pop-in {
@@ -68,6 +69,17 @@
   }
 }
 
+@keyframes glow-pulse {
+  0%, 100% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -82,15 +94,4 @@
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
-}
-
-@keyframes hero-glow-pulse {
-  0%, 100% {
-    opacity: 0.7;
-    transform: scale(0.92);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.04);
-  }
 }

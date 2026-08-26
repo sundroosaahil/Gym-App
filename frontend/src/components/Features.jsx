@@ -1,15 +1,43 @@
 import { useState, useRef } from 'react';
 import { Dumbbell, Users, Snowflake, Lock, ShieldCheck, Award, ChevronLeft, ChevronRight } from 'lucide-react';
 
-const images = ['/images/gym-1.jpg', '/images/gym-2.jpg', '/images/gym-3.jpg'];
-
 const features = [
-  { label: 'Advanced gym equipment', icon: Dumbbell, image: images[0] },
-  { label: 'Friendly environment', icon: Users, image: images[1] },
-  { label: 'Fully air conditioned', icon: Snowflake, image: images[2] },
-  { label: 'Locker facility', icon: Lock, image: images[0] },
-  { label: 'Trusted supplements', icon: ShieldCheck, image: images[1] },
-  { label: 'Experienced trainers', icon: Award, image: images[2] }
+  {
+    label: 'Advanced gym equipment',
+    icon: Dumbbell,
+    image: '/images/treadmill.jpg',
+    position: 'left center'
+  },
+  {
+    label: 'Friendly environment',
+    icon: Users,
+    image: '/images/chest-machine.jpg',
+    position: 'left center'
+  },
+  {
+    label: 'Fully air conditioned',
+    icon: Snowflake,
+    image: '/images/gym-2.jpg',
+    position: 'center'
+  },
+  {
+    label: 'Locker facility',
+    icon: Lock,
+    image: '/images/locker.jpg',
+    position: 'center'
+  },
+  {
+    label: 'Trusted supplements',
+    icon: ShieldCheck,
+    image: '/images/supplements.jpg',
+    position: '5% center'
+  },
+  {
+    label: 'Experienced trainers',
+    icon: Award,
+    image: '/images/tricep-machine.jpg',
+    position: 'left center'
+  }
 ];
 
 // Ignore touch movement smaller than this — otherwise normal taps
@@ -57,7 +85,7 @@ function Features() {
 
   return (
     <section
-      className="relative h-[32rem] md:h-[36rem] overflow-hidden"
+      className="relative h-[32rem] md:h-[40rem] lg:h-[46rem] overflow-hidden"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -71,6 +99,7 @@ function Features() {
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
             i === active ? 'opacity-100' : 'opacity-0'
           }`}
+          style={{ objectPosition: f.position }}
         />
       ))}
 
@@ -94,7 +123,7 @@ function Features() {
         </div>
       </div>
 
-            <div className="absolute bottom-8 inset-x-0 flex items-center justify-center gap-6">
+      <div className="absolute bottom-8 inset-x-0 flex items-center justify-center gap-6">
         <button
           onClick={goToPrev}
           aria-label="Previous feature"
