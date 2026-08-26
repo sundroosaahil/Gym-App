@@ -11,7 +11,7 @@ function MapSection() {
     <section className="grid md:grid-cols-2 h-[32rem] md:h-[36rem]">
       <div
         className="relative bg-cover bg-center"
-        style={{ backgroundImage: "url('/images/gym-1.jpg')" }}
+        style={{ backgroundImage: "url('/images/gym-2.jpg')" }}
       >
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/20" />
 
