@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Dumbbell, Users, Snowflake, Lock, ShieldCheck, Award, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const features = [
@@ -30,7 +30,7 @@ const features = [
     label: 'Trusted supplements',
     icon: ShieldCheck,
     image: '/images/supplements.jpg',
-    position: '5% center'
+    position: '15% center'
   },
   {
     label: 'Experienced trainers',
@@ -44,19 +44,37 @@ const features = [
 // or slight finger jitter get misread as swipes.
 const MIN_SWIPE_DISTANCE = 50;
 
+// How long each slide stays up before auto-advancing.
+const AUTOPLAY_INTERVAL = 5000;
+
 function Features() {
   const [active, setActive] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
   const Active = features[active];
 
   const touchStartX = useRef(null);
   const touchEndX = useRef(null);
 
-  function goToPrev() {
+  const goToPrev = useCallback(() => {
     setActive((current) => (current - 1 + features.length) % features.length);
-  }
+  }, []);
 
-  function goToNext() {
+  const goToNext = useCallback(() => {
     setActive((current) => (current + 1) % features.length);
+  }, []);
+
+  // Autoplay: runs on a timer, but resets whenever `active` changes —
+  // meaning a manual nav (click dot, arrow, swipe) pushes the next
+  // auto-advance back out to a full interval instead of firing early.
+  useEffect(() => {
+    if (isPaused) return;
+
+    const timer = setInterval(goToNext, AUTOPLAY_INTERVAL);
+    return () => clearInterval(timer);
+  }, [active, isPaused, goToNext]);
+
+  function handleManualNav(action) {
+    action();
   }
 
   function handleTouchStart(e) {
@@ -74,9 +92,9 @@ function Features() {
     const distance = touchStartX.current - touchEndX.current;
 
     if (distance > MIN_SWIPE_DISTANCE) {
-      goToNext();
+      handleManualNav(goToNext);
     } else if (distance < -MIN_SWIPE_DISTANCE) {
-      goToPrev();
+      handleManualNav(goToPrev);
     }
 
     touchStartX.current = null;
@@ -89,6 +107,8 @@ function Features() {
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
     >
       {features.map((f, i) => (
         <img
@@ -125,7 +145,7 @@ function Features() {
 
       <div className="absolute bottom-8 inset-x-0 flex items-center justify-center gap-6">
         <button
-          onClick={goToPrev}
+          onClick={() => handleManualNav(goToPrev)}
           aria-label="Previous feature"
           className="w-9 h-9 flex items-center justify-center rounded-full border-2 border-[#F5F5F0]/30 text-[#F5F5F0] hover:border-[#F2C230] hover:text-[#F2C230] transition-colors"
         >
@@ -136,7 +156,7 @@ function Features() {
           {features.map((f, i) => (
             <button
               key={f.label}
-              onClick={() => setActive(i)}
+              onClick={() => handleManualNav(() => setActive(i))}
               aria-label={`Show ${f.label}`}
               className="p-1.5"
             >
@@ -150,7 +170,7 @@ function Features() {
         </div>
 
         <button
-          onClick={goToNext}
+          onClick={() => handleManualNav(goToNext)}
           aria-label="Next feature"
           className="w-9 h-9 flex items-center justify-center rounded-full border-2 border-[#F5F5F0]/30 text-[#F5F5F0] hover:border-[#F2C230] hover:text-[#F2C230] transition-colors"
         >
