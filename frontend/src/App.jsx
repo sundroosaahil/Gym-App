@@ -4,6 +4,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import Login from './pages/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminLogs from './pages/AdminLogs';
+import AnalyticsPage from './pages/AnalyticsPage';
 import OfflineBanner from './components/OfflineBanner';
 
 function App() {
@@ -21,6 +22,15 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+  path="/admin/analytics"
+  element={
+    <ProtectedRoute>
+      <AnalyticsPage />
+    </ProtectedRoute>
+  }
+/>
+
         <Route
           path="/admin/logs"
           element={
