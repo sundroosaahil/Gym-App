@@ -40,7 +40,7 @@ router.post('/login', loginLimiter, async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-       res.cookie('token', signToken(admin), cookieOptions());
+    res.cookie('token', signToken(admin), cookieOptions());
 
     const device = getDeviceInfo(req.headers['user-agent'], deviceModel);
     await logAction('Logged In', device, admin.email);
@@ -56,7 +56,21 @@ router.post('/logout', async (req, res) => {
   const token = req.cookies.token;
   const { deviceModel } = req.body || {};
 
-  router.post('/logout-all', requireAuth, async (req, res) => {
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const device = getDeviceInfo(req.headers['user-agent'], deviceModel);
+      await logAction('Logged Out', device, decoded.email);
+    } catch (error) {
+      // token invalid/expired — nothing meaningful to log
+    }
+  }
+
+  res.clearCookie('token');
+  res.json({ message: 'Logged out successfully' });
+});
+
+router.post('/logout-all', requireAuth, async (req, res) => {
   try {
     const admin = await Admin.findById(req.adminId);
     admin.tokenVersion += 1;
@@ -71,20 +85,6 @@ router.post('/logout', async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-});
-
-  if (token) {
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const device = getDeviceInfo(req.headers['user-agent'], deviceModel);
-      await logAction('Logged Out', device, decoded.email);
-    } catch (error) {
-      // token invalid/expired — nothing meaningful to log
-    }
-  }
-
-  res.clearCookie('token');
-  res.json({ message: 'Logged out successfully' });
 });
 
 router.get('/me', requireAuth, (req, res) => {
