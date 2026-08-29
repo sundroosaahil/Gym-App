@@ -52,3 +52,5 @@ export function fuzzyMatchesName(name, query) {
 
   return words.some((word) => levenshtein(word, normalizedQuery) <= threshold);
 }
+
+//checks a member's name against a search query, tolerating typos.

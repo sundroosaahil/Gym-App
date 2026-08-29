@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Clock, XCircle, LogOut, Search, FileText, Loader2, ChevronDown } from 'lucide-react';
+import { Users, Clock, XCircle, LogOut, Search, FileText, Loader2, ChevronDown, BarChart3 } from 'lucide-react';
 import api from '../api/axiosConfig';
 import AddMemberForm from '../components/AddMemberForm';
 import MemberRow from '../components/MemberRow';
@@ -9,7 +9,7 @@ import SkeletonCard from '../components/SkeletonCard';
 import SkeletonRow from '../components/SkeletonRow';
 import EmptyState from '../components/EmptyState';
 import { useAuth } from '../context/AuthContext';
-import { fuzzyMatchesName } from '../utils/FuzzySearch';
+import { fuzzyMatchesName } from '../utils/fuzzySearch';
 
 async function getClientDeviceModel() {
   if (navigator.userAgentData?.getHighEntropyValues) {
@@ -127,6 +127,13 @@ const filteredMembers = searchTerm
             >
               <FileText className="w-4 h-4" />
               <span className="hidden sm:inline">Activity Log</span>
+            </Link>
+            <Link
+              to="/admin/analytics"
+              className="flex items-center gap-2 text-sm text-[#999] hover:text-[#F2C230] transition-colors"
+            >
+              <BarChart3 className="w-4 h-4" />
+              <span className="hidden sm:inline">Analytics</span>
             </Link>
             <button
               onClick={handleLogout}
