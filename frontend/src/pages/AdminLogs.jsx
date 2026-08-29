@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import api from '../api/axiosConfig';
-import LoadingScreen from '../components/LoadingScreen';
+import SkeletonLogCard from '../components/SkeletonLogCard';
 
 function AdminLogs() {
   const [logs, setLogs] = useState([]);
@@ -23,8 +23,6 @@ function AdminLogs() {
       });
   }, []);
 
-  // Built from whatever logs actually came back, so this dropdown never
-  // goes out of sync with the real action strings the backend writes.
   const actionOptions = useMemo(
     () => ['all', ...new Set(logs.map((log) => log.action))],
     [logs]
@@ -44,7 +42,6 @@ function AdminLogs() {
   const selectClass =
     'bg-[#1A1A1A] border border-[#333] rounded px-3 py-2 text-sm text-[#F5F5F0] focus:outline-none focus:border-[#F2C230]';
 
-  if (loading) return <LoadingScreen />;
   if (error) return <p className="p-8 text-red-400">{error}</p>;
 
   return (
@@ -63,7 +60,7 @@ function AdminLogs() {
         </h1>
         <p className="text-xs text-[#666] mb-6">Logs are automatically deleted after 30 days.</p>
 
-        {logs.length > 0 && (
+        {!loading && logs.length > 0 && (
           <div className="flex flex-wrap gap-3 mb-6">
             <div>
               <label className="block text-xs text-[#999] uppercase mb-1">Action</label>
@@ -96,7 +93,13 @@ function AdminLogs() {
           </div>
         )}
 
-        {filteredLogs.length === 0 ? (
+        {loading ? (
+          <div className="space-y-2">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <SkeletonLogCard key={i} />
+            ))}
+          </div>
+        ) : filteredLogs.length === 0 ? (
           <p className="text-[#666]">No activity matches these filters.</p>
         ) : (
           <div className="space-y-2">

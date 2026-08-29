@@ -7,6 +7,7 @@ const Admin = require('../models/Admin');
 const requireAuth = require('../middleware/requireAuth');
 const logAction = require('../utils/logAction');
 const { getDeviceInfo } = require('../utils/deviceInfo');
+const { signToken, cookieOptions } = require('../utils/authToken');
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -39,20 +40,7 @@ router.post('/login', loginLimiter, async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    const token = jwt.sign(
-      { adminId: admin._id, email: admin.email },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
-
-    const isProduction = process.env.NODE_ENV === 'production';
-
-    res.cookie('token', token, {
-      httpOnly: true,
-     sameSite: 'lax',
-      secure: isProduction,
-      maxAge: 7 * 24 * 60 * 60 * 1000
-    });
+       res.cookie('token', signToken(admin), cookieOptions());
 
     const device = getDeviceInfo(req.headers['user-agent'], deviceModel);
     await logAction('Logged In', device, admin.email);
@@ -67,6 +55,23 @@ router.post('/login', loginLimiter, async (req, res) => {
 router.post('/logout', async (req, res) => {
   const token = req.cookies.token;
   const { deviceModel } = req.body || {};
+
+  router.post('/logout-all', requireAuth, async (req, res) => {
+  try {
+    const admin = await Admin.findById(req.adminId);
+    admin.tokenVersion += 1;
+    await admin.save();
+
+    const { deviceModel } = req.body || {};
+    const device = getDeviceInfo(req.headers['user-agent'], deviceModel);
+    await logAction('Logged Out (All Devices)', device, admin.email);
+
+    res.clearCookie('token');
+    res.json({ message: 'Logged out of all devices' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
   if (token) {
     try {
