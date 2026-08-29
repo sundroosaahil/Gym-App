@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { TrendingUp, TrendingDown, Users, AlertTriangle, Trophy, Info, ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import api from '../api/axiosConfig';
 import BarChart from '../components/analytics/BarChart';
+import DonutChart from '../components/analytics/DonutChart';
 import SkeletonCard from '../components/SkeletonCard';
 import EmptyState from '../components/EmptyState';
 
@@ -17,24 +18,26 @@ function AnalyticsPage() {
   const [newJoins, setNewJoins] = useState(null);
   const [atRisk, setAtRisk] = useState(null);
   const [leaderboard, setLeaderboard] = useState(null);
+  const [memberStatus, setMemberStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showAllRisk, setShowAllRisk] = useState(false);
   const [showAllLeaderboard, setShowAllLeaderboard] = useState(false);
 
   useEffect(() => {
     async function loadAll() {
       try {
-        const [revRes, joinsRes, riskRes, boardRes] = await Promise.all([
+        const [revRes, joinsRes, riskRes, boardRes, statusRes] = await Promise.all([
           api.get('/analytics/revenue'),
           api.get('/analytics/new-joins'),
           api.get('/analytics/revenue-at-risk'),
-          api.get('/analytics/leaderboard')
+          api.get('/analytics/leaderboard'),
+          api.get('/analytics/member-status')
         ]);
         setRevenue(revRes.data);
         setNewJoins(joinsRes.data);
         setAtRisk(riskRes.data);
         setLeaderboard(boardRes.data);
+        setMemberStatus(statusRes.data);
       } catch (err) {
         setError('Could not load analytics. Try refreshing.');
       } finally {
@@ -89,6 +92,20 @@ function AnalyticsPage() {
               </span>
             </div>
 
+            {/* Member status breakdown */}
+            <div className="bg-[#1A1A1A] border-2 border-[#333] rounded-lg p-4">
+              <h3 className="font-bold text-white uppercase tracking-wide text-sm mb-1">Member Status</h3>
+              <p className="text-xs text-[#666] mb-4">Tap a slice or legend item for details</p>
+              <DonutChart
+                data={[
+                  { label: 'Active', value: memberStatus.active, color: '#C6FF3D' },
+                  { label: 'Pending', value: memberStatus.pending, color: '#F2C230' },
+                  { label: 'Inactive', value: memberStatus.inactive, color: '#555' },
+                  { label: 'Not Renewing', value: memberStatus.not_renewing, color: '#EF4444' }
+                ]}
+              />
+            </div>
+
             {/* Revenue — 12 months */}
             <div className="bg-[#1A1A1A] border-2 border-[#333] rounded-lg p-4">
               <div className="flex items-center justify-between mb-1">
@@ -130,35 +147,36 @@ function AnalyticsPage() {
                 Revenue at Risk
               </h3>
               <p className="text-xs text-[#666] mb-4">
-                {atRisk.count} member{atRisk.count !== 1 ? 's' : ''} expiring within 7 days, still marked as renewing
+                {atRisk.count} member{atRisk.count !== 1 ? 's' : ''} in the 7-day grace period after expiry, still marked as renewing
               </p>
               {atRisk.count === 0 ? (
                 <EmptyState icon={AlertTriangle} title="Nothing at risk right now" />
               ) : (
                 <>
-                  <p className="text-2xl font-black text-[#F2C230] mb-3">
-                    ₹{atRisk.totalAtRisk.toLocaleString('en-IN')}
-                  </p>
-                  <div className="space-y-2">
-                    {(showAllRisk ? atRisk.members : atRisk.members.slice(0, 3)).map((m) => (
-                      <div key={m._id} className="flex justify-between text-sm border-b border-[#2A2A2A] pb-2">
-                        <span className="text-white">{m.name} <span className="text-[#666]">#{m.gymCode}</span></span>
-                        <span className="text-[#999]">{new Date(m.endDate).toLocaleDateString('en-IN')}</span>
-                      </div>
-                    ))}
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div>
+                      <p className="text-2xl font-black text-[#F2C230]">
+                        ₹{atRisk.totalAtRisk.toLocaleString('en-IN')}
+                      </p>
+                      <p className="text-[10px] text-[#666] uppercase tracking-wide">Total at risk</p>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-black text-white">
+                        ₹{atRisk.averageAtRisk.toLocaleString('en-IN')}
+                      </p>
+                      <p className="text-[10px] text-[#666] uppercase tracking-wide">Average per member</p>
+                    </div>
                   </div>
-                  {atRisk.members.length > 3 && (
-                    <button
-                      onClick={() => setShowAllRisk((v) => !v)}
-                      className="flex items-center gap-1 text-xs text-[#F2C230] hover:text-[#C6FF3D] transition-colors mt-3 font-bold uppercase tracking-wide"
-                    >
-                      {showAllRisk ? (
-                        <>Show less <ChevronUp className="w-3.5 h-3.5" /></>
-                      ) : (
-                        <>Show all {atRisk.members.length} <ChevronDown className="w-3.5 h-3.5" /></>
-                      )}
-                    </button>
-                  )}
+                  <p className="text-[10px] text-[#666] uppercase tracking-wide mb-2">Days into grace period</p>
+                  <BarChart
+                    data={atRisk.breakdown.map((b) => ({ label: `D${b.day}`, value: b.count }))}
+                    color="#F2C230"
+                    highlightColor="#EF4444"
+                    highlightLast
+                  />
+                  <p className="text-[10px] text-[#666] mt-2">
+                    Day 7 members flip to "inactive" tomorrow if they don't renew
+                  </p>
                 </>
               )}
             </div>

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Member = require('../models/Member');
 const requireAuth = require('../middleware/requireAuth');
+const calculateStatus = require('../utils/calculateStatus');
 
 router.use(requireAuth);
 
@@ -112,20 +113,46 @@ router.get('/new-joins', async (req, res) => {
 });
 
 // Revenue at risk: members expiring within 7 days who are still marked "continuing".
+// Revenue at risk: members currently in the "pending" grace window —
+// already past endDate, within the same day-range calculateStatus() treats
+// as pending elsewhere in the app, and not marked not_renewing.
+//
+// Reuses calculateStatus() instead of re-deriving the day math here, so this
+// number always matches the "pending" badge members see on the dashboard —
+// if the grace period ever changes in calculateStatus.js, this updates too.
 router.get('/revenue-at-risk', async (req, res) => {
   try {
     const now = new Date();
-    const sevenDaysFromNow = new Date(now);
-    sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
 
-    const members = await Member.find({
-      endDate: { $gte: now, $lte: sevenDaysFromNow },
+    // DB-level filter is intentionally loose (just "already expired, still
+    // continuing") — cheap on a small dataset, and avoids duplicating the
+    // exact day-boundary logic that already lives in calculateStatus().
+    const candidates = await Member.find({
+      endDate: { $lte: now },
       renewalIntent: 'continuing'
-    }).select('name gymCode endDate amountPaid');
+    }).select('endDate amountPaid renewalIntent');
 
-    const totalAtRisk = members.reduce((sum, m) => sum + m.amountPaid, 0);
+    const pendingMembers = candidates.filter((m) => calculateStatus(m).status === 'pending');
+    const totalAtRisk = pendingMembers.reduce((sum, m) => sum + m.amountPaid, 0);
+    const count = pendingMembers.length;
+    const averageAtRisk = count === 0 ? 0 : Math.round(totalAtRisk / count);
 
-    res.json({ members, totalAtRisk, count: members.length });
+    // Breakdown by how many days into the 7-day grace period each member is.
+    // Day 0-1 = just lapsed, plenty of time. Day 6-7 = about to flip to
+    // "inactive" — this is the number that tells you where to focus today,
+    // without listing individual names (that's already on the member list).
+    const byDay = {};
+    for (let d = 0; d <= 7; d++) byDay[d] = 0;
+    pendingMembers.forEach((m) => {
+      const { daysPastExpiry } = calculateStatus(m);
+      if (byDay[daysPastExpiry] !== undefined) byDay[daysPastExpiry]++;
+    });
+    const breakdown = Object.entries(byDay).map(([day, memberCount]) => ({
+      day: Number(day),
+      count: memberCount
+    }));
+
+    res.json({ count, totalAtRisk, averageAtRisk, breakdown });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -152,6 +179,26 @@ router.get('/leaderboard', async (req, res) => {
     ]);
 
     res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Member status breakdown: active / pending / inactive / not_renewing counts.
+// Reuses calculateStatus() — same reasoning as revenue-at-risk: one source
+// of truth for what "pending" etc. means, so this never drifts from the
+// status badges shown on the member list.
+router.get('/member-status', async (req, res) => {
+  try {
+    const members = await Member.find().select('endDate renewalIntent');
+
+    const counts = { active: 0, pending: 0, inactive: 0, not_renewing: 0 };
+    members.forEach((m) => {
+      const { status } = calculateStatus(m);
+      if (counts[status] !== undefined) counts[status]++;
+    });
+
+    res.json(counts);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
