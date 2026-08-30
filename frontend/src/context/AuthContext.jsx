@@ -20,6 +20,11 @@ export function AuthProvider({ children }) {
     setIsLoggedIn(true);
   }
 
+  async function loginWithGoogle(credential, deviceModel) {
+    await api.post("/auth/google", { credential, deviceModel });
+    setIsLoggedIn(true);
+  }
+
   async function logout(deviceModel) {
     await api.post("/auth/logout", { deviceModel });
     setIsLoggedIn(false);
@@ -31,7 +36,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ isLoggedIn, checkingAuth, login, logout, logoutAll }}
+      value={{ isLoggedIn, checkingAuth, login, loginWithGoogle, logout, logoutAll }}
     >
       {children}
     </AuthContext.Provider>

@@ -6,13 +6,13 @@ const adminSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-  passwordHash: {
+  name: {
     type: String,
     required: true
   },
-  // Bump this to instantly invalidate every existing session for this admin
-  // (e.g. lost phone). Existing tokens fail the check in requireAuth even
-  // though they haven't technically expired yet.
+  passwordHash: {
+    type: String
+  },
   tokenVersion: {
     type: Number,
     default: 0

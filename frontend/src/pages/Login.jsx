@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { Lock, Eye, EyeOff, Dumbbell } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -16,7 +16,7 @@ async function getClientDeviceModel() {
       return null;
     }
   }
-  return null; // Safari/Firefox don't support this API — backend falls back to UA parsing
+  return null;
 }
 
 function Login() {
@@ -25,8 +25,52 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { login, isLoggedIn, checkingAuth } = useAuth();
+  const { login, loginWithGoogle, isLoggedIn, checkingAuth } = useAuth();
   const navigate = useNavigate();
+  const googleButtonRef = useRef(null);
+
+  useEffect(() => {
+    async function handleCredentialResponse(response) {
+      setError(null);
+      setIsLoading(true);
+      try {
+        const deviceModel = await getClientDeviceModel();
+        await loginWithGoogle(response.credential, deviceModel);
+        navigate('/admin');
+      } catch (err) {
+        setError(err.response?.data?.error || 'Login failed');
+        setIsLoading(false);
+      }
+    }
+
+    function renderGoogleButton() {
+      if (!googleButtonRef.current || isLoggedIn || !window.google) return;
+
+      window.google.accounts.id.initialize({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        callback: handleCredentialResponse
+      });
+      window.google.accounts.id.renderButton(googleButtonRef.current, {
+        theme: 'filled_black',
+        size: 'large',
+        shape: 'pill',
+        width: 280
+      });
+    }
+
+    // The static <script> tag in index.html loads async and may not have
+    // finished by the time this effect runs. Rather than guessing, load
+    // it here and only render the button once it's actually ready.
+    if (window.google) {
+      renderGoogleButton();
+    } else {
+      const script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.onload = renderGoogleButton;
+      document.body.appendChild(script);
+    }
+  }, [loginWithGoogle, navigate, isLoggedIn]);
 
   // Already have a valid session (e.g. clicked "Admin" from the landing page
   // while still logged in from another tab) — skip the form entirely.
@@ -59,7 +103,6 @@ function Login() {
 
   return (
     <div className="min-h-screen bg-black lg:grid lg:grid-cols-2">
-      {/* Compact brand banner — phones and tablets (below lg) */}
       <div className="lg:hidden relative overflow-hidden">
         <div
           className="h-2 w-full"
@@ -98,7 +141,6 @@ function Login() {
         </div>
       </div>
 
-      {/* Full brand panel — lg and up */}
       <div className="relative hidden lg:flex flex-col justify-between overflow-hidden p-12">
         <div
           className="absolute inset-0"
@@ -142,7 +184,6 @@ function Login() {
         </p>
       </div>
 
-      {/* Form panel — every screen size */}
       <div className="flex items-center justify-center px-6 py-12 sm:py-16">
         <div className="w-full max-w-sm animate-fade-up opacity-0">
           <div className="mb-8 lg:mb-10">
@@ -204,6 +245,16 @@ function Login() {
               )}
             </button>
           </form>
+
+          <div className="flex items-center gap-3 my-6">
+            <div className="h-px bg-[#2A2A2A] flex-1" />
+            <span className="text-xs text-[#666] uppercase tracking-widest">or</span>
+            <div className="h-px bg-[#2A2A2A] flex-1" />
+          </div>
+
+          <div className="flex justify-center">
+            <div ref={googleButtonRef} />
+          </div>
         </div>
       </div>
     </div>

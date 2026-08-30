@@ -28,10 +28,15 @@ function AdminLogs() {
     [logs]
   );
 
-  const adminOptions = useMemo(
-    () => ['all', ...new Set(logs.map((log) => log.adminEmail))],
-    [logs]
-  );
+  const adminOptions = useMemo(() => {
+    const map = new Map();
+    logs.forEach((log) => {
+      if (!map.has(log.adminEmail)) {
+        map.set(log.adminEmail, log.adminName || log.adminEmail);
+      }
+    });
+    return [{ email: 'all', label: 'All Admins' }, ...Array.from(map, ([email, label]) => ({ email, label }))];
+  }, [logs]);
 
   const filteredLogs = logs.filter((log) => {
     const matchesAction = actionFilter === 'all' || log.action === actionFilter;
@@ -83,9 +88,9 @@ function AdminLogs() {
                 onChange={(e) => setAdminFilter(e.target.value)}
                 className={selectClass}
               >
-                {adminOptions.map((admin) => (
-                  <option key={admin} value={admin}>
-                    {admin === 'all' ? 'All Admins' : admin}
+                {adminOptions.map((opt) => (
+                  <option key={opt.email} value={opt.email}>
+                    {opt.label}
                   </option>
                 ))}
               </select>
@@ -114,7 +119,7 @@ function AdminLogs() {
                       {log.action}
                     </p>
                     <p className="text-sm text-[#F5F5F0] mt-1">{log.details}</p>
-                    <p className="text-xs text-[#666] mt-1">by {log.adminEmail}</p>
+                    <p className="text-xs text-[#666] mt-1">by {log.adminName || log.adminEmail}</p>
                   </div>
                   <p className="text-xs text-[#999] whitespace-nowrap">
                     {new Date(log.createdAt).toLocaleString()}
