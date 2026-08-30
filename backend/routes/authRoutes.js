@@ -65,11 +65,12 @@ async function verifyGoogleAccessToken(accessToken) {
     `https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(accessToken)}`
   );
   if (!response.ok) {
-    throw new Error('Invalid Google access token');
+    const body = await response.text().catch(() => '');
+    throw new Error(`tokeninfo rejected access token (${response.status}): ${body}`);
   }
   const info = await response.json();
   if (info.aud !== process.env.GOOGLE_CLIENT_ID) {
-    throw new Error('Access token was not issued for this app');
+    throw new Error(`Access token aud "${info.aud}" does not match GOOGLE_CLIENT_ID`);
   }
   return info;
 }
@@ -94,6 +95,7 @@ router.post('/google', loginLimiter, async (req, res) => {
         payload = await verifyGoogleAccessToken(accessToken);
       }
     } catch (err) {
+      console.error('Google sign-in verification failed:', err.message);
       return res.status(401).json({ error: 'Invalid Google sign-in' });
     }
 
