@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { Lock, Eye, EyeOff, Dumbbell } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import LoadingScreen from '../components/LoadingScreen';
 
 const ADMIN_HEADLINE = ['Front Desk'];
 const ADMIN_TAGLINE = 'Members, payments, and everything in between.';
@@ -24,8 +25,18 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, isLoggedIn, checkingAuth } = useAuth();
   const navigate = useNavigate();
+
+  // Already have a valid session (e.g. clicked "Admin" from the landing page
+  // while still logged in from another tab) — skip the form entirely.
+  if (checkingAuth) {
+    return <LoadingScreen />;
+  }
+
+  if (isLoggedIn) {
+    return <Navigate to="/admin" replace />;
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
