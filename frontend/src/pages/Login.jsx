@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { Lock, Eye, EyeOff, Dumbbell } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -27,15 +27,14 @@ function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const { login, loginWithGoogle, isLoggedIn, checkingAuth } = useAuth();
   const navigate = useNavigate();
-  const googleButtonRef = useRef(null);
 
   useEffect(() => {
-    async function handleCredentialResponse(response) {
+    async function completeGoogleLogin(tokens) {
       setError(null);
       setIsLoading(true);
       try {
         const deviceModel = await getClientDeviceModel();
-        await loginWithGoogle(response.credential, deviceModel);
+        await loginWithGoogle(tokens, deviceModel);
         navigate('/admin');
       } catch (err) {
         setError(err.response?.data?.error || 'Login failed');
@@ -43,34 +42,45 @@ function Login() {
       }
     }
 
-    function renderGoogleButton() {
-      if (!googleButtonRef.current || isLoggedIn || !window.google) return;
+    function initGoogleClient() {
+      if (!window.google) return;
 
-      window.google.accounts.id.initialize({
+      // Google's native "Sign in with Google" button (renderButton) only
+      // ships with fixed themes — outline, filled_blue, filled_black — so
+      // there's no way to make it yellow. Instead we use this token client
+      // headlessly and trigger it from our own custom-styled button below.
+      // It also always passes prompt: 'select_account', which forces
+      // Google's account picker every time instead of silently signing in
+      // with whatever Google session happens to be active in the browser.
+      window.googleAccountPickerClient = window.google.accounts.oauth2.initTokenClient({
         client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-        callback: handleCredentialResponse
-      });
-      window.google.accounts.id.renderButton(googleButtonRef.current, {
-        theme: 'filled_black',
-        size: 'large',
-        shape: 'pill',
-        width: 280
+        scope: 'openid email profile',
+        prompt: 'select_account',
+        callback: (tokenResponse) => {
+          if (tokenResponse?.access_token) {
+            completeGoogleLogin({ accessToken: tokenResponse.access_token });
+          }
+        }
       });
     }
 
     // The static <script> tag in index.html loads async and may not have
     // finished by the time this effect runs. Rather than guessing, load
-    // it here and only render the button once it's actually ready.
+    // it here and only init the client once it's actually ready.
     if (window.google) {
-      renderGoogleButton();
+      initGoogleClient();
     } else {
       const script = document.createElement('script');
       script.src = 'https://accounts.google.com/gsi/client';
       script.async = true;
-      script.onload = renderGoogleButton;
+      script.onload = initGoogleClient;
       document.body.appendChild(script);
     }
   }, [loginWithGoogle, navigate, isLoggedIn]);
+
+  function handleGoogleSignIn() {
+    window.googleAccountPickerClient?.requestAccessToken();
+  }
 
   // Already have a valid session (e.g. clicked "Admin" from the landing page
   // while still logged in from another tab) — skip the form entirely.
@@ -252,9 +262,19 @@ function Login() {
             <div className="h-px bg-[#2A2A2A] flex-1" />
           </div>
 
-          <div className="flex justify-center">
-            <div ref={googleButtonRef} />
-          </div>
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            className="w-full flex items-center justify-center gap-3 bg-[#F2C230] text-black font-bold uppercase py-3 rounded hover:bg-[#C6FF3D] hover:-translate-y-0.5 transition-all"
+          >
+            <svg className="w-5 h-5 shrink-0" viewBox="0 0 48 48" aria-hidden="true">
+              <path fill="#FFFFFF" d="M43.6 20.5H42V20.4H24v7.2h11.3C33.6 32.3 29.2 35.2 24 35.2c-6.2 0-11.2-5-11.2-11.2S17.8 12.8 24 12.8c2.9 0 5.4 1.1 7.4 2.9l5.1-5.1C33.2 7.5 28.9 5.6 24 5.6 13.8 5.6 5.6 13.8 5.6 24S13.8 42.4 24 42.4 42.4 34.2 42.4 24c0-1.2-.1-2.4-.3-3.5z"/>
+              <path fill="#FFFFFF" d="M6.9 14.6l5.9 4.3C14.4 15.6 18.9 12.8 24 12.8c2.9 0 5.4 1.1 7.4 2.9l5.1-5.1C33.2 7.5 28.9 5.6 24 5.6c-7.7 0-14.3 4.4-17.1 10.8z"/>
+              <path fill="#FFFFFF" d="M24 42.4c4.8 0 9.1-1.8 12.4-4.8l-5.7-4.8c-1.9 1.3-4.3 2.1-6.7 2.1-5.2 0-9.6-2.9-11.3-7.2l-5.9 4.5c2.8 6.4 9.3 10.2 17.2 10.2z"/>
+              <path fill="#FFFFFF" d="M43.6 20.5H42V20.4H24v7.2h11.3c-.8 2.4-2.4 4.4-4.5 5.7l5.7 4.8c-.4.4 6.7-4.9 6.7-14.3 0-1.2-.1-2.4-.3-3.5z"/>
+            </svg>
+            Sign in with Google
+          </button>
         </div>
       </div>
     </div>

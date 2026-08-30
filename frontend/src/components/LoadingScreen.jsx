@@ -30,7 +30,7 @@ function LoadingScreen() {
         />
       </div>
 
-      <div className="blur-sm opacity-40 pointer-events-none select-none">
+      <div className="pointer-events-none select-none">
         <DashboardSkeleton />
       </div>
     </div>

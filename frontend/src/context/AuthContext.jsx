@@ -20,8 +20,8 @@ export function AuthProvider({ children }) {
     setIsLoggedIn(true);
   }
 
-  async function loginWithGoogle(credential, deviceModel) {
-    await api.post("/auth/google", { credential, deviceModel });
+  async function loginWithGoogle({ credential, accessToken }, deviceModel) {
+    await api.post("/auth/google", { credential, accessToken, deviceModel });
     setIsLoggedIn(true);
   }
 

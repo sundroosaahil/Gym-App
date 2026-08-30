@@ -55,26 +55,49 @@ router.post('/login', loginLimiter, async (req, res) => {
   }
 });
 
+// Verifies a Google OAuth access token (used by the "choose a different
+// account" flow, which requests an access token via prompt: 'select_account'
+// rather than the personalized ID-token button). We check the token against
+// Google's tokeninfo endpoint rather than trusting the client, confirming it
+// was actually issued for our client_id and that the email is verified.
+async function verifyGoogleAccessToken(accessToken) {
+  const response = await fetch(
+    `https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(accessToken)}`
+  );
+  if (!response.ok) {
+    throw new Error('Invalid Google access token');
+  }
+  const info = await response.json();
+  if (info.aud !== process.env.GOOGLE_CLIENT_ID) {
+    throw new Error('Access token was not issued for this app');
+  }
+  return info;
+}
+
 router.post('/google', loginLimiter, async (req, res) => {
   try {
-    const { credential, deviceModel } = req.body;
+    const { credential, accessToken, deviceModel } = req.body;
 
-    if (typeof credential !== 'string') {
+    if (typeof credential !== 'string' && typeof accessToken !== 'string') {
       return res.status(400).json({ error: 'Missing Google credential' });
     }
 
     let payload;
     try {
-      const ticket = await googleClient.verifyIdToken({
-        idToken: credential,
-        audience: process.env.GOOGLE_CLIENT_ID
-      });
-      payload = ticket.getPayload();
+      if (typeof credential === 'string') {
+        const ticket = await googleClient.verifyIdToken({
+          idToken: credential,
+          audience: process.env.GOOGLE_CLIENT_ID
+        });
+        payload = ticket.getPayload();
+      } else {
+        payload = await verifyGoogleAccessToken(accessToken);
+      }
     } catch (err) {
       return res.status(401).json({ error: 'Invalid Google sign-in' });
     }
 
-    if (!payload.email_verified) {
+    if (!payload.email_verified && payload.email_verified !== 'true') {
       return res.status(401).json({ error: 'Google email not verified' });
     }
 
