@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
 require("dotenv").config();
 
+const cronRoutes = require("./routes/cronRoutes");
 const memberRoutes = require("./routes/memberRoutes");
 const authRoutes = require("./routes/authRoutes");
 const logRoutes = require("./routes/logRoutes");
@@ -35,6 +36,7 @@ app.use("/api/members", memberRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/logs", logRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/cron", cronRoutes);
 
 mongoose
   .connect(process.env.MONGO_URI)

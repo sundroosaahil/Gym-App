@@ -4,6 +4,7 @@ const Member = require('../models/Member');
 const calculateStatus = require('../utils/calculateStatus');
 const requireAuth = require('../middleware/requireAuth');
 const logAction = require('../utils/logAction');
+const sendNotificationToAdmins = require('../utils/sendNotification');
 
 router.use(requireAuth);
 
@@ -36,6 +37,12 @@ router.post('/', async (req, res) => {
 
     await member.save();
     await logAction('Added Member', `${member.name} (${member.gymCode})`, req.adminEmail);
+        sendNotificationToAdmins(
+      'newMember',
+      'New Member Added',
+      `${member.name} (${member.gymCode}) joined`,
+      { type: 'new_member', memberId: member._id.toString() }
+    );
     res.status(201).json(member);
 
   } catch (error) {
@@ -186,6 +193,12 @@ router.put('/:id/mark-paid', async (req, res) => {
       'Marked Paid',
       `${member.name} (${member.gymCode}) — ₹${amountPaid}, ${durationDays} days, mode: ${mode}${receiptNo ? `, Receipt #${receiptNo}` : ''}`,
       req.adminEmail
+    );
+        sendNotificationToAdmins(
+      'memberPaid',
+      'Payment Received',
+      `${member.name} (${member.gymCode}) — ₹${amountPaid}`,
+      { type: 'member_paid', memberId: member._id.toString() }
     );
     res.json(member);
 

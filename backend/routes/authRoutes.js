@@ -159,4 +159,43 @@ router.get('/me', requireAuth, (req, res) => {
   res.json({ adminId: req.adminId });
 });
 
+router.post('/fcm-token', requireAuth, async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (typeof token !== 'string' || !token) {
+      return res.status(400).json({ error: 'Invalid token' });
+    }
+    await Admin.findByIdAndUpdate(req.adminId, { $addToSet: { fcmTokens: token } });
+    res.json({ message: 'Token saved' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/notification-prefs', requireAuth, async (req, res) => {
+  try {
+    const admin = await Admin.findById(req.adminId).select('notificationPrefs');
+    res.json(admin.notificationPrefs);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.put('/notification-prefs', requireAuth, async (req, res) => {
+  try {
+    const { memberPaid, newMember, dailyPending, dailyInactive } = req.body;
+    const admin = await Admin.findById(req.adminId);
+    admin.notificationPrefs = {
+      memberPaid: !!memberPaid,
+      newMember: !!newMember,
+      dailyPending: !!dailyPending,
+      dailyInactive: !!dailyInactive
+    };
+    await admin.save();
+    res.json(admin.notificationPrefs);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

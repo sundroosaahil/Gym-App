@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
-import { MoreVertical, LogOut, Loader2, ShieldOff } from 'lucide-react';
+import { MoreVertical, LogOut, Loader2, ShieldOff, Bell } from 'lucide-react';
 import ConfirmDialog from './ConfirmDialog';
+import NotificationSettings from './NotificationSettings';
 
 function LogoutMenu({ onLogout, onLogoutAll, isLoggingOut }) {
   const [open, setOpen] = useState(false);
   const [confirmingAll, setConfirmingAll] = useState(false);
+  const [showNotifSettings, setShowNotifSettings] = useState(false);
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -31,8 +33,15 @@ function LogoutMenu({ onLogout, onLogoutAll, isLoggingOut }) {
       {open && (
         <div className="absolute right-0 mt-2 w-56 bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg shadow-xl overflow-hidden z-40">
           <button
-            onClick={() => { setOpen(false); onLogout(); }}
+            onClick={() => { setOpen(false); setShowNotifSettings(true); }}
             className="w-full flex items-center gap-2 px-4 py-3 text-sm text-[#F5F5F0] hover:bg-[#2A2A2A] transition-colors text-left"
+          >
+            <Bell className="w-4 h-4 text-[#999]" />
+            Notification Settings
+          </button>
+          <button
+            onClick={() => { setOpen(false); onLogout(); }}
+            className="w-full flex items-center gap-2 px-4 py-3 text-sm text-[#F5F5F0] hover:bg-[#2A2A2A] transition-colors text-left border-t border-[#2A2A2A]"
           >
             <LogOut className="w-4 h-4 text-[#999]" />
             Log Out
@@ -56,6 +65,10 @@ function LogoutMenu({ onLogout, onLogoutAll, isLoggingOut }) {
           onConfirm={() => { setConfirmingAll(false); onLogoutAll(); }}
           onCancel={() => setConfirmingAll(false)}
         />
+      )}
+
+      {showNotifSettings && (
+        <NotificationSettings onClose={() => setShowNotifSettings(false)} />
       )}
     </div>
   );

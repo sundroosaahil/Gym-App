@@ -19,7 +19,10 @@ import EmptyState from "../components/EmptyState";
 import { useAuth } from "../context/AuthContext";
 import { fuzzyMatchesName } from "../utils/fuzzySearch";
 import LogoutMenu from "../components/LogoutMenu";
+import { registerPushNotifications } from "../utils/registerPush";
+import { listenForForegroundMessages } from "../firebase";
 
+ 
 async function getClientDeviceModel() {
   if (navigator.userAgentData?.getHighEntropyValues) {
     try {
@@ -65,9 +68,18 @@ function AdminDashboard() {
         setHasLoadedOnce(true);
       });
   }
+   useEffect(() => {
+    registerPushNotifications();
+    listenForForegroundMessages();
+  }, []);
+
+
+   useEffect(() => {
+    fetchMembers();
+  }, []);
 
   useEffect(() => {
-    fetchMembers();
+    registerPushNotifications();
   }, []);
 
   async function handleLogout() {
