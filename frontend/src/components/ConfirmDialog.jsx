@@ -4,7 +4,7 @@ function ConfirmDialog({ title, message, confirmLabel = 'Confirm', onConfirm, on
   return createPortal(
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-6">
       <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg p-6 max-w-sm w-full">
-        <h3 className="text-lg font-black uppercase tracking-tight mb-2">{title}</h3>
+        <h3 className="text-lg font-black uppercase tracking-tight text-[#F5F5F0] mb-2">{title}</h3>
         <p className="text-sm text-[#999] mb-6">{message}</p>
         <div className="flex gap-3 justify-end">
           <button

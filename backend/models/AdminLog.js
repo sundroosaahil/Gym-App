@@ -14,8 +14,8 @@ const adminLogSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-// Auto-delete logs 30 days after creation.
+// Auto-delete logs 60 days after creation.
 // MongoDB checks this in the background roughly every 60 seconds — no manual cleanup needed.
-adminLogSchema.index({ createdAt: 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 });
+adminLogSchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 * 24 * 60 * 60 });
 
 module.exports = mongoose.model('AdminLog', adminLogSchema);
