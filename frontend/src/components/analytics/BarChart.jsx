@@ -37,14 +37,14 @@ function BarChart({ data, color = '#F2C230', highlightColor = '#C6FF3D', highlig
         className="overflow-x-auto -mx-1 px-1 scroll-smooth"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
-        <div ref={inViewRef} className="flex items-end gap-2 h-48 w-max">
+        <div ref={inViewRef} className="flex items-end gap-1.5 h-48 w-max">
           {data.map((d, i) => {
             const heightPercent = (d.value / max) * 100;
             const isLast = highlightLast && i === data.length - 1;
             const barColor = isLast ? highlightColor : color;
 
             return (
-              <div key={i} className="group flex flex-col items-center gap-1.5 h-full justify-end w-16 shrink-0">
+              <div key={i} className="group flex flex-col items-center gap-1.5 h-full justify-end w-11 sm:w-16 shrink-0">
                 <span
                   className={`text-[10px] sm:text-xs font-bold whitespace-nowrap transition-colors ${
                     isLast ? 'text-[#C6FF3D]' : 'text-[#999] group-hover:text-[#F2C230]'
@@ -79,3 +79,4 @@ function BarChart({ data, color = '#F2C230', highlightColor = '#C6FF3D', highlig
 }
 
 export default BarChart;
+//check

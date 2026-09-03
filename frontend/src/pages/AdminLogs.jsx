@@ -63,7 +63,7 @@ function AdminLogs() {
         <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight mb-2">
           Admin Activity Log
         </h1>
-        <p className="text-xs text-[#666] mb-6">Logs are automatically deleted after 30 days.</p>
+        <p className="text-xs text-[#666] mb-6">Logs are automatically deleted after 60 days.</p>
 
         {!loading && logs.length > 0 && (
           <div className="flex flex-wrap gap-3 mb-6">
