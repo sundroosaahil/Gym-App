@@ -7,6 +7,10 @@ const sendNotificationToAdmins = require('../utils/sendNotification');
 // Triggered by an external scheduler (cron-job.org), not by anything inside
 // this app — Render's free tier can't be trusted to wake itself up on time.
 router.post('/daily-digest', async (req, res) => {
+  // TEMPORARY DEBUG — remove these two lines once the 401 is fixed
+  console.log('RECEIVED:', JSON.stringify(req.headers['x-cron-secret']));
+  console.log('EXPECTED:', JSON.stringify(process.env.CRON_SECRET));
+
   if (req.headers['x-cron-secret'] !== process.env.CRON_SECRET) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
