@@ -206,7 +206,7 @@ function HeroPhoto() {
         ref={imgRef}
         src="/images/gym-hero.png"
         alt="Bodyworks Gym owner"
-        className="relative z-10 -ml-16 w-150 max-w-none h-auto md:ml-0 md:w-150 md:-mr-12 will-change-transform transition-transform duration-200 ease-out"
+        className="relative z-10 -ml-8 w-[22rem] max-w-none h-auto sm:w-[26rem] md:ml-0 md:w-[32rem] md:-mr-12 lg:w-150 will-change-transform transition-transform duration-200 ease-out"
         style={{
           filter: 'drop-shadow(0 20px 35px rgba(0,0,0,0.5))',
           WebkitMaskImage: 'linear-gradient(to bottom, black 62%, rgba(0,0,0,0.9) 73%, rgba(0,0,0,0.55) 87%, transparent 100%)',

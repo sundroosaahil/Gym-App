@@ -34,7 +34,7 @@ function BarChart({ data, color = '#F2C230', highlightColor = '#C6FF3D', highlig
     <div>
       <div
         ref={scrollRef}
-        className="overflow-x-auto -mx-1 px-1 scroll-smooth"
+        className="no-scrollbar overflow-x-auto -mx-1 px-1 scroll-smooth"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <div ref={inViewRef} className="flex items-end gap-1.5 h-48 w-max">

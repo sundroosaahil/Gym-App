@@ -172,6 +172,21 @@ router.post('/fcm-token', requireAuth, async (req, res) => {
   }
 });
 
+router.post('/fcm-token/remove', requireAuth, async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (typeof token !== 'string' || !token) {
+      return res.status(400).json({ error: 'Invalid token' });
+    }
+    await Admin.findByIdAndUpdate(req.adminId, { $pull: { fcmTokens: token } });
+    res.json({ message: 'Token removed' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+
 router.get('/notification-prefs', requireAuth, async (req, res) => {
   try {
     const admin = await Admin.findById(req.adminId).select('notificationPrefs');
