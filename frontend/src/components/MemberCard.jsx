@@ -227,7 +227,9 @@ function MemberCard({ member, isOpen, onToggle, onEditingChange, onMarkPaidChang
                 </button>
                 <button
                   onClick={handleToggleMarkPaid}
-                  className="bg-[#F2C230] text-black text-sm font-bold uppercase py-3 rounded hover:bg-[#C6FF3D] transition-colors"
+                  className={`bg-[#F2C230] text-black text-sm font-bold uppercase py-3 rounded hover:bg-[#C6FF3D] transition-colors ${
+                    isShaking && showMarkPaid ? 'markpaid-btn-glow' : ''
+                  }`}
                 >
                   {showMarkPaid ? 'Cancel' : 'Mark Paid'}
                 </button>
@@ -358,7 +360,9 @@ function MemberCard({ member, isOpen, onToggle, onEditingChange, onMarkPaidChang
                   markPaidStatus === 'success'
                     ? 'bg-green-500 text-white'
                     : 'bg-[#C6FF3D] text-black hover:bg-[#F2C230]'
-                } ${markPaidStatus === 'submitting' ? 'opacity-70 cursor-not-allowed' : ''}`}
+                } ${markPaidStatus === 'submitting' ? 'opacity-70 cursor-not-allowed' : ''} ${
+                  isShaking ? 'markpaid-btn-glow' : ''
+                }`}
               >
                 {markPaidStatus === 'submitting' && (
                   <>

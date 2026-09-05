@@ -77,6 +77,11 @@ function AdminDashboard() {
     if (markPaidMemberRef.current) {
       setShakeMemberId(markPaidMemberRef.current.id);
       setShakeTick((t) => t + 1);
+      setBlockedNotice(
+        `Please complete or cancel the payment for ${markPaidMemberRef.current.name} to view another member.`
+      );
+      clearTimeout(blockedNoticeTimerRef.current);
+      blockedNoticeTimerRef.current = setTimeout(() => setBlockedNotice(null), 3000);
       return;
     }
     setActiveMemberId((current) => (current === memberId ? null : memberId));
@@ -93,14 +98,26 @@ function AdminDashboard() {
   const [markPaidMember, setMarkPaidMember] = useState(null); // { id, name } | null
   const [shakeMemberId, setShakeMemberId] = useState(null);
   const [shakeTick, setShakeTick] = useState(0); // bump to retrigger the animation even for the same member
+  // Explains *why* clicking another member did nothing, since the shake
+  // alone doesn't say which member is blocking or what to do about it.
+  const [blockedNotice, setBlockedNotice] = useState(null); // string | null
+  const blockedNoticeTimerRef = useRef(null);
 
   const markPaidMemberRef = useRef(markPaidMember);
   useEffect(() => {
     markPaidMemberRef.current = markPaidMember;
   }, [markPaidMember]);
 
+  useEffect(() => {
+    return () => clearTimeout(blockedNoticeTimerRef.current);
+  }, []);
+
   const handleMarkPaidChange = useCallback((memberId, memberName, isMarkingPaid) => {
     setMarkPaidMember(isMarkingPaid ? { id: memberId, name: memberName } : null);
+    // The lock just cleared (or moved elsewhere) — whatever notice was
+    // showing no longer applies.
+    clearTimeout(blockedNoticeTimerRef.current);
+    setBlockedNotice(null);
   }, []);
 
   function handleConfirmSwitch() {
@@ -246,6 +263,13 @@ function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-black text-[#F5F5F0]">
+      {blockedNotice && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-[90vw] px-4">
+          <div className="blocked-notice bg-[#F2C230] text-black text-sm font-bold px-4 py-3 rounded-lg shadow-lg text-center">
+            {blockedNotice}
+          </div>
+        </div>
+      )}
       <div className="max-w-6xl mx-auto px-6 py-8">
         <div className="flex justify-between items-center mb-6 gap-3">
           <h1 className="text-xl md:text-3xl font-black uppercase tracking-tight truncate">

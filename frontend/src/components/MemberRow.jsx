@@ -218,7 +218,9 @@ function MemberRow({ member, isOpen, onToggle, onEditingChange, onMarkPaidChange
                 </button>
                 <button
                   onClick={handleToggleMarkPaid}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded border border-[#F2C230]/40 text-[#F2C230] text-sm font-bold uppercase hover:bg-[#F2C230]/10 transition-colors"
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded border border-[#F2C230]/40 text-[#F2C230] text-sm font-bold uppercase hover:bg-[#F2C230]/10 transition-colors ${
+                    isShaking && showMarkPaid ? 'markpaid-btn-glow' : ''
+                  }`}
                 >
                   <IndianRupee className="w-4 h-4" />
                   {showMarkPaid ? 'Cancel' : 'Mark Paid'}
@@ -357,7 +359,9 @@ function MemberRow({ member, isOpen, onToggle, onEditingChange, onMarkPaidChange
                   markPaidStatus === 'success'
                     ? 'bg-green-500 text-white'
                     : 'bg-[#C6FF3D] text-black hover:bg-[#F2C230]'
-                } ${markPaidStatus === 'submitting' ? 'opacity-70 cursor-not-allowed' : ''}`}
+                } ${markPaidStatus === 'submitting' ? 'opacity-70 cursor-not-allowed' : ''} ${
+                  isShaking ? 'markpaid-btn-glow' : ''
+                }`}
               >
                 {markPaidStatus === 'submitting' && (
                   <>
