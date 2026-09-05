@@ -6,6 +6,7 @@
   --animate-marquee: marquee 22s linear infinite;
   --animate-pop-in: pop-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   --animate-glow-pulse: glow-pulse 5s ease-in-out infinite;
+  --animate-shake-no: shake-no 0.4s ease-in-out;
 }
 
 .animate-dumbbell-pulse {
@@ -27,6 +28,28 @@
 .member-card-pop-in {
   animation: var(--animate-pop-in);
   will-change: transform, opacity;
+}
+
+.member-card-shake {
+  animation: var(--animate-shake-no);
+}
+
+@keyframes shake-no {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(6px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
 }
 
 @keyframes pop-in {

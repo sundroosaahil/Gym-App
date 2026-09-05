@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, memo } from 'react';
 import { Pencil, Trash2, MessageCircle, Loader2, Check, IndianRupee, UserX } from 'lucide-react';
 import api from '../api/axiosConfig';
 import { durationOptions } from '../constants/durationOptions';
@@ -8,11 +8,10 @@ import { formatDate } from '../utils/formatDate';
 import { buildWhatsAppReminderLink } from '../utils/sendWhatsAppReminder';
 import { toFullPhone, toLocalPhone } from '../utils/formatPhone';
 
-function MemberRow({ member, onUpdated }) {
+function MemberRow({ member, isOpen, onToggle, onEditingChange, onMarkPaidChange, shakeSignal, onUpdated }) {
   const [showMarkPaid, setShowMarkPaid] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showActions, setShowActions] = useState(false);
   const [durationChoice, setDurationChoice] = useState('30');
   const [customDays, setCustomDays] = useState('');
   const [amountPaid, setAmountPaid] = useState('');
@@ -38,6 +37,37 @@ function MemberRow({ member, onUpdated }) {
   const [remindMessage, setRemindMessage] = useState(null);
 
   const hasPhone = Boolean(member.phone);
+  const [isShaking, setIsShaking] = useState(false);
+  const prevShakeSignal = useRef(shakeSignal);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setShowMarkPaid(false);
+      setShowEdit(false);
+      setShowDeleteConfirm(false);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (shakeSignal !== prevShakeSignal.current) {
+      prevShakeSignal.current = shakeSignal;
+      setIsShaking(true);
+      const timer = setTimeout(() => setIsShaking(false), 400);
+      return () => clearTimeout(timer);
+    }
+  }, [shakeSignal]);
+
+  function handleToggleEdit() {
+    const next = !showEdit;
+    setShowEdit(next);
+    onEditingChange(member._id, member.name, next);
+  }
+
+  function handleToggleMarkPaid() {
+    const next = !showMarkPaid;
+    setShowMarkPaid(next);
+    onMarkPaidChange(member._id, member.name, next);
+  }
 
   function handleRemindClick() {
     if (member.status === 'active') {
@@ -77,6 +107,7 @@ function MemberRow({ member, onUpdated }) {
         setCustomDays('');
         setMarkPaidReceiptNo('');
         setMarkPaidStatus('idle');
+        onMarkPaidChange(member._id, member.name, false);
         onUpdated();
       }, 700);
     } catch (err) {
@@ -117,6 +148,7 @@ function MemberRow({ member, onUpdated }) {
         ...(editData.receiptNo.trim() && { receiptNo: editData.receiptNo.trim() })
       });
       setShowEdit(false);
+      onEditingChange(member._id, member.name, false);
       onUpdated();
     } catch (err) {
       setEditError(err.response?.data?.error || 'Failed to update member');
@@ -126,6 +158,11 @@ function MemberRow({ member, onUpdated }) {
   async function handleDelete() {
     await api.delete(`/members/${member._id}`);
     setShowDeleteConfirm(false);
+    // If this member happened to have an edit or mark-paid form open, clear
+    // the parent's lock — otherwise deleting mid-edit/payment would leave
+    // every other member permanently blocked with nothing left to cancel it.
+    onEditingChange(member._id, member.name, false);
+    onMarkPaidChange(member._id, member.name, false);
     onUpdated();
   }
 
@@ -135,8 +172,8 @@ function MemberRow({ member, onUpdated }) {
   return (
     <tbody>
       <tr
-        onClick={() => setShowActions(!showActions)}
-        className={`cursor-pointer ${member.status === 'pending' ? 'bg-orange-500/5' : ''}`}
+        onClick={() => onToggle(member._id, member.name)}
+        className={`cursor-pointer ${isShaking ? 'member-card-shake' : ''} ${member.status === 'pending' ? 'bg-orange-500/5' : ''}`}
       >
         <td className="border border-[#2A2A2A] px-4 py-3 font-mono text-[#999]">{member.gymCode}</td>
         <td className="border border-[#2A2A2A] px-4 py-3 font-semibold">{member.name}</td>
@@ -150,11 +187,11 @@ function MemberRow({ member, onUpdated }) {
           <div className="text-xs text-[#666]">Rcpt: {latestReceiptNo || '—'}</div>
         </td>
         <td className="border border-[#2A2A2A] px-3 py-2 text-center text-xs uppercase tracking-wide text-[#666]">
-          {showActions ? 'Actions below' : 'Click to take action'}
+          {isOpen ? 'Actions below' : 'Click to take action'}
         </td>
       </tr>
 
-      <tr className={showActions ? '' : 'hidden'}>
+      <tr className={isOpen ? '' : 'hidden'}>
         <td colSpan="9" className="border border-t-0 border-[#2A2A2A] border-b-2 border-b-[#333] px-4 py-3">
           <div className="flex items-stretch gap-2">
             {member.renewalIntent === 'not_renewing' ? (
@@ -180,11 +217,11 @@ function MemberRow({ member, onUpdated }) {
                   Remind
                 </button>
                 <button
-                  onClick={() => setShowMarkPaid(!showMarkPaid)}
+                  onClick={handleToggleMarkPaid}
                   className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded border border-[#F2C230]/40 text-[#F2C230] text-sm font-bold uppercase hover:bg-[#F2C230]/10 transition-colors"
                 >
                   <IndianRupee className="w-4 h-4" />
-                  Mark Paid
+                  {showMarkPaid ? 'Cancel' : 'Mark Paid'}
                 </button>
                 <button
                   onClick={handleNotRenewing}
@@ -215,7 +252,7 @@ function MemberRow({ member, onUpdated }) {
                   )}
                 </button>
                 <button
-                  onClick={() => setShowEdit(!showEdit)}
+                  onClick={handleToggleEdit}
                   className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded border border-[#333] text-[#999] text-sm font-bold uppercase hover:bg-[#2A2A2A] hover:text-[#F5F5F0] transition-colors"
                 >
                   <Pencil className="w-4 h-4" />
@@ -426,4 +463,4 @@ function MemberRow({ member, onUpdated }) {
   );
 }
 
-export default MemberRow;
+export default memo(MemberRow);

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   Users,
@@ -16,6 +16,7 @@ import MemberCard from "../components/MemberCard";
 import SkeletonCard from "../components/SkeletonCard";
 import SkeletonRow from "../components/SkeletonRow";
 import EmptyState from "../components/EmptyState";
+import ConfirmDialog from "../components/ConfirmDialog";
 import { useAuth } from "../context/AuthContext";
 import { fuzzyMatchesName } from "../utils/fuzzySearch";
 import LogoutMenu from "../components/LogoutMenu";
@@ -49,12 +50,77 @@ function AdminDashboard() {
   const { logout, logoutAll } = useAuth();
   const [hideInactive, setHideInactive] = useState(true);
 
-  function fetchMembers() {
+  // Only one member's details/actions panel can be open at a time.
+  const [activeMemberId, setActiveMemberId] = useState(null);
+  // Tracks which member currently has an edit form open, so we can warn
+  // before switching away and silently discarding unsaved changes.
+  const [editingMember, setEditingMember] = useState(null); // { id, name } | null
+  // The member the admin clicked while an edit was in progress elsewhere —
+  // we hold the click here until they confirm or cancel.
+  const [pendingSwitch, setPendingSwitch] = useState(null);
+
+  // handleToggleMember/handleEditingChange are passed to EVERY member card.
+  // If we redefine them on every render, React.memo on MemberCard/MemberRow
+  // is pointless — every card would still re-render on every keystroke in
+  // the search box. Keeping them stable (useCallback + refs for the values
+  // they need to read) is what lets memo actually skip untouched cards.
+  const editingMemberRef = useRef(editingMember);
+  useEffect(() => {
+    editingMemberRef.current = editingMember;
+  }, [editingMember]);
+
+  const handleToggleMember = useCallback((memberId, memberName) => {
+    if (editingMemberRef.current) {
+      setPendingSwitch({ _id: memberId, name: memberName });
+      return;
+    }
+    if (markPaidMemberRef.current) {
+      setShakeMemberId(markPaidMemberRef.current.id);
+      setShakeTick((t) => t + 1);
+      return;
+    }
+    setActiveMemberId((current) => (current === memberId ? null : memberId));
+  }, []);
+
+  const handleEditingChange = useCallback((memberId, memberName, isEditing) => {
+    setEditingMember(isEditing ? { id: memberId, name: memberName } : null);
+  }, []);
+
+  // Tracks which member currently has the Mark Paid form open. While this is
+  // set, no other member can be opened/closed — we shake the busy card
+  // instead of blocking silently, so the admin gets feedback on why nothing
+  // happened.
+  const [markPaidMember, setMarkPaidMember] = useState(null); // { id, name } | null
+  const [shakeMemberId, setShakeMemberId] = useState(null);
+  const [shakeTick, setShakeTick] = useState(0); // bump to retrigger the animation even for the same member
+
+  const markPaidMemberRef = useRef(markPaidMember);
+  useEffect(() => {
+    markPaidMemberRef.current = markPaidMember;
+  }, [markPaidMember]);
+
+  const handleMarkPaidChange = useCallback((memberId, memberName, isMarkingPaid) => {
+    setMarkPaidMember(isMarkingPaid ? { id: memberId, name: memberName } : null);
+  }, []);
+
+  function handleConfirmSwitch() {
+    const clickedId = pendingSwitch._id;
+    setEditingMember(null);
+    setActiveMemberId((current) => (current === clickedId ? null : clickedId));
+    setPendingSwitch(null);
+  }
+
+  const hasLoadedOnceRef = useRef(hasLoadedOnce);
+  useEffect(() => {
+    hasLoadedOnceRef.current = hasLoadedOnce;
+  }, [hasLoadedOnce]);
+
+  const fetchMembers = useCallback(() => {
     // Only the very first load should show a loading state — every refetch
     // after that (add/edit/mark-paid/etc. via onUpdated) happens quietly in
     // the background so the whole dashboard doesn't flash back to a splash
     // screen every time an admin taps a button.
-    if (!hasLoadedOnce) setLoading(true);
+    if (!hasLoadedOnceRef.current) setLoading(true);
     api
       .get("/members")
       .then((response) => {
@@ -67,7 +133,7 @@ function AdminDashboard() {
         setLoading(false);
         setHasLoadedOnce(true);
       });
-  }
+  }, []);
    useEffect(() => {
     registerPushNotifications();
     listenForForegroundMessages();
@@ -103,13 +169,16 @@ function AdminDashboard() {
 
   if (error) return <p className="p-8 text-red-400">{error}</p>;
 
-  const counts = {
-    active: members.filter((m) => m.status === "active").length,
-    pending: members.filter((m) => m.status === "pending").length,
-    inactive: members.filter(
-      (m) => m.status === "inactive" || m.status === "not_renewing",
-    ).length,
-  };
+  const counts = useMemo(
+    () => ({
+      active: members.filter((m) => m.status === "active").length,
+      pending: members.filter((m) => m.status === "pending").length,
+      inactive: members.filter(
+        (m) => m.status === "inactive" || m.status === "not_renewing",
+      ).length,
+    }),
+    [members],
+  );
 
   const filters = [
     { key: "all", label: "All" },
@@ -119,8 +188,8 @@ function AdminDashboard() {
     { key: "renewals", label: "Renewals" },
   ];
 
-  const statusFiltered =
-    filter === "all"
+  const statusFiltered = useMemo(() => {
+    return filter === "all"
       ? members
       : filter === "renewals"
         ? [...members]
@@ -137,16 +206,19 @@ function AdminDashboard() {
               )
               .sort((a, b) => a.daysPastExpiry - b.daysPastExpiry)
           : members.filter((m) => m.status === filter);
+  }, [members, filter, hideInactive]);
 
   const searchTerm = search.trim().toLowerCase();
 
-  const filteredMembers = searchTerm
-    ? statusFiltered.filter(
-        (m) =>
-          m.gymCode.toLowerCase().includes(searchTerm) ||
-          fuzzyMatchesName(m.name, searchTerm),
-      )
-    : statusFiltered;
+  const filteredMembers = useMemo(() => {
+    return searchTerm
+      ? statusFiltered.filter(
+          (m) =>
+            m.gymCode.toLowerCase().includes(searchTerm) ||
+            fuzzyMatchesName(m.name, searchTerm),
+        )
+      : statusFiltered;
+  }, [statusFiltered, searchTerm]);
 
   const statCards = [
     {
@@ -344,6 +416,11 @@ function AdminDashboard() {
                 <MemberRow
                   key={member._id}
                   member={member}
+                  isOpen={activeMemberId === member._id}
+                  onToggle={handleToggleMember}
+                  onEditingChange={handleEditingChange}
+                  onMarkPaidChange={handleMarkPaidChange}
+                  shakeSignal={member._id === shakeMemberId ? shakeTick : 0}
                   onUpdated={fetchMembers}
                 />
               ))}
@@ -369,12 +446,28 @@ function AdminDashboard() {
               <MemberCard
                 key={member._id}
                 member={member}
+                isOpen={activeMemberId === member._id}
+                onToggle={handleToggleMember}
+                onEditingChange={handleEditingChange}
+                onMarkPaidChange={handleMarkPaidChange}
+                shakeSignal={member._id === shakeMemberId ? shakeTick : 0}
                 onUpdated={fetchMembers}
               />
             ))
           )}
         </div>
       </div>
+
+      {pendingSwitch && (
+        <ConfirmDialog
+          title="Unsaved Changes"
+          message={`You're currently editing ${editingMember.name}. Switching now will discard those changes.`}
+          confirmLabel="Discard & Switch"
+          danger
+          onConfirm={handleConfirmSwitch}
+          onCancel={() => setPendingSwitch(null)}
+        />
+      )}
     </div>
   );
 }

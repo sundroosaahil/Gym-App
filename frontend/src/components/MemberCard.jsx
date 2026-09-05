@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, memo } from 'react';
 import { Pencil, Trash2, MessageCircle, Loader2, Check, UserX } from 'lucide-react';
 import api from '../api/axiosConfig';
 import { durationOptions } from '../constants/durationOptions';
@@ -9,9 +9,8 @@ import { formatDate } from '../utils/formatDate';
 import { buildWhatsAppReminderLink } from '../utils/sendWhatsAppReminder';
 import { toFullPhone, toLocalPhone } from '../utils/formatPhone';
 
-function MemberCard({ member, onUpdated }) {
+function MemberCard({ member, isOpen, onToggle, onEditingChange, onMarkPaidChange, shakeSignal, onUpdated }) {
   const [ref, inView] = useInView();
-  const [expanded, setExpanded] = useState(false);
   const [showMarkPaid, setShowMarkPaid] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -40,6 +39,37 @@ function MemberCard({ member, onUpdated }) {
   const [remindMessage, setRemindMessage] = useState(null);
 
   const hasPhone = Boolean(member.phone);
+  const [isShaking, setIsShaking] = useState(false);
+  const prevShakeSignal = useRef(shakeSignal);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setShowMarkPaid(false);
+      setShowEdit(false);
+      setShowDeleteConfirm(false);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (shakeSignal !== prevShakeSignal.current) {
+      prevShakeSignal.current = shakeSignal;
+      setIsShaking(true);
+      const timer = setTimeout(() => setIsShaking(false), 400);
+      return () => clearTimeout(timer);
+    }
+  }, [shakeSignal]);
+
+  function handleToggleEdit() {
+    const next = !showEdit;
+    setShowEdit(next);
+    onEditingChange(member._id, member.name, next);
+  }
+
+  function handleToggleMarkPaid() {
+    const next = !showMarkPaid;
+    setShowMarkPaid(next);
+    onMarkPaidChange(member._id, member.name, next);
+  }
 
   function handleRemindClick() {
     if (member.status === 'active') {
@@ -79,6 +109,7 @@ function MemberCard({ member, onUpdated }) {
         setCustomDays('');
         setMarkPaidReceiptNo('');
         setMarkPaidStatus('idle');
+        onMarkPaidChange(member._id, member.name, false);
         onUpdated();
       }, 700);
     } catch (err) {
@@ -119,6 +150,7 @@ function MemberCard({ member, onUpdated }) {
         ...(editData.receiptNo.trim() && { receiptNo: editData.receiptNo.trim() })
       });
       setShowEdit(false);
+      onEditingChange(member._id, member.name, false);
       onUpdated();
     } catch (err) {
       setEditError(err.response?.data?.error || 'Failed to update member');
@@ -128,6 +160,11 @@ function MemberCard({ member, onUpdated }) {
   async function handleDelete() {
     await api.delete(`/members/${member._id}`);
     setShowDeleteConfirm(false);
+    // If this member happened to have an edit or mark-paid form open, clear
+    // the parent's lock — otherwise deleting mid-edit/payment would leave
+    // every other member permanently blocked with nothing left to cancel it.
+    onEditingChange(member._id, member.name, false);
+    onMarkPaidChange(member._id, member.name, false);
     onUpdated();
   }
 
@@ -137,12 +174,12 @@ function MemberCard({ member, onUpdated }) {
   return (
     <div
       ref={ref}
-      className={`bg-[#1A1A1A] border rounded-lg p-4 ${inView ? 'member-card-pop-in' : ''} ${
+      className={`bg-[#1A1A1A] border rounded-lg p-4 ${inView ? 'member-card-pop-in' : ''} ${isShaking ? 'member-card-shake' : ''} ${
         member.status === 'pending' ? 'border-orange-500/50' : 'border-[#2A2A2A]'
       }`}
     >
       {/* Collapsed view — always visible, tap to expand */}
-      <div onClick={() => setExpanded(!expanded)} className="cursor-pointer">
+      <div onClick={() => onToggle(member._id, member.name)} className="cursor-pointer">
         <div className="flex justify-between items-start mb-2">
           <div>
             <p className="font-semibold">{member.name}</p>
@@ -156,7 +193,7 @@ function MemberCard({ member, onUpdated }) {
       </div>
 
       {/* Expanded view — extra details + actions, only rendered when opened */}
-      {expanded && (
+      {isOpen && (
         <div onClick={(e) => e.stopPropagation()}>
           <div className="text-sm text-[#999] space-y-1 mt-3 mb-4 pt-3 border-t border-[#2A2A2A]">
             <p>Start Date: {formatDate(member.startDate)}</p>
@@ -189,10 +226,10 @@ function MemberCard({ member, onUpdated }) {
                   Remind
                 </button>
                 <button
-                  onClick={() => setShowMarkPaid(!showMarkPaid)}
+                  onClick={handleToggleMarkPaid}
                   className="bg-[#F2C230] text-black text-sm font-bold uppercase py-3 rounded hover:bg-[#C6FF3D] transition-colors"
                 >
-                  Mark Paid
+                  {showMarkPaid ? 'Cancel' : 'Mark Paid'}
                 </button>
                 <button
                   onClick={handleNotRenewing}
@@ -223,7 +260,7 @@ function MemberCard({ member, onUpdated }) {
                   )}
                 </button>
                 <button
-                  onClick={() => setShowEdit(!showEdit)}
+                  onClick={handleToggleEdit}
                   className="bg-[#2A2A2A] text-[#F5F5F0] flex items-center justify-center gap-2 text-sm font-bold uppercase py-3 rounded hover:bg-[#333] transition-colors"
                 >
                   <Pencil className="w-4 h-4" />
@@ -423,4 +460,4 @@ function MemberCard({ member, onUpdated }) {
   );
 }
 
-export default MemberCard;
+export default memo(MemberCard);
