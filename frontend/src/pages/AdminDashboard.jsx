@@ -46,6 +46,12 @@ function AdminDashboard() {
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
+  // While the admin is actively searching (focused or has typed something),
+  // the on-screen keyboard eats most of a phone screen — so we tuck the
+  // stat cards and Add Member row out of the way and pull results right up
+  // under the search bar instead of leaving them stranded below the fold.
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const searchInputRef = useRef(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { logout, logoutAll } = useAuth();
@@ -174,6 +180,26 @@ function AdminDashboard() {
       : statusFiltered;
   }, [statusFiltered, searchTerm]);
 
+  // Same condition used to compact the layout while searching — focused
+  // counts too, so things shift out of the way right as the keyboard opens
+  // rather than waiting for the first keystroke.
+  const isSearchActive = isSearchFocused || searchTerm.length > 0;
+
+  function handleSearchFocus() {
+    setIsSearchFocused(true);
+    // Let the on-screen keyboard finish animating in, then make sure the
+    // search bar ends up at the top of the visible area — otherwise on a
+    // lot of phones it (and everything below it) stays half-hidden behind
+    // the keyboard the whole time you're typing.
+    setTimeout(() => {
+      searchInputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 300);
+  }
+
+  function handleSearchBlur() {
+    setIsSearchFocused(false);
+  }
+
   const statCards = [
     {
       label: "Active",
@@ -228,18 +254,32 @@ function AdminDashboard() {
           </div>
         </div>
 
-        <div className="relative mb-8">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#666]" />
-          <input
-            type="text"
-            placeholder="Search by name, code..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-[#1A1A1A] border-2 border-[#333] rounded-lg pl-12 pr-4 py-3.5 text-base placeholder-[#666] focus:outline-none focus:border-[#F2C230] transition-colors"
-          />
+        <div className="sticky top-0 z-30 bg-black pt-2 pb-4 mb-4 -mx-6 px-6 md:static md:mx-0 md:px-0 md:pt-0 md:mb-8">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#666]" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search by name, code..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onFocus={handleSearchFocus}
+              onBlur={handleSearchBlur}
+              className="w-full bg-[#1A1A1A] border-2 border-[#333] rounded-lg pl-12 pr-4 py-3.5 text-base placeholder-[#666] focus:outline-none focus:border-[#F2C230] transition-colors"
+            />
+          </div>
+          {/* Instant feedback that shows right under the search bar, so it's
+              still visible even when the keyboard is covering everything
+              below it — you don't have to dismiss the keyboard just to find
+              out whether your search matched anything. */}
+          {searchTerm && (
+            <p className="text-xs text-[#999] mt-2 px-1">
+              {filteredMembers.length} member{filteredMembers.length === 1 ? "" : "s"} found
+            </p>
+          )}
         </div>
 
-        <div className="grid grid-cols-3 gap-2 md:gap-4 mb-8">
+        <div className={`grid grid-cols-3 gap-2 md:gap-4 mb-8 ${isSearchActive ? "hidden md:grid" : ""}`}>
           {statCards.map(({ label, value, icon: Icon, color, filterKey }) => {
             const isSelected = filter === filterKey;
             return (
@@ -266,7 +306,7 @@ function AdminDashboard() {
           })}
         </div>
 
-        <div className="flex flex-col md:flex-row md:items-center gap-3 mb-4">
+        <div className={`flex flex-col md:flex-row md:items-center gap-3 mb-4 ${isSearchActive ? "hidden md:flex" : ""}`}>
           <button
             onClick={() => setShowAddForm(true)}
             className="w-full md:flex-1 flex items-center justify-center gap-2 bg-[#F2C230] text-black font-black uppercase px-5 py-3.5 rounded-lg hover:bg-[#C6FF3D] hover:-translate-y-0.5 transition-all tracking-wide"
