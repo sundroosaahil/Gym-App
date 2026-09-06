@@ -3,7 +3,7 @@ import { MoreVertical, LogOut, Loader2, ShieldOff, Bell } from 'lucide-react';
 import ConfirmDialog from './ConfirmDialog';
 import NotificationSettings from './NotificationSettings';
 
-function LogoutMenu({ onLogout, onLogoutAll, isLoggingOut }) {
+function LogoutMenu({ onLogout, onLogoutAll, isLoggingOut, dropUp = false, variant = 'icon' }) {
   const [open, setOpen] = useState(false);
   const [confirmingAll, setConfirmingAll] = useState(false);
   const [showNotifSettings, setShowNotifSettings] = useState(false);
@@ -21,17 +21,39 @@ function LogoutMenu({ onLogout, onLogoutAll, isLoggingOut }) {
 
   return (
     <div className="relative" ref={menuRef}>
-      <button
-        onClick={() => setOpen((o) => !o)}
-        disabled={isLoggingOut}
-        className="flex items-center justify-center w-8 h-8 rounded text-[#999] hover:text-[#F2C230] hover:bg-[#1A1A1A] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-        aria-label="Account menu"
-      >
-        {isLoggingOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <MoreVertical className="w-4 h-4" />}
-      </button>
+      {variant === 'nav' ? (
+        <button
+          onClick={() => setOpen((o) => !o)}
+          disabled={isLoggingOut}
+          className={`flex flex-col items-center justify-center gap-0.5 min-w-[56px] transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
+            open ? 'text-[#F2C230] font-bold' : 'text-[#999] hover:text-[#F5F5F0]'
+          }`}
+          aria-label="Account menu"
+        >
+          {isLoggingOut ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <MoreVertical className="w-5 h-5" />
+          )}
+          <span className="text-[10px] tracking-wider uppercase font-semibold">Account</span>
+        </button>
+      ) : (
+        <button
+          onClick={() => setOpen((o) => !o)}
+          disabled={isLoggingOut}
+          className="flex items-center justify-center w-8 h-8 rounded text-[#999] hover:text-[#F2C230] hover:bg-[#1A1A1A] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          aria-label="Account menu"
+        >
+          {isLoggingOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <MoreVertical className="w-4 h-4" />}
+        </button>
+      )}
 
       {open && (
-        <div className="absolute right-0 mt-2 w-56 bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg shadow-xl overflow-hidden z-40">
+        <div
+          className={`absolute right-0 w-56 bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg shadow-xl overflow-hidden z-40 ${
+            dropUp ? 'bottom-full mb-2' : 'mt-2'
+          }`}
+        >
           <button
             onClick={() => { setOpen(false); setShowNotifSettings(true); }}
             className="w-full flex items-center gap-2 px-4 py-3 text-sm text-[#F5F5F0] hover:bg-[#2A2A2A] transition-colors text-left"

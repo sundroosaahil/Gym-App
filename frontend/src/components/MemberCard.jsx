@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, memo } from 'react';
-import { Pencil, Trash2, MessageCircle, Loader2, Check, UserX } from 'lucide-react';
+import { Pencil, Trash2, MessageCircle, Loader2, Check, UserX, MapPin } from 'lucide-react';
 import api from '../api/axiosConfig';
 import { durationOptions } from '../constants/durationOptions';
 import StatusBadge from './StatusBadge';
@@ -8,6 +8,7 @@ import { useInView } from '../hooks/useInView';
 import { formatDate } from '../utils/formatDate';
 import { buildWhatsAppReminderLink } from '../utils/sendWhatsAppReminder';
 import { toFullPhone, toLocalPhone } from '../utils/formatPhone';
+import { getRenewalLabel } from '../utils/renewalLabel';
 
 function MemberCard({ member, isOpen, onToggle, onEditingChange, onMarkPaidChange, shakeSignal, onUpdated }) {
   const [ref, inView] = useInView();
@@ -188,8 +189,13 @@ function MemberCard({ member, isOpen, onToggle, onEditingChange, onMarkPaidChang
           <StatusBadge status={member.status} />
         </div>
 
-        <p className="text-sm text-[#999] mb-1">{member.residence || '—'}</p>
-        <p className="text-sm text-[#999]">Days past: {member.daysPastExpiry}</p>
+        <p className="text-sm text-[#999] mb-1 flex items-center gap-1">
+          <MapPin className="w-3.5 h-3.5 shrink-0 text-[#666]" />
+          {member.residence || '—'}
+        </p>
+        <p className={`text-sm font-bold ${getRenewalLabel(member).colorClass}`}>
+          {getRenewalLabel(member).text}
+        </p>
       </div>
 
       {/* Expanded view — extra details + actions, only rendered when opened */}

@@ -30,6 +30,21 @@
   will-change: transform, opacity;
 }
 
+/* Backdrop behind the Add Member modal — a quick fade so the blur doesn't
+   just snap in. */
+.modal-backdrop-fade-in {
+  animation: modal-backdrop-fade 0.2s ease-out forwards;
+}
+
+@keyframes modal-backdrop-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .member-card-shake {
   animation: var(--animate-shake-no);
 }

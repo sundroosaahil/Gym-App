@@ -6,8 +6,10 @@ import {
   XCircle,
   Search,
   FileText,
-  ChevronDown,
   BarChart3,
+  Plus,
+  X,
+  ChevronDown,
 } from "lucide-react";
 import api from "../api/axiosConfig";
 import AddMemberForm from "../components/AddMemberForm";
@@ -164,6 +166,15 @@ function AdminDashboard() {
   useEffect(() => {
     registerPushNotifications();
   }, []);
+
+  useEffect(() => {
+    if (!showAddForm) return;
+    function handleEsc(e) {
+      if (e.key === "Escape") setShowAddForm(false);
+    }
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [showAddForm]);
 
   async function handleLogout() {
     setIsLoggingOut(true);
@@ -336,59 +347,84 @@ function AdminDashboard() {
           })}
         </div>
 
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="bg-[#F2C230] text-black font-bold uppercase px-5 py-2.5 rounded hover:bg-[#C6FF3D] hover:-translate-y-0.5 transition-all mb-4"
-        >
-          {showAddForm ? "Cancel" : "+ Add Member"}
-        </button>
+        <div className="flex flex-col md:flex-row md:items-center gap-3 mb-4">
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="w-full md:flex-1 flex items-center justify-center gap-2 bg-[#F2C230] text-black font-black uppercase px-5 py-3.5 rounded-lg hover:bg-[#C6FF3D] hover:-translate-y-0.5 transition-all tracking-wide"
+          >
+            <Plus className="w-5 h-5" strokeWidth={3} />
+            Add Member
+          </button>
+
+          {/* The dropdown filter (defaults to "All") only shows up on
+              tablet/desktop, next to Add Member — on phones the stat cards
+              above are enough and the big Add Member button gets full width. */}
+          <div className="hidden md:flex md:items-center gap-3">
+            <div className="relative">
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="appearance-none bg-[#1A1A1A] text-[#F5F5F0] text-sm font-bold uppercase tracking-wide border border-[#333] rounded px-4 py-3.5 pr-9 cursor-pointer hover:border-[#555] transition-colors focus:outline-none focus:border-[#F2C230]"
+              >
+                {filters.map(({ key, label }) => (
+                  <option key={key} value={key}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="w-4 h-4 text-[#999] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+
+            {filter === "renewals" && (
+              <label className="flex items-center gap-2 cursor-pointer select-none whitespace-nowrap">
+                <span className="text-xs text-[#999] uppercase tracking-wide">
+                  Hide Inactive
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setHideInactive(!hideInactive)}
+                  className={`relative w-11 h-6 rounded-full transition-colors ${
+                    hideInactive ? "bg-[#C6FF3D]" : "bg-[#333]"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                      hideInactive ? "translate-x-5" : "translate-x-0"
+                    }`}
+                  />
+                </button>
+              </label>
+            )}
+          </div>
+        </div>
 
         {showAddForm && (
-          <AddMemberForm
-            onMemberAdded={() => {
-              fetchMembers();
-              setShowAddForm(false);
-            }}
-          />
-        )}
-
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-4 mt-8">
-          <div className="relative">
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="appearance-none bg-[#1A1A1A] text-[#F5F5F0] text-sm font-bold uppercase tracking-wide border border-[#333] rounded px-4 py-2 pr-9 cursor-pointer hover:border-[#555] transition-colors focus:outline-none focus:border-[#F2C230]"
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm modal-backdrop-fade-in"
+            onClick={() => setShowAddForm(false)}
+          >
+            <div
+              className="relative w-full max-w-2xl"
+              onClick={(e) => e.stopPropagation()}
             >
-              {filters.map(({ key, label }) => (
-                <option key={key} value={key}>
-                  {label}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="w-4 h-4 text-[#999] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-          </div>
-
-          {filter === "renewals" && (
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <span className="text-xs text-[#999] uppercase tracking-wide">
-                Hide Inactive
-              </span>
               <button
-                type="button"
-                onClick={() => setHideInactive(!hideInactive)}
-                className={`relative w-11 h-6 rounded-full transition-colors ${
-                  hideInactive ? "bg-[#C6FF3D]" : "bg-[#333]"
-                }`}
+                onClick={() => setShowAddForm(false)}
+                aria-label="Close"
+                className="absolute -top-3 -right-3 w-9 h-9 rounded-full bg-[#1A1A1A] border border-[#333] flex items-center justify-center text-[#999] hover:text-white hover:border-[#F2C230] transition-colors z-10"
               >
-                <span
-                  className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                    hideInactive ? "translate-x-5" : "translate-x-0"
-                  }`}
-                />
+                <X className="w-4 h-4" />
               </button>
-            </label>
-          )}
-        </div>
+              <div className="max-h-[85vh] overflow-y-auto overflow-x-hidden no-scrollbar rounded-lg member-card-pop-in">
+                <AddMemberForm
+                  onMemberAdded={() => {
+                    fetchMembers();
+                    setShowAddForm(false);
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Desktop table */}
         <div className="hidden md:block bg-[#1A1A1A] border border-[#F2C230]/20 rounded-lg overflow-x-auto">
@@ -403,7 +439,7 @@ function AdminDashboard() {
                   Start Date
                 </th>
                 <th className="border border-[#2A2A2A] px-4 py-3">End Date</th>
-                <th className="border border-[#2A2A2A] px-4 py-3">Days Past</th>
+                <th className="border border-[#2A2A2A] px-4 py-3">Renewal / Days Past</th>
                 <th className="border border-[#2A2A2A] px-4 py-3">
                   Amount Paid
                 </th>

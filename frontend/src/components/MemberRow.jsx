@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, memo } from 'react';
-import { Pencil, Trash2, MessageCircle, Loader2, Check, IndianRupee, UserX } from 'lucide-react';
+import { Pencil, Trash2, MessageCircle, Loader2, Check, IndianRupee, UserX, MapPin } from 'lucide-react';
 import api from '../api/axiosConfig';
 import { durationOptions } from '../constants/durationOptions';
 import StatusBadge from './StatusBadge';
@@ -7,6 +7,7 @@ import ConfirmDialog from './ConfirmDialog';
 import { formatDate } from '../utils/formatDate';
 import { buildWhatsAppReminderLink } from '../utils/sendWhatsAppReminder';
 import { toFullPhone, toLocalPhone } from '../utils/formatPhone';
+import { getRenewalLabel } from '../utils/renewalLabel';
 
 function MemberRow({ member, isOpen, onToggle, onEditingChange, onMarkPaidChange, shakeSignal, onUpdated }) {
   const [showMarkPaid, setShowMarkPaid] = useState(false);
@@ -177,11 +178,18 @@ function MemberRow({ member, isOpen, onToggle, onEditingChange, onMarkPaidChange
       >
         <td className="border border-[#2A2A2A] px-4 py-3 font-mono text-[#999]">{member.gymCode}</td>
         <td className="border border-[#2A2A2A] px-4 py-3 font-semibold">{member.name}</td>
-        <td className="border border-[#2A2A2A] px-4 py-3 text-[#999]">{member.residence || '—'}</td>
+        <td className="border border-[#2A2A2A] px-4 py-3 text-[#999]">
+          <span className="flex items-center gap-1">
+            <MapPin className="w-3.5 h-3.5 shrink-0 text-[#666]" />
+            {member.residence || '—'}
+          </span>
+        </td>
         <td className="border border-[#2A2A2A] px-4 py-3"><StatusBadge status={member.status} /></td>
         <td className="border border-[#2A2A2A] px-4 py-3 text-[#999]">{formatDate(member.startDate)}</td>
         <td className="border border-[#2A2A2A] px-4 py-3 text-[#999]">{formatDate(member.endDate)}</td>
-        <td className="border border-[#2A2A2A] px-4 py-3 text-[#999]">{member.daysPastExpiry}</td>
+        <td className={`border border-[#2A2A2A] px-4 py-3 font-bold ${getRenewalLabel(member).colorClass}`}>
+          {getRenewalLabel(member).text}
+        </td>
         <td className="border border-[#2A2A2A] px-4 py-3 text-[#999]">
           ₹{member.amountPaid}
           <div className="text-xs text-[#666]">Rcpt: {latestReceiptNo || '—'}</div>
