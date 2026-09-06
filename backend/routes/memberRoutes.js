@@ -157,10 +157,14 @@ router.delete('/:id', async (req, res) => {
 // Mark member as paid — extend membership
 router.put('/:id/mark-paid', async (req, res) => {
   try {
-    const { durationDays, amountPaid, receiptNo, mode } = req.body;
+    const { durationDays, amountPaid, receiptNo, mode, paymentMode } = req.body;
 
     if (!mode || !['reset', 'renewal'].includes(mode)) {
       return res.status(400).json({ error: 'mode is required and must be "reset" or "renewal"' });
+    }
+
+    if (paymentMode !== undefined && !['cash', 'upi'].includes(paymentMode)) {
+      return res.status(400).json({ error: 'paymentMode must be "cash" or "upi"' });
     }
 
     const member = await Member.findById(req.params.id);
@@ -183,6 +187,10 @@ router.put('/:id/mark-paid', async (req, res) => {
     member.endDate = newEndDate;
     member.amountPaid = amountPaid;
     member.renewalIntent = 'continuing';
+    // Clearing to undefined (rather than leaving it alone) when no
+    // paymentMode is sent this time — otherwise a payment with mode left
+    // unselected would misleadingly keep showing last time's mode.
+    member.paymentMode = paymentMode || undefined;
 
     if (receiptNo) {
       member.receipts.push({ receiptNo, amount: amountPaid });
@@ -191,7 +199,7 @@ router.put('/:id/mark-paid', async (req, res) => {
     await member.save();
     await logAction(
       'Marked Paid',
-      `${member.name} (${member.gymCode}) — ₹${amountPaid}, ${durationDays} days, mode: ${mode}${receiptNo ? `, Receipt #${receiptNo}` : ''}`,
+      `${member.name} (${member.gymCode}) — ₹${amountPaid}, ${durationDays} days, mode: ${mode}${paymentMode ? `, via ${paymentMode}` : ''}${receiptNo ? `, Receipt #${receiptNo}` : ''}`,
       req.adminEmail
     );
         sendNotificationToAdmins(

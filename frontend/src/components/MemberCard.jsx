@@ -1,75 +1,126 @@
-import { useState, useEffect, useRef, memo } from 'react';
-import { Pencil, Trash2, MessageCircle, Loader2, Check, UserX, MapPin } from 'lucide-react';
+import { useState, useRef, memo } from 'react';
+import { Pencil, Trash2, MessageCircle, Loader2, Check, UserX, MapPin, IndianRupee, Banknote, QrCode } from 'lucide-react';
 import api from '../api/axiosConfig';
 import { durationOptions } from '../constants/durationOptions';
 import StatusBadge from './StatusBadge';
 import ConfirmDialog from './ConfirmDialog';
+import Modal from './Modal';
 import { useInView } from '../hooks/useInView';
 import { formatDate } from '../utils/formatDate';
 import { buildWhatsAppReminderLink } from '../utils/sendWhatsAppReminder';
 import { toFullPhone, toLocalPhone } from '../utils/formatPhone';
 import { getRenewalLabel } from '../utils/renewalLabel';
 
-function MemberCard({ member, isOpen, onToggle, onEditingChange, onMarkPaidChange, shakeSignal, onUpdated }) {
+const MARK_PAID_DEFAULTS = {
+  durationChoice: '30',
+  customDays: '',
+  amountPaid: '',
+  markPaidReceiptNo: '',
+  mode: 'renewal',
+  paymentMode: ''
+};
+
+function MemberCard({ member, isOpen, onToggle, onUpdated }) {
   const [ref, inView] = useInView();
   const [showMarkPaid, setShowMarkPaid] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [durationChoice, setDurationChoice] = useState('30');
-  const [customDays, setCustomDays] = useState('');
-  const [amountPaid, setAmountPaid] = useState('');
-  const [markPaidReceiptNo, setMarkPaidReceiptNo] = useState('');
-  const [mode, setMode] = useState('renewal');
+  const [durationChoice, setDurationChoice] = useState(MARK_PAID_DEFAULTS.durationChoice);
+  const [customDays, setCustomDays] = useState(MARK_PAID_DEFAULTS.customDays);
+  const [amountPaid, setAmountPaid] = useState(MARK_PAID_DEFAULTS.amountPaid);
+  const [markPaidReceiptNo, setMarkPaidReceiptNo] = useState(MARK_PAID_DEFAULTS.markPaidReceiptNo);
+  const [mode, setMode] = useState(MARK_PAID_DEFAULTS.mode);
+  const [paymentMode, setPaymentMode] = useState(MARK_PAID_DEFAULTS.paymentMode);
   const [markPaidStatus, setMarkPaidStatus] = useState('idle'); // 'idle' | 'submitting' | 'success'
   const [notRenewingStatus, setNotRenewingStatus] = useState('idle'); // 'idle' | 'submitting' | 'success'
   const [error, setError] = useState(null);
+  // Asks "discard changes?" before actually closing the Mark Paid modal.
+  const [confirmDiscardMarkPaid, setConfirmDiscardMarkPaid] = useState(false);
 
   const latestReceiptNo =
     member.receipts && member.receipts.length > 0
       ? member.receipts[member.receipts.length - 1].receiptNo
       : null;
 
-  const [editData, setEditData] = useState({
+  const makeEditSnapshot = () => ({
     name: member.name,
     residence: member.residence || '',
     phone: toLocalPhone(member.phone),
     amountPaid: member.amountPaid,
     receiptNo: latestReceiptNo || ''
   });
+
+  const [editData, setEditData] = useState(makeEditSnapshot);
   const [editError, setEditError] = useState(null);
   const [remindMessage, setRemindMessage] = useState(null);
+  // Asks "discard changes?" before actually closing the Edit modal.
+  const [confirmDiscardEdit, setConfirmDiscardEdit] = useState(false);
+  // Snapshot taken the moment the Edit modal opens, so we can tell whether
+  // anything actually changed before warning about discarding it.
+  const initialEditDataRef = useRef(editData);
 
   const hasPhone = Boolean(member.phone);
-  const [isShaking, setIsShaking] = useState(false);
-  const prevShakeSignal = useRef(shakeSignal);
 
-  useEffect(() => {
-    if (!isOpen) {
-      setShowMarkPaid(false);
-      setShowEdit(false);
-      setShowDeleteConfirm(false);
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (shakeSignal !== prevShakeSignal.current) {
-      prevShakeSignal.current = shakeSignal;
-      setIsShaking(true);
-      const timer = setTimeout(() => setIsShaking(false), 400);
-      return () => clearTimeout(timer);
-    }
-  }, [shakeSignal]);
-
-  function handleToggleEdit() {
-    const next = !showEdit;
-    setShowEdit(next);
-    onEditingChange(member._id, member.name, next);
+  function handleOpenEdit() {
+    const snapshot = makeEditSnapshot();
+    setEditData(snapshot);
+    initialEditDataRef.current = snapshot;
+    setEditError(null);
+    setShowEdit(true);
   }
 
-  function handleToggleMarkPaid() {
-    const next = !showMarkPaid;
-    setShowMarkPaid(next);
-    onMarkPaidChange(member._id, member.name, next);
+  function isEditDirty() {
+    return JSON.stringify(editData) !== JSON.stringify(initialEditDataRef.current);
+  }
+
+  function handleRequestCloseEdit() {
+    if (isEditDirty()) {
+      setConfirmDiscardEdit(true);
+      return;
+    }
+    setShowEdit(false);
+  }
+
+  function handleConfirmDiscardEdit() {
+    setEditData(initialEditDataRef.current);
+    setEditError(null);
+    setConfirmDiscardEdit(false);
+    setShowEdit(false);
+  }
+
+  function handleOpenMarkPaid() {
+    setDurationChoice(MARK_PAID_DEFAULTS.durationChoice);
+    setCustomDays(MARK_PAID_DEFAULTS.customDays);
+    setAmountPaid(MARK_PAID_DEFAULTS.amountPaid);
+    setMarkPaidReceiptNo(MARK_PAID_DEFAULTS.markPaidReceiptNo);
+    setMode(MARK_PAID_DEFAULTS.mode);
+    setPaymentMode(MARK_PAID_DEFAULTS.paymentMode);
+    setError(null);
+    setShowMarkPaid(true);
+  }
+
+  function isMarkPaidDirty() {
+    return (
+      amountPaid !== MARK_PAID_DEFAULTS.amountPaid ||
+      customDays !== MARK_PAID_DEFAULTS.customDays ||
+      markPaidReceiptNo !== MARK_PAID_DEFAULTS.markPaidReceiptNo ||
+      durationChoice !== MARK_PAID_DEFAULTS.durationChoice ||
+      mode !== MARK_PAID_DEFAULTS.mode ||
+      paymentMode !== MARK_PAID_DEFAULTS.paymentMode
+    );
+  }
+
+  function handleRequestCloseMarkPaid() {
+    if (isMarkPaidDirty()) {
+      setConfirmDiscardMarkPaid(true);
+      return;
+    }
+    setShowMarkPaid(false);
+  }
+
+  function handleConfirmDiscardMarkPaid() {
+    setConfirmDiscardMarkPaid(false);
+    setShowMarkPaid(false);
   }
 
   function handleRemindClick() {
@@ -101,16 +152,17 @@ function MemberCard({ member, isOpen, onToggle, onEditingChange, onMarkPaidChang
         durationDays,
         amountPaid: Number(amountPaid),
         mode,
+        ...(paymentMode && { paymentMode }),
         ...(markPaidReceiptNo.trim() && { receiptNo: markPaidReceiptNo.trim() })
       });
       setMarkPaidStatus('success');
       setTimeout(() => {
         setShowMarkPaid(false);
-        setAmountPaid('');
-        setCustomDays('');
-        setMarkPaidReceiptNo('');
+        setAmountPaid(MARK_PAID_DEFAULTS.amountPaid);
+        setCustomDays(MARK_PAID_DEFAULTS.customDays);
+        setMarkPaidReceiptNo(MARK_PAID_DEFAULTS.markPaidReceiptNo);
+        setPaymentMode(MARK_PAID_DEFAULTS.paymentMode);
         setMarkPaidStatus('idle');
-        onMarkPaidChange(member._id, member.name, false);
         onUpdated();
       }, 700);
     } catch (err) {
@@ -151,7 +203,6 @@ function MemberCard({ member, isOpen, onToggle, onEditingChange, onMarkPaidChang
         ...(editData.receiptNo.trim() && { receiptNo: editData.receiptNo.trim() })
       });
       setShowEdit(false);
-      onEditingChange(member._id, member.name, false);
       onUpdated();
     } catch (err) {
       setEditError(err.response?.data?.error || 'Failed to update member');
@@ -161,21 +212,16 @@ function MemberCard({ member, isOpen, onToggle, onEditingChange, onMarkPaidChang
   async function handleDelete() {
     await api.delete(`/members/${member._id}`);
     setShowDeleteConfirm(false);
-    // If this member happened to have an edit or mark-paid form open, clear
-    // the parent's lock — otherwise deleting mid-edit/payment would leave
-    // every other member permanently blocked with nothing left to cancel it.
-    onEditingChange(member._id, member.name, false);
-    onMarkPaidChange(member._id, member.name, false);
     onUpdated();
   }
 
   const editInputClass =
-    'bg-[#0D0D0D] border border-[#333] rounded px-3 py-2 text-sm w-full';
+    'bg-[#0D0D0D] border border-[#333] rounded px-3 py-2 text-sm w-full text-[#F5F5F0] focus:outline-none focus:border-[#F2C230]';
 
   return (
     <div
       ref={ref}
-      className={`bg-[#1A1A1A] border rounded-lg p-4 ${inView ? 'member-card-pop-in' : ''} ${isShaking ? 'member-card-shake' : ''} ${
+      className={`bg-[#1A1A1A] border rounded-lg p-4 ${inView ? 'member-card-pop-in' : ''} ${
         member.status === 'pending' ? 'border-orange-500/50' : 'border-[#2A2A2A]'
       }`}
     >
@@ -204,7 +250,15 @@ function MemberCard({ member, isOpen, onToggle, onEditingChange, onMarkPaidChang
           <div className="text-sm text-[#999] space-y-1 mt-3 mb-4 pt-3 border-t border-[#2A2A2A]">
             <p>Start Date: {formatDate(member.startDate)}</p>
             <p>End Date: {formatDate(member.endDate)}</p>
-            <p>Amount Paid: ₹{member.amountPaid}</p>
+            <p className="flex items-center gap-1.5">
+              Amount Paid: ₹{member.amountPaid}
+              {member.paymentMode === 'cash' && (
+                <Banknote className="w-3.5 h-3.5 text-[#F2C230]" aria-label="Paid by cash" />
+              )}
+              {member.paymentMode === 'upi' && (
+                <QrCode className="w-3.5 h-3.5 text-[#F2C230]" aria-label="Paid by UPI" />
+              )}
+            </p>
             <p>Receipt No: {latestReceiptNo || '—'}</p>
           </div>
 
@@ -232,12 +286,10 @@ function MemberCard({ member, isOpen, onToggle, onEditingChange, onMarkPaidChang
                   Remind
                 </button>
                 <button
-                  onClick={handleToggleMarkPaid}
-                  className={`bg-[#F2C230] text-black text-sm font-bold uppercase py-3 rounded hover:bg-[#C6FF3D] transition-colors ${
-                    isShaking && showMarkPaid ? 'markpaid-btn-glow' : ''
-                  }`}
+                  onClick={handleOpenMarkPaid}
+                  className="bg-[#F2C230] text-black text-sm font-bold uppercase py-3 rounded hover:bg-[#C6FF3D] transition-colors"
                 >
-                  {showMarkPaid ? 'Cancel' : 'Mark Paid'}
+                  Mark Paid
                 </button>
                 <button
                   onClick={handleNotRenewing}
@@ -268,7 +320,7 @@ function MemberCard({ member, isOpen, onToggle, onEditingChange, onMarkPaidChang
                   )}
                 </button>
                 <button
-                  onClick={handleToggleEdit}
+                  onClick={handleOpenEdit}
                   className="bg-[#2A2A2A] text-[#F5F5F0] flex items-center justify-center gap-2 text-sm font-bold uppercase py-3 rounded hover:bg-[#333] transition-colors"
                 >
                   <Pencil className="w-4 h-4" />
@@ -288,13 +340,23 @@ function MemberCard({ member, isOpen, onToggle, onEditingChange, onMarkPaidChang
           {remindMessage && (
             <p className="text-xs text-[#999] mb-2">{remindMessage}</p>
           )}
+        </div>
+      )}
 
-          {showMarkPaid && (
-            <form onSubmit={handleMarkPaid} className="mt-3 pt-3 border-t border-[#2A2A2A] flex flex-wrap items-end gap-3">
-              {error && <p className="text-red-400 text-sm w-full">{error}</p>}
+      {showMarkPaid && (
+        <Modal onClose={handleRequestCloseMarkPaid}>
+          <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg p-6">
+            <h2 className="text-lg font-black uppercase tracking-wide mb-4 flex items-center gap-2">
+              <IndianRupee className="w-5 h-5 text-[#F2C230]" strokeWidth={3} />
+              Enter Payment for {member.name}
+            </h2>
+
+            {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
+
+            <form onSubmit={handleMarkPaid} className="flex flex-col gap-4">
               <div>
                 <label className="block text-xs text-[#999] uppercase mb-1">Start Date</label>
-                <div className="flex gap-1 bg-[#111] border border-[#333] rounded p-1">
+                <div className="flex gap-1 bg-[#111] border border-[#333] rounded p-1 w-fit">
                   <button
                     type="button"
                     onClick={() => setMode('renewal')}
@@ -315,60 +377,95 @@ function MemberCard({ member, isOpen, onToggle, onEditingChange, onMarkPaidChang
                   </button>
                 </div>
               </div>
-              <div>
-                <label className="block text-xs text-[#999] uppercase mb-1">Duration</label>
-                <select
-                  value={durationChoice}
-                  onChange={(e) => setDurationChoice(e.target.value)}
-                  className="bg-[#111] border border-[#333] rounded px-3 py-2 text-sm"
-                >
-                  {durationOptions.map((opt) => (
-                    <option key={opt.label} value={opt.days}>{opt.label}</option>
-                  ))}
-                </select>
-              </div>
-              {durationChoice === 'custom' && (
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs text-[#999] uppercase mb-1">Days</label>
+                  <label className="block text-xs text-[#999] uppercase mb-1">Duration</label>
+                  <select
+                    value={durationChoice}
+                    onChange={(e) => setDurationChoice(e.target.value)}
+                    className={editInputClass}
+                  >
+                    {durationOptions.map((opt) => (
+                      <option key={opt.label} value={opt.days}>{opt.label}</option>
+                    ))}
+                  </select>
+                </div>
+                {durationChoice === 'custom' && (
+                  <div>
+                    <label className="block text-xs text-[#999] uppercase mb-1">Days</label>
+                    <input
+                      type="number"
+                      value={customDays}
+                      onChange={(e) => setCustomDays(e.target.value)}
+                      required
+                      className={editInputClass}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-[#999] uppercase mb-1">Amount</label>
                   <input
                     type="number"
-                    value={customDays}
-                    onChange={(e) => setCustomDays(e.target.value)}
+                    value={amountPaid}
+                    onChange={(e) => setAmountPaid(e.target.value)}
                     required
-                    className="bg-[#111] border border-[#333] rounded px-3 py-2 text-sm w-20"
+                    className={editInputClass}
                   />
                 </div>
-              )}
-              <div>
-                <label className="block text-xs text-[#999] uppercase mb-1">Amount</label>
-                <input
-                  type="number"
-                  value={amountPaid}
-                  onChange={(e) => setAmountPaid(e.target.value)}
-                  required
-                  className="bg-[#111] border border-[#333] rounded px-3 py-2 text-sm w-24"
-                />
+                <div>
+                  <label className="block text-xs text-[#999] uppercase mb-1">Receipt No.</label>
+                  <input
+                    type="text"
+                    value={markPaidReceiptNo}
+                    onChange={(e) => setMarkPaidReceiptNo(e.target.value)}
+                    placeholder="optional"
+                    className={editInputClass}
+                  />
+                </div>
               </div>
+
               <div>
-                <label className="block text-xs text-[#999] uppercase mb-1">Receipt No.</label>
-                <input
-                  type="text"
-                  value={markPaidReceiptNo}
-                  onChange={(e) => setMarkPaidReceiptNo(e.target.value)}
-                  placeholder="optional"
-                  className="bg-[#111] border border-[#333] rounded px-3 py-2 text-sm w-28"
-                />
+                <label className="block text-xs text-[#999] uppercase mb-1">Payment Mode (optional)</label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMode(paymentMode === 'cash' ? '' : 'cash')}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded border text-sm font-bold uppercase transition-colors ${
+                      paymentMode === 'cash'
+                        ? 'border-[#F2C230] bg-[#F2C230]/10 text-[#F2C230]'
+                        : 'border-[#333] text-[#999] hover:border-[#555]'
+                    }`}
+                  >
+                    <Banknote className="w-4 h-4" />
+                    Cash
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMode(paymentMode === 'upi' ? '' : 'upi')}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded border text-sm font-bold uppercase transition-colors ${
+                      paymentMode === 'upi'
+                        ? 'border-[#F2C230] bg-[#F2C230]/10 text-[#F2C230]'
+                        : 'border-[#333] text-[#999] hover:border-[#555]'
+                    }`}
+                  >
+                    <QrCode className="w-4 h-4" />
+                    UPI
+                  </button>
+                </div>
               </div>
+
               <button
                 type="submit"
                 disabled={markPaidStatus !== 'idle'}
-                className={`text-sm font-bold uppercase px-4 py-2 rounded transition-colors flex items-center justify-center gap-2 min-w-[110px] ${
+                className={`font-bold uppercase py-2.5 rounded transition-colors flex items-center justify-center gap-2 ${
                   markPaidStatus === 'success'
                     ? 'bg-green-500 text-white'
-                    : 'bg-[#C6FF3D] text-black hover:bg-[#F2C230]'
-                } ${markPaidStatus === 'submitting' ? 'opacity-70 cursor-not-allowed' : ''} ${
-                  isShaking ? 'markpaid-btn-glow' : ''
-                }`}
+                    : 'bg-[#F2C230] text-black hover:bg-[#C6FF3D]'
+                } ${markPaidStatus === 'submitting' ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
                 {markPaidStatus === 'submitting' && (
                   <>
@@ -382,14 +479,24 @@ function MemberCard({ member, isOpen, onToggle, onEditingChange, onMarkPaidChang
                     Done!
                   </>
                 )}
-                {markPaidStatus === 'idle' && 'Confirm'}
+                {markPaidStatus === 'idle' && 'Confirm Payment'}
               </button>
             </form>
-          )}
+          </div>
+        </Modal>
+      )}
 
-          {showEdit && (
-            <form onSubmit={handleEditSubmit} className="mt-3 pt-3 border-t border-[#2A2A2A] flex flex-col gap-3">
-              {editError && <p className="text-red-400 text-sm">{editError}</p>}
+      {showEdit && (
+        <Modal onClose={handleRequestCloseEdit}>
+          <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg p-6">
+            <h2 className="text-lg font-black uppercase tracking-wide mb-4 flex items-center gap-2">
+              <Pencil className="w-5 h-5 text-[#F2C230]" strokeWidth={3} />
+              Edit {member.name}
+            </h2>
+
+            {editError && <p className="text-red-400 text-sm mb-3">{editError}</p>}
+
+            <form onSubmit={handleEditSubmit} className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs text-[#999] uppercase mb-1">Name</label>
                 <input
@@ -422,7 +529,7 @@ function MemberCard({ member, isOpen, onToggle, onEditingChange, onMarkPaidChang
                       setEditData({ ...editData, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })
                     }
                     placeholder="9876543210"
-                    className="bg-[#0D0D0D] border border-[#333] rounded-r px-3 py-2 text-sm w-full"
+                    className="bg-[#0D0D0D] border border-[#333] rounded-r px-3 py-2 text-sm w-full text-[#F5F5F0] focus:outline-none focus:border-[#F2C230]"
                   />
                 </div>
               </div>
@@ -436,7 +543,7 @@ function MemberCard({ member, isOpen, onToggle, onEditingChange, onMarkPaidChang
                   className={editInputClass}
                 />
               </div>
-              <div>
+              <div className="sm:col-span-2">
                 <label className="block text-xs text-[#999] uppercase mb-1">Receipt No.</label>
                 <input
                   value={editData.receiptNo}
@@ -447,13 +554,35 @@ function MemberCard({ member, isOpen, onToggle, onEditingChange, onMarkPaidChang
               </div>
               <button
                 type="submit"
-                className="bg-[#F2C230] text-black text-sm font-bold uppercase py-2 rounded hover:bg-[#C6FF3D] transition-colors"
+                className="sm:col-span-2 bg-[#F2C230] text-black text-sm font-bold uppercase py-2.5 rounded hover:bg-[#C6FF3D] transition-colors"
               >
-                Save
+                Save Changes
               </button>
             </form>
-          )}
-        </div>
+          </div>
+        </Modal>
+      )}
+
+      {confirmDiscardEdit && (
+        <ConfirmDialog
+          title="Discard Changes?"
+          message={`You have unsaved edits for ${member.name}. Closing now will discard them.`}
+          confirmLabel="Discard"
+          danger
+          onConfirm={handleConfirmDiscardEdit}
+          onCancel={() => setConfirmDiscardEdit(false)}
+        />
+      )}
+
+      {confirmDiscardMarkPaid && (
+        <ConfirmDialog
+          title="Discard Changes?"
+          message={`You've entered payment details for ${member.name} that haven't been saved. Closing now will discard them.`}
+          confirmLabel="Discard"
+          danger
+          onConfirm={handleConfirmDiscardMarkPaid}
+          onCancel={() => setConfirmDiscardMarkPaid(false)}
+        />
       )}
 
       {showDeleteConfirm && (

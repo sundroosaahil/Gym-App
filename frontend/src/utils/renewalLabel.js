@@ -4,9 +4,11 @@
 // remaining), 0-7 while it's in the pending/grace window, and positive once
 // it's properly lapsed — see backend/utils/calculateStatus.js.
 //
-// Active members should read as a countdown ("Renewal in: N days") in green,
-// while pending/inactive/not_renewing members should read as an overdue
-// counter ("Days past: N days") in an escalating colour.
+// IMPORTANT: a member can be marked "not_renewing" at ANY point, including
+// while their membership is still active. That means daysPastExpiry can be
+// negative even when status is 'not_renewing' — it does NOT imply overdue.
+// This is why 'not_renewing' needs its own branch instead of being lumped
+// in with 'inactive' (which is always genuinely overdue).
 export function getRenewalLabel(member) {
   const days = member.daysPastExpiry;
 
@@ -25,7 +27,23 @@ export function getRenewalLabel(member) {
     };
   }
 
-  // inactive / not_renewing
+  if (member.status === 'not_renewing') {
+    if (days < 0) {
+      // Membership is still running, just won't be renewed.
+      const daysRemaining = Math.abs(days);
+      return {
+        text: `Not renewing: ${daysRemaining} day${daysRemaining === 1 ? '' : 's'} left`,
+        colorClass: 'text-gray-400',
+      };
+    }
+    // Membership already lapsed and won't be renewed.
+    return {
+      text: `Not renewing: ${days} day${days === 1 ? '' : 's'} ago`,
+      colorClass: 'text-gray-400',
+    };
+  }
+
+  // inactive
   return {
     text: `Days past: ${days} day${days === 1 ? '' : 's'}`,
     colorClass: 'text-red-400',

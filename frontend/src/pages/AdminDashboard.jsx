@@ -8,7 +8,6 @@ import {
   FileText,
   BarChart3,
   Plus,
-  X,
   ChevronDown,
 } from "lucide-react";
 import api from "../api/axiosConfig";
@@ -18,7 +17,7 @@ import MemberCard from "../components/MemberCard";
 import SkeletonCard from "../components/SkeletonCard";
 import SkeletonRow from "../components/SkeletonRow";
 import EmptyState from "../components/EmptyState";
-import ConfirmDialog from "../components/ConfirmDialog";
+import Modal from "../components/Modal";
 import { useAuth } from "../context/AuthContext";
 import { fuzzyMatchesName } from "../utils/fuzzySearch";
 import LogoutMenu from "../components/LogoutMenu";
@@ -54,80 +53,16 @@ function AdminDashboard() {
 
   // Only one member's details/actions panel can be open at a time.
   const [activeMemberId, setActiveMemberId] = useState(null);
-  // Tracks which member currently has an edit form open, so we can warn
-  // before switching away and silently discarding unsaved changes.
-  const [editingMember, setEditingMember] = useState(null); // { id, name } | null
-  // The member the admin clicked while an edit was in progress elsewhere —
-  // we hold the click here until they confirm or cancel.
-  const [pendingSwitch, setPendingSwitch] = useState(null);
 
-  // handleToggleMember/handleEditingChange are passed to EVERY member card.
-  // If we redefine them on every render, React.memo on MemberCard/MemberRow
-  // is pointless — every card would still re-render on every keystroke in
-  // the search box. Keeping them stable (useCallback + refs for the values
-  // they need to read) is what lets memo actually skip untouched cards.
-  const editingMemberRef = useRef(editingMember);
-  useEffect(() => {
-    editingMemberRef.current = editingMember;
-  }, [editingMember]);
-
-  const handleToggleMember = useCallback((memberId, memberName) => {
-    if (editingMemberRef.current) {
-      setPendingSwitch({ _id: memberId, name: memberName });
-      return;
-    }
-    if (markPaidMemberRef.current) {
-      setShakeMemberId(markPaidMemberRef.current.id);
-      setShakeTick((t) => t + 1);
-      setBlockedNotice(
-        `Please complete or cancel the payment for ${markPaidMemberRef.current.name} to view another member.`
-      );
-      clearTimeout(blockedNoticeTimerRef.current);
-      blockedNoticeTimerRef.current = setTimeout(() => setBlockedNotice(null), 3000);
-      return;
-    }
+  // Edit and Mark Paid now open as full-screen modals (see MemberCard /
+  // MemberRow), so they naturally block interaction with every other card
+  // via their own backdrop — there's no longer a need to track "is some
+  // other member mid-edit" up here, shake a busy card, or warn before
+  // switching between members. Each modal handles its own "discard
+  // changes?" confirmation internally instead.
+  const handleToggleMember = useCallback((memberId) => {
     setActiveMemberId((current) => (current === memberId ? null : memberId));
   }, []);
-
-  const handleEditingChange = useCallback((memberId, memberName, isEditing) => {
-    setEditingMember(isEditing ? { id: memberId, name: memberName } : null);
-  }, []);
-
-  // Tracks which member currently has the Mark Paid form open. While this is
-  // set, no other member can be opened/closed — we shake the busy card
-  // instead of blocking silently, so the admin gets feedback on why nothing
-  // happened.
-  const [markPaidMember, setMarkPaidMember] = useState(null); // { id, name } | null
-  const [shakeMemberId, setShakeMemberId] = useState(null);
-  const [shakeTick, setShakeTick] = useState(0); // bump to retrigger the animation even for the same member
-  // Explains *why* clicking another member did nothing, since the shake
-  // alone doesn't say which member is blocking or what to do about it.
-  const [blockedNotice, setBlockedNotice] = useState(null); // string | null
-  const blockedNoticeTimerRef = useRef(null);
-
-  const markPaidMemberRef = useRef(markPaidMember);
-  useEffect(() => {
-    markPaidMemberRef.current = markPaidMember;
-  }, [markPaidMember]);
-
-  useEffect(() => {
-    return () => clearTimeout(blockedNoticeTimerRef.current);
-  }, []);
-
-  const handleMarkPaidChange = useCallback((memberId, memberName, isMarkingPaid) => {
-    setMarkPaidMember(isMarkingPaid ? { id: memberId, name: memberName } : null);
-    // The lock just cleared (or moved elsewhere) — whatever notice was
-    // showing no longer applies.
-    clearTimeout(blockedNoticeTimerRef.current);
-    setBlockedNotice(null);
-  }, []);
-
-  function handleConfirmSwitch() {
-    const clickedId = pendingSwitch._id;
-    setEditingMember(null);
-    setActiveMemberId((current) => (current === clickedId ? null : clickedId));
-    setPendingSwitch(null);
-  }
 
   const hasLoadedOnceRef = useRef(hasLoadedOnce);
   useEffect(() => {
@@ -166,15 +101,6 @@ function AdminDashboard() {
   useEffect(() => {
     registerPushNotifications();
   }, []);
-
-  useEffect(() => {
-    if (!showAddForm) return;
-    function handleEsc(e) {
-      if (e.key === "Escape") setShowAddForm(false);
-    }
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, [showAddForm]);
 
   async function handleLogout() {
     setIsLoggingOut(true);
@@ -274,13 +200,6 @@ function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-black text-[#F5F5F0]">
-      {blockedNotice && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-[90vw] px-4">
-          <div className="blocked-notice bg-[#F2C230] text-black text-sm font-bold px-4 py-3 rounded-lg shadow-lg text-center">
-            {blockedNotice}
-          </div>
-        </div>
-      )}
       <div className="max-w-6xl mx-auto px-6 py-8">
         <div className="flex justify-between items-center mb-6 gap-3">
           <h1 className="text-xl md:text-3xl font-black uppercase tracking-tight truncate">
@@ -399,31 +318,14 @@ function AdminDashboard() {
         </div>
 
         {showAddForm && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm modal-backdrop-fade-in"
-            onClick={() => setShowAddForm(false)}
-          >
-            <div
-              className="relative w-full max-w-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                onClick={() => setShowAddForm(false)}
-                aria-label="Close"
-                className="absolute -top-3 -right-3 w-9 h-9 rounded-full bg-[#1A1A1A] border border-[#333] flex items-center justify-center text-[#999] hover:text-white hover:border-[#F2C230] transition-colors z-10"
-              >
-                <X className="w-4 h-4" />
-              </button>
-              <div className="max-h-[85vh] overflow-y-auto overflow-x-hidden no-scrollbar rounded-lg member-card-pop-in">
-                <AddMemberForm
-                  onMemberAdded={() => {
-                    fetchMembers();
-                    setShowAddForm(false);
-                  }}
-                />
-              </div>
-            </div>
-          </div>
+          <Modal onClose={() => setShowAddForm(false)}>
+            <AddMemberForm
+              onMemberAdded={() => {
+                fetchMembers();
+                setShowAddForm(false);
+              }}
+            />
+          </Modal>
         )}
 
         {/* Desktop table */}
@@ -478,9 +380,6 @@ function AdminDashboard() {
                   member={member}
                   isOpen={activeMemberId === member._id}
                   onToggle={handleToggleMember}
-                  onEditingChange={handleEditingChange}
-                  onMarkPaidChange={handleMarkPaidChange}
-                  shakeSignal={member._id === shakeMemberId ? shakeTick : 0}
                   onUpdated={fetchMembers}
                 />
               ))}
@@ -508,26 +407,12 @@ function AdminDashboard() {
                 member={member}
                 isOpen={activeMemberId === member._id}
                 onToggle={handleToggleMember}
-                onEditingChange={handleEditingChange}
-                onMarkPaidChange={handleMarkPaidChange}
-                shakeSignal={member._id === shakeMemberId ? shakeTick : 0}
                 onUpdated={fetchMembers}
               />
             ))
           )}
         </div>
       </div>
-
-      {pendingSwitch && (
-        <ConfirmDialog
-          title="Unsaved Changes"
-          message={`You're currently editing ${editingMember.name}. Switching now will discard those changes.`}
-          confirmLabel="Discard & Switch"
-          danger
-          onConfirm={handleConfirmSwitch}
-          onCancel={() => setPendingSwitch(null)}
-        />
-      )}
     </div>
   );
 }
