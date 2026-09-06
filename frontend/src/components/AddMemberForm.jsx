@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Loader2, Check } from 'lucide-react';
+import { Plus, Loader2, Check, Banknote, QrCode } from 'lucide-react';
 import api from '../api/axiosConfig';
 import { durationOptions } from '../constants/durationOptions';
 import { toFullPhone } from '../utils/formatPhone';
@@ -13,7 +13,8 @@ function AddMemberForm({ onMemberAdded }) {
     startDate: '',
     durationChoice: '30',
     customDays: '',
-    receiptNo: ''
+    receiptNo: '',
+    paymentMode: ''
   });
   const [error, setError] = useState(null);
   const [submitStatus, setSubmitStatus] = useState('idle'); // 'idle' | 'submitting' | 'success'
@@ -30,6 +31,13 @@ function AddMemberForm({ onMemberAdded }) {
       setDuplicateMatches([]); // stale warning — clear until re-checked on blur
     }
     setFormData((prev) => ({ ...prev, [name]: value }));
+  }
+
+  function togglePaymentMode(value) {
+    setFormData((prev) => ({
+      ...prev,
+      paymentMode: prev.paymentMode === value ? '' : value
+    }));
   }
 
   async function handleDuplicateCheck() {
@@ -71,7 +79,8 @@ function AddMemberForm({ onMemberAdded }) {
         amountPaid: Number(formData.amountPaid),
         startDate: formData.startDate,
         durationDays,
-        ...(formData.receiptNo.trim() && { receiptNo: formData.receiptNo.trim() })
+        ...(formData.receiptNo.trim() && { receiptNo: formData.receiptNo.trim() }),
+        ...(formData.paymentMode && { paymentMode: formData.paymentMode })
       });
 
       setSubmitStatus('success');
@@ -84,7 +93,8 @@ function AddMemberForm({ onMemberAdded }) {
           startDate: '',
           durationChoice: '30',
           customDays: '',
-          receiptNo: ''
+          receiptNo: '',
+          paymentMode: ''
         });
         setDuplicateMatches([]);
         setSubmitStatus('idle');
@@ -205,6 +215,36 @@ function AddMemberForm({ onMemberAdded }) {
           onChange={handleChange}
           className={inputClass}
         />
+
+        <div className="md:col-span-3">
+          <label className="block text-xs text-[#999] uppercase mb-1">Payment Mode (optional)</label>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => togglePaymentMode('cash')}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded border text-sm font-bold uppercase transition-colors ${
+                formData.paymentMode === 'cash'
+                  ? 'border-[#F2C230] bg-[#F2C230]/10 text-[#F2C230]'
+                  : 'border-[#333] text-[#999] hover:border-[#555]'
+              }`}
+            >
+              <Banknote className="w-4 h-4" />
+              Cash
+            </button>
+            <button
+              type="button"
+              onClick={() => togglePaymentMode('upi')}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded border text-sm font-bold uppercase transition-colors ${
+                formData.paymentMode === 'upi'
+                  ? 'border-[#F2C230] bg-[#F2C230]/10 text-[#F2C230]'
+                  : 'border-[#333] text-[#999] hover:border-[#555]'
+              }`}
+            >
+              <QrCode className="w-4 h-4" />
+              UPI
+            </button>
+          </div>
+        </div>
 
         <button
           type="submit"

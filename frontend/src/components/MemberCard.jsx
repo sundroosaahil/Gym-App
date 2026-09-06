@@ -47,7 +47,8 @@ function MemberCard({ member, isOpen, onToggle, onUpdated }) {
     residence: member.residence || '',
     phone: toLocalPhone(member.phone),
     amountPaid: member.amountPaid,
-    receiptNo: latestReceiptNo || ''
+    receiptNo: latestReceiptNo || '',
+    paymentMode: member.paymentMode || ''
   });
 
   const [editData, setEditData] = useState(makeEditSnapshot);
@@ -200,6 +201,7 @@ function MemberCard({ member, isOpen, onToggle, onUpdated }) {
         residence: editData.residence,
         phone: toFullPhone(editData.phone),
         amountPaid: Number(editData.amountPaid),
+        paymentMode: editData.paymentMode,
         ...(editData.receiptNo.trim() && { receiptNo: editData.receiptNo.trim() })
       });
       setShowEdit(false);
@@ -551,6 +553,39 @@ function MemberCard({ member, isOpen, onToggle, onUpdated }) {
                   placeholder="optional"
                   className={editInputClass}
                 />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-xs text-[#999] uppercase mb-1">Payment Mode (optional)</label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setEditData({ ...editData, paymentMode: editData.paymentMode === 'cash' ? '' : 'cash' })
+                    }
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded border text-sm font-bold uppercase transition-colors ${
+                      editData.paymentMode === 'cash'
+                        ? 'border-[#F2C230] bg-[#F2C230]/10 text-[#F2C230]'
+                        : 'border-[#333] text-[#999] hover:border-[#555]'
+                    }`}
+                  >
+                    <Banknote className="w-4 h-4" />
+                    Cash
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setEditData({ ...editData, paymentMode: editData.paymentMode === 'upi' ? '' : 'upi' })
+                    }
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded border text-sm font-bold uppercase transition-colors ${
+                      editData.paymentMode === 'upi'
+                        ? 'border-[#F2C230] bg-[#F2C230]/10 text-[#F2C230]'
+                        : 'border-[#333] text-[#999] hover:border-[#555]'
+                    }`}
+                  >
+                    <QrCode className="w-4 h-4" />
+                    UPI
+                  </button>
+                </div>
               </div>
               <button
                 type="submit"

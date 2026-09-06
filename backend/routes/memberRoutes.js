@@ -10,7 +10,11 @@ router.use(requireAuth);
 
 router.post('/', async (req, res) => {
   try {
-    const { name, residence, phone, amountPaid, startDate, durationDays, receiptNo } = req.body;
+    const { name, residence, phone, amountPaid, startDate, durationDays, receiptNo, paymentMode } = req.body;
+
+    if (paymentMode !== undefined && !['cash', 'upi'].includes(paymentMode)) {
+      return res.status(400).json({ error: 'paymentMode must be "cash" or "upi"' });
+    }
 
     const lastMember = await Member.findOne().sort({ gymCode: -1 });
 
@@ -32,6 +36,7 @@ router.post('/', async (req, res) => {
       amountPaid,
       startDate: start,
       endDate: end,
+      ...(paymentMode && { paymentMode }),
       receipts: receiptNo ? [{ receiptNo, amount: amountPaid }] : []
     });
 
@@ -112,7 +117,7 @@ router.get('/:id', async (req, res) => {
 // UPDATE a member (correction, not a new payment)
 router.put('/:id', async (req, res) => {
   try {
-    const { name, residence, phone, amountPaid, receiptNo } = req.body;
+    const { name, residence, phone, amountPaid, receiptNo, paymentMode } = req.body;
 
     const member = await Member.findById(req.params.id);
     if (!member) {
@@ -123,6 +128,16 @@ router.put('/:id', async (req, res) => {
     member.residence = residence;
     member.phone = phone;
     member.amountPaid = amountPaid;
+
+    // Only touch paymentMode if the request actually included the field —
+    // this lets the Edit form both correct it ('cash'/'upi') and explicitly
+    // clear it (empty string), without other callers accidentally wiping it.
+    if (paymentMode !== undefined) {
+      if (paymentMode && !['cash', 'upi'].includes(paymentMode)) {
+        return res.status(400).json({ error: 'paymentMode must be "cash" or "upi"' });
+      }
+      member.paymentMode = paymentMode || undefined;
+    }
 
     if (receiptNo) {
       if (member.receipts.length > 0) {
