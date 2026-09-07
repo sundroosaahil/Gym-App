@@ -26,12 +26,12 @@ export function ToastProvider({ children }) {
     <ToastContext.Provider value={{ showToast }}>
       {children}
       {createPortal(
-        <div className="fixed bottom-5 inset-x-0 z-[100] flex flex-col items-center gap-2 px-4 pointer-events-none">
+        <div className="fixed top-5 inset-x-0 z-[100] flex flex-col items-center gap-2 px-4 pointer-events-none">
           {toasts.map((t) => (
             <div
               key={t.id}
               onClick={() => dismissToast(t.id)}
-              className={`toast-slide-up pointer-events-auto flex items-center gap-2 w-full sm:w-auto max-w-sm border rounded-lg px-4 py-3 shadow-lg cursor-pointer bg-[#1A1A1A] ${
+              className={`toast-slide-down pointer-events-auto flex items-center gap-2 w-full sm:w-auto max-w-sm border rounded-lg px-4 py-3 shadow-lg cursor-pointer bg-[#1A1A1A] ${
                 t.type === 'error' ? 'border-red-500/50' : 'border-[#C6FF3D]/50'
               }`}
             >

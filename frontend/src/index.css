@@ -155,17 +155,18 @@
   }
 }
 
-/* Toasts slide up from the bottom, same easing family as the modal pop-in
+/* Toasts slide down from the top, same easing family as the modal pop-in
    above so it feels like part of the same design system, not a bolted-on
-   library. */
-.toast-slide-up {
-  animation: toast-slide-up 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+   library. Top placement (not bottom) so it doesn't collide with the
+   sticky action buttons at the bottom of member cards on phones. */
+.toast-slide-down {
+  animation: toast-slide-down 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-@keyframes toast-slide-up {
+@keyframes toast-slide-down {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(-12px);
   }
   to {
     opacity: 1;

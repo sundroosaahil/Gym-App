@@ -53,6 +53,7 @@ function MemberRow({ member, isOpen, onToggle, onUpdated }) {
 
   const [editData, setEditData] = useState(makeEditSnapshot);
   const [editError, setEditError] = useState(null);
+  const [editStatus, setEditStatus] = useState('idle'); // 'idle' | 'submitting' | 'success'
   const [remindMessage, setRemindMessage] = useState(null);
   // Asks "discard changes?" before actually closing the Edit modal.
   const [confirmDiscardEdit, setConfirmDiscardEdit] = useState(false);
@@ -67,6 +68,7 @@ function MemberRow({ member, isOpen, onToggle, onUpdated }) {
     setEditData(snapshot);
     initialEditDataRef.current = snapshot;
     setEditError(null);
+    setEditStatus('idle');
     setShowEdit(true);
   }
 
@@ -199,7 +201,9 @@ function MemberRow({ member, isOpen, onToggle, onUpdated }) {
 
   async function handleEditSubmit(e) {
     e.preventDefault();
+    if (editStatus !== 'idle') return; // guard against double-submit
     setEditError(null);
+    setEditStatus('submitting');
     try {
       await api.put(`/members/${member._id}`, {
         name: editData.name,
@@ -209,11 +213,16 @@ function MemberRow({ member, isOpen, onToggle, onUpdated }) {
         paymentMode: editData.paymentMode,
         ...(editData.receiptNo.trim() && { receiptNo: editData.receiptNo.trim() })
       });
-      setShowEdit(false);
+      setEditStatus('success');
       showToast(`${member.name} updated`);
-      onUpdated();
+      setTimeout(() => {
+        setShowEdit(false);
+        setEditStatus('idle');
+        onUpdated();
+      }, 700);
     } catch (err) {
       setEditError(err.response?.data?.error || 'Failed to update member');
+      setEditStatus('idle');
     }
   }
 
@@ -600,9 +609,26 @@ function MemberRow({ member, isOpen, onToggle, onUpdated }) {
               </div>
               <button
                 type="submit"
-                className="sm:col-span-2 bg-[#F2C230] text-black text-sm font-bold uppercase py-2.5 rounded hover:bg-[#C6FF3D] transition-colors"
+                disabled={editStatus !== 'idle'}
+                className={`sm:col-span-2 text-sm font-bold uppercase py-2.5 rounded transition-colors flex items-center justify-center gap-2 ${
+                  editStatus === 'success'
+                    ? 'bg-sky-400 text-black'
+                    : 'bg-[#F2C230] text-black hover:bg-[#C6FF3D]'
+                } ${editStatus === 'submitting' ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
-                Save Changes
+                {editStatus === 'submitting' && (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Saving...
+                  </>
+                )}
+                {editStatus === 'success' && (
+                  <>
+                    <Check className="w-4 h-4" />
+                    Saved!
+                  </>
+                )}
+                {editStatus === 'idle' && 'Save Changes'}
               </button>
             </form>
           </div>
