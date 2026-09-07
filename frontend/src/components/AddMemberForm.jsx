@@ -3,8 +3,10 @@ import { Plus, Loader2, Check, Banknote, QrCode } from 'lucide-react';
 import api from '../api/axiosConfig';
 import { durationOptions } from '../constants/durationOptions';
 import { toFullPhone } from '../utils/formatPhone';
+import { useToast } from '../context/ToastContext';
 
 function AddMemberForm({ onMemberAdded }) {
+  const { showToast } = useToast();
   const [formData, setFormData] = useState({
     name: '',
     residence: '',
@@ -84,6 +86,7 @@ function AddMemberForm({ onMemberAdded }) {
       });
 
       setSubmitStatus('success');
+      showToast(`${formData.name} added`);
       setTimeout(() => {
         setFormData({
           name: '',

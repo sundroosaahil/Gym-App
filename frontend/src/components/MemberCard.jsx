@@ -161,6 +161,7 @@ function MemberCard({ member, isOpen, onToggle, onUpdated }) {
         ...(markPaidReceiptNo.trim() && { receiptNo: markPaidReceiptNo.trim() })
       });
       setMarkPaidStatus('success');
+      showToast(`Payment recorded for ${member.name}`);
       setTimeout(() => {
         setShowMarkPaid(false);
         setAmountPaid(MARK_PAID_DEFAULTS.amountPaid);
