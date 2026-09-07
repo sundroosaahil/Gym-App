@@ -165,7 +165,9 @@ function AdminDashboard() {
                 (m) => m.status === "inactive" || m.status === "not_renewing",
               )
               .sort((a, b) => a.daysPastExpiry - b.daysPastExpiry)
-          : members.filter((m) => m.status === filter);
+          : members
+              .filter((m) => m.status === filter)
+              .sort((a, b) => b.daysPastExpiry - a.daysPastExpiry);
   }, [members, filter, hideInactive]);
 
   const searchTerm = search.trim().toLowerCase();
