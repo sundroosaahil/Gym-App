@@ -9,6 +9,7 @@ import { formatDate } from '../utils/formatDate';
 import { buildWhatsAppReminderLink } from '../utils/sendWhatsAppReminder';
 import { toFullPhone, toLocalPhone } from '../utils/formatPhone';
 import { getRenewalLabel } from '../utils/renewalLabel';
+import { useToast } from '../context/ToastContext';
 
 const MARK_PAID_DEFAULTS = {
   durationChoice: '30',
@@ -20,6 +21,7 @@ const MARK_PAID_DEFAULTS = {
 };
 
 function MemberRow({ member, isOpen, onToggle, onUpdated }) {
+  const { showToast } = useToast();
   const [showMarkPaid, setShowMarkPaid] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -186,8 +188,13 @@ function MemberRow({ member, isOpen, onToggle, onUpdated }) {
   }
 
   async function handleReactivate() {
-    await api.put(`/members/${member._id}/reactivate`);
-    onUpdated();
+    try {
+      await api.put(`/members/${member._id}/reactivate`);
+      showToast(`${member.name} reactivated`);
+      onUpdated();
+    } catch (err) {
+      showToast(err.response?.data?.error || 'Failed to reactivate member', 'error');
+    }
   }
 
   async function handleEditSubmit(e) {
@@ -203,6 +210,7 @@ function MemberRow({ member, isOpen, onToggle, onUpdated }) {
         ...(editData.receiptNo.trim() && { receiptNo: editData.receiptNo.trim() })
       });
       setShowEdit(false);
+      showToast(`${member.name} updated`);
       onUpdated();
     } catch (err) {
       setEditError(err.response?.data?.error || 'Failed to update member');
@@ -210,9 +218,15 @@ function MemberRow({ member, isOpen, onToggle, onUpdated }) {
   }
 
   async function handleDelete() {
-    await api.delete(`/members/${member._id}`);
-    setShowDeleteConfirm(false);
-    onUpdated();
+    try {
+      await api.delete(`/members/${member._id}`);
+      setShowDeleteConfirm(false);
+      showToast(`${member.name} deleted`);
+      onUpdated();
+    } catch (err) {
+      setShowDeleteConfirm(false);
+      showToast(err.response?.data?.error || 'Failed to delete member', 'error');
+    }
   }
 
   const editInputClass =
@@ -240,7 +254,7 @@ function MemberRow({ member, isOpen, onToggle, onUpdated }) {
         </td>
         <td className="border border-[#2A2A2A] px-4 py-3 text-[#999]">
           <span className="flex items-center gap-1.5">
-            ₹{member.amountPaid}
+            ₹{Number(member.amountPaid || 0).toLocaleString('en-IN')}
             {member.paymentMode === 'cash' && (
               <Banknote className="w-3.5 h-3.5 text-[#F2C230]" aria-label="Paid by cash" />
             )}

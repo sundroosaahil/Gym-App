@@ -9,6 +9,7 @@ import {
   BarChart3,
   Plus,
   ChevronDown,
+  X,
 } from "lucide-react";
 import api from "../api/axiosConfig";
 import AddMemberForm from "../components/AddMemberForm";
@@ -267,8 +268,25 @@ function AdminDashboard() {
               onChange={(e) => setSearch(e.target.value)}
               onFocus={handleSearchFocus}
               onBlur={handleSearchBlur}
-              className="w-full bg-[#1A1A1A] border-2 border-[#333] rounded-lg pl-12 pr-4 py-3.5 text-base placeholder-[#666] focus:outline-none focus:border-[#F2C230] transition-colors"
+              className="w-full bg-[#1A1A1A] border-2 border-[#333] rounded-lg pl-12 pr-11 py-3.5 text-base placeholder-[#666] focus:outline-none focus:border-[#F2C230] transition-colors"
             />
+            {search && (
+              <button
+                type="button"
+                // onMouseDown (not onClick) fires before the input's onBlur,
+                // so the field doesn't collapse out of "search active" mode
+                // for a frame before the click actually registers.
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  setSearch("");
+                  searchInputRef.current?.focus();
+                }}
+                aria-label="Clear search"
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-full text-[#666] hover:text-[#F5F5F0] hover:bg-[#2A2A2A] transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
           {/* Instant feedback that shows right under the search bar, so it's
               still visible even when the keyboard is covering everything
@@ -409,6 +427,8 @@ function AdminDashboard() {
                           ? "Try a different search."
                           : "Add your first member to get started."
                       }
+                      actionLabel={search ? "Clear search" : "Add Member"}
+                      onAction={search ? () => setSearch("") : () => setShowAddForm(true)}
                     />
                   </td>
                 </tr>
@@ -441,6 +461,8 @@ function AdminDashboard() {
                   ? "Try a different search."
                   : "Add your first member to get started."
               }
+              actionLabel={search ? "Clear search" : "Add Member"}
+              onAction={search ? () => setSearch("") : () => setShowAddForm(true)}
             />
           ) : (
             filteredMembers.map((member) => (

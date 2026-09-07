@@ -11,6 +11,17 @@ function Modal({ children, onClose }) {
     return () => window.removeEventListener('keydown', handleEsc);
   }, [onClose]);
 
+  // Without this, the page behind the modal keeps scrolling on touch
+  // devices — the modal looks "open" but the body content underneath
+  // drifts, which reads as a bug even though nothing is technically broken.
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
+
   return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm modal-backdrop-fade-in text-[#F5F5F0]"
