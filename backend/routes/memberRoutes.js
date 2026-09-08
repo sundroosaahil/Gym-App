@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Member = require('../models/Member');
 const calculateStatus = require('../utils/calculateStatus');
+const { startOfDay } = require('../utils/datehelpers');
 const requireAuth = require('../middleware/requireAuth');
 const logAction = require('../utils/logAction');
 const sendNotificationToAdmins = require('../utils/sendNotification');
@@ -188,8 +189,12 @@ router.put('/:id/mark-paid', async (req, res) => {
       return res.status(404).json({ error: 'Member not found' });
     }
 
-    const today = new Date();
-    const currentEnd = new Date(member.endDate);
+    // Normalized to midnight — otherwise the new cycle's start/end timestamps
+    // inherit whatever time-of-day this button happened to be clicked at,
+    // which throws off the calendar-day math in calculateStatus() for this
+    // member from now on (see dateHelpers.js for why).
+    const today = startOfDay(new Date());
+    const currentEnd = startOfDay(member.endDate);
 
     // reset   -> new cycle starts today (member didn't use the gym during the gap)
     // renewal -> new cycle starts from old due date (recovers days already used, or extends an active member cleanly)

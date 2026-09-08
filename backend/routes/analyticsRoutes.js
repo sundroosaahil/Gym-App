@@ -138,11 +138,13 @@ router.get('/revenue-at-risk', async (req, res) => {
     const averageAtRisk = count === 0 ? 0 : Math.round(totalAtRisk / count);
 
     // Breakdown by how many days into the 7-day grace period each member is.
-    // Day 0-1 = just lapsed, plenty of time. Day 6-7 = about to flip to
-    // "inactive" — this is the number that tells you where to focus today,
-    // without listing individual names (that's already on the member list).
+    // Day 0 doesn't appear here — that's "due today", still counts as
+    // active in calculateStatus(). Day 1-2 = just lapsed, plenty of time.
+    // Day 6-7 = about to flip to "inactive" — this is the number that tells
+    // you where to focus today, without listing individual names (that's
+    // already on the member list).
     const byDay = {};
-    for (let d = 0; d <= 7; d++) byDay[d] = 0;
+    for (let d = 1; d <= 7; d++) byDay[d] = 0;
     pendingMembers.forEach((m) => {
       const { daysPastExpiry } = calculateStatus(m);
       if (byDay[daysPastExpiry] !== undefined) byDay[daysPastExpiry]++;
