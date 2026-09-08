@@ -253,10 +253,16 @@ function MemberRow({ member, isOpen, onToggle, onUpdated }) {
       >
         <td className="border border-[#2A2A2A] px-4 py-3 font-mono text-[#999]">{member.gymCode}</td>
         <td className="border border-[#2A2A2A] px-4 py-3 font-semibold">
-          {getDisplayName(member)}
-          {!member.lastName && (
-            <span className="block text-[10px] text-yellow-500 uppercase tracking-wide">⚠ No last name</span>
-          )}
+          <span className="flex items-center gap-1.5">
+            {getDisplayName(member)}
+            {!member.lastName && (
+              <span
+                className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0"
+                title="No last name on file"
+                aria-label="No last name on file"
+              />
+            )}
+          </span>
         </td>
         <td className="border border-[#2A2A2A] px-4 py-3 text-[#999]">
           <span className="flex items-center gap-1">
@@ -289,6 +295,9 @@ function MemberRow({ member, isOpen, onToggle, onUpdated }) {
 
       <tr className={isOpen ? '' : 'hidden'}>
         <td colSpan="9" className="border border-t-0 border-[#2A2A2A] border-b-2 border-b-[#333] px-4 py-3">
+          {!member.lastName && (
+            <p className="text-xs text-blue-400 mb-2">Edit to add last name</p>
+          )}
           <div className="flex items-stretch gap-2">
             {member.renewalIntent === 'not_renewing' ? (
               <button

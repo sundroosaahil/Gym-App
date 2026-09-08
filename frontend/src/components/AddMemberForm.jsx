@@ -140,7 +140,7 @@ function AddMemberForm({ onMemberAdded }) {
         <div>
           <input
             name="lastName"
-            placeholder="Last Name (if applicable)"
+            placeholder="Last Name (optional)"
             value={formData.lastName}
             onChange={handleChange}
             onBlur={handleDuplicateCheck}

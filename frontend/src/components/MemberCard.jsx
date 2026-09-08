@@ -258,10 +258,16 @@ function MemberCard({ member, isOpen, onToggle, onUpdated }) {
       <div onClick={() => onToggle(member._id, getDisplayName(member))} className="cursor-pointer">
         <div className="flex justify-between items-start mb-2">
           <div>
-            <p className="font-semibold">{getDisplayName(member)}</p>
-            {!member.lastName && (
-              <p className="text-[10px] text-yellow-500 uppercase tracking-wide">⚠ No last name</p>
-            )}
+            <p className="font-semibold flex items-center gap-1.5">
+              {getDisplayName(member)}
+              {!member.lastName && (
+                <span
+                  className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0"
+                  title="No last name on file"
+                  aria-label="No last name on file"
+                />
+              )}
+            </p>
             <p className="text-xs text-[#999] font-mono">{member.gymCode}</p>
           </div>
           <StatusBadge status={member.status} />
@@ -280,6 +286,9 @@ function MemberCard({ member, isOpen, onToggle, onUpdated }) {
       {isOpen && (
         <div onClick={(e) => e.stopPropagation()}>
           <div className="text-sm text-[#999] space-y-1 mt-3 mb-4 pt-3 border-t border-[#2A2A2A]">
+            {!member.lastName && (
+              <p className="text-xs text-blue-400">Edit to add last name</p>
+            )}
             <p>Start Date: {formatDate(member.startDate)}</p>
             <p>End Date: {formatDate(member.endDate)}</p>
             <p className="flex items-center gap-1.5">
