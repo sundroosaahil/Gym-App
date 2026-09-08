@@ -56,3 +56,22 @@ export function fuzzyMatchesName(name, query) {
     return nameWords.some((nameWord) => levenshtein(nameWord, queryWord) <= threshold);
   });
 }
+
+// Ranks how good a match is, so exact/prefix matches can float to the top
+// of search results instead of sitting wherever the list happened to leave
+// them. Lower is better. Assumes fuzzyMatchesName(name, query) is already
+// true (or the gym code matched) — this only decides ordering, not inclusion.
+export function nameMatchRank(name, query) {
+  const normalizedName = name.toLowerCase().trim();
+  const normalizedQuery = query.toLowerCase().trim();
+
+  if (!normalizedQuery) return 0;
+  if (normalizedName === normalizedQuery) return 0; // exact full-name match
+  if (normalizedName.startsWith(normalizedQuery)) return 1; // name starts with query
+
+  const nameWords = normalizedName.split(/\s+/);
+  if (nameWords.some((w) => w.startsWith(normalizedQuery))) return 2; // a word starts with query
+  if (normalizedName.includes(normalizedQuery)) return 3; // query appears anywhere
+
+  return 4; // only matched via fuzzy/typo-tolerant comparison
+}

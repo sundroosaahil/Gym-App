@@ -20,7 +20,7 @@ import SkeletonRow from "../components/SkeletonRow";
 import EmptyState from "../components/EmptyState";
 import Modal from "../components/Modal";
 import { useAuth } from "../context/AuthContext";
-import { fuzzyMatchesName } from "../utils/fuzzySearch";
+import { fuzzyMatchesName, nameMatchRank } from "../utils/fuzzySearch";
 import { getDisplayName } from "../utils/getDisplayName";
 import LogoutMenu from "../components/LogoutMenu";
 import { registerPushNotifications } from "../utils/registerPush";
@@ -175,13 +175,26 @@ function AdminDashboard() {
   const searchTerm = search.trim().toLowerCase();
 
   const filteredMembers = useMemo(() => {
-    return searchTerm
-      ? statusFiltered.filter(
-          (m) =>
-            m.gymCode.toLowerCase().includes(searchTerm) ||
-            fuzzyMatchesName(getDisplayName(m), searchTerm),
-        )
-      : statusFiltered;
+    if (!searchTerm) return statusFiltered;
+
+    return statusFiltered
+      .filter(
+        (m) =>
+          m.gymCode.toLowerCase().includes(searchTerm) ||
+          fuzzyMatchesName(getDisplayName(m), searchTerm),
+      )
+      // Relevance sort: exact/prefix name matches float to the top instead
+      // of staying wherever the status/renewal sort left them. A gym-code
+      // match that isn't also a name match ranks just below a substring
+      // name match, since code lookups tend to be intentional but shouldn't
+      // outrank a name someone actually typed a name for.
+      .map((m) => {
+        const nameRank = nameMatchRank(getDisplayName(m), searchTerm);
+        const codeRank = m.gymCode.toLowerCase().includes(searchTerm) ? 3 : 5;
+        return { member: m, rank: Math.min(nameRank, codeRank) };
+      })
+      .sort((a, b) => a.rank - b.rank)
+      .map(({ member }) => member);
   }, [statusFiltered, searchTerm]);
 
   // Same condition used to compact the layout while searching — focused
