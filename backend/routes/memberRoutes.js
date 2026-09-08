@@ -6,12 +6,17 @@ const { startOfDay } = require('../utils/datehelpers');
 const requireAuth = require('../middleware/requireAuth');
 const logAction = require('../utils/logAction');
 const sendNotificationToAdmins = require('../utils/sendNotification');
+const getDisplayName = require('../utils/getDisplayName');
 
 router.use(requireAuth);
 
 router.post('/', async (req, res) => {
   try {
-    const { name, residence, phone, amountPaid, startDate, durationDays, receiptNo, paymentMode } = req.body;
+    const { firstName, lastName, residence, phone, amountPaid, startDate, durationDays, receiptNo, paymentMode } = req.body;
+
+    if (typeof firstName !== 'string' || !firstName.trim()) {
+      return res.status(400).json({ error: 'firstName is required' });
+    }
 
     if (paymentMode !== undefined && !['cash', 'upi'].includes(paymentMode)) {
       return res.status(400).json({ error: 'paymentMode must be "cash" or "upi"' });
@@ -31,7 +36,8 @@ router.post('/', async (req, res) => {
 
     const member = new Member({
       gymCode,
-      name,
+      firstName: firstName.trim(),
+      lastName: (lastName || '').trim(),
       residence,
       phone,
       amountPaid,
@@ -42,11 +48,11 @@ router.post('/', async (req, res) => {
     });
 
     await member.save();
-    await logAction('Added Member', `${member.name} (${member.gymCode})`, req.adminEmail);
+    await logAction('Added Member', `${getDisplayName(member)} (${member.gymCode})`, req.adminEmail);
         sendNotificationToAdmins(
       'newMember',
       'New Member Added',
-      `${member.name} (${member.gymCode}) joined`,
+      `${getDisplayName(member)} (${member.gymCode}) joined`,
       { type: 'new_member', memberId: member._id.toString() }
     );
     res.status(201).json(member);
@@ -84,17 +90,23 @@ router.get('/', async (req, res) => {
 // Must be defined before GET /:id, or Express treats "check-duplicate" as an id.
 router.get('/check-duplicate', async (req, res) => {
   try {
-    const { name, residence } = req.query;
+    const { firstName, lastName, residence } = req.query;
     const trimmedResidence = typeof residence === 'string' ? residence.trim() : '';
-    if (typeof name !== 'string' || !name.trim() || !trimmedResidence) {
+    const trimmedFirstName = typeof firstName === 'string' ? firstName.trim() : '';
+    const trimmedLastName = typeof lastName === 'string' ? lastName.trim() : '';
+    if (!trimmedFirstName || !trimmedResidence) {
       // Can't disambiguate without a residence — skip rather than flooding
       // the admin with false positives from every same-named, no-address member.
       return res.json({ matches: [] });
     }
 
-    const matches = await Member.find({ name: name.trim(), residence: trimmedResidence })
+    const matches = await Member.find({
+      firstName: trimmedFirstName,
+      lastName: trimmedLastName,
+      residence: trimmedResidence
+    })
       .collation({ locale: 'en', strength: 2 }) // case-insensitive exact match, no regex
-      .select('name gymCode residence');
+      .select('firstName lastName gymCode residence');
 
     res.json({ matches });
   } catch (error) {
@@ -118,14 +130,19 @@ router.get('/:id', async (req, res) => {
 // UPDATE a member (correction, not a new payment)
 router.put('/:id', async (req, res) => {
   try {
-    const { name, residence, phone, amountPaid, receiptNo, paymentMode } = req.body;
+    const { firstName, lastName, residence, phone, amountPaid, receiptNo, paymentMode } = req.body;
 
     const member = await Member.findById(req.params.id);
     if (!member) {
       return res.status(404).json({ error: 'Member not found' });
     }
 
-    member.name = name;
+    if (typeof firstName !== 'string' || !firstName.trim()) {
+      return res.status(400).json({ error: 'firstName is required' });
+    }
+
+    member.firstName = firstName.trim();
+    member.lastName = (lastName || '').trim();
     member.residence = residence;
     member.phone = phone;
     member.amountPaid = amountPaid;
@@ -149,7 +166,7 @@ router.put('/:id', async (req, res) => {
     }
 
     await member.save();
-    await logAction('Edited Member', `${member.name} (${member.gymCode})`, req.adminEmail);
+    await logAction('Edited Member', `${getDisplayName(member)} (${member.gymCode})`, req.adminEmail);
     res.json(member);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -163,7 +180,7 @@ router.delete('/:id', async (req, res) => {
     if (!deletedMember) {
       return res.status(404).json({ error: 'Member not found' });
     }
-    await logAction('Deleted Member', `${deletedMember.name} (${deletedMember.gymCode})`, req.adminEmail);
+    await logAction('Deleted Member', `${getDisplayName(deletedMember)} (${deletedMember.gymCode})`, req.adminEmail);
     res.json({ message: 'Member deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -219,13 +236,13 @@ router.put('/:id/mark-paid', async (req, res) => {
     await member.save();
     await logAction(
       'Marked Paid',
-      `${member.name} (${member.gymCode}) — ₹${amountPaid}, ${durationDays} days, mode: ${mode}${paymentMode ? `, via ${paymentMode}` : ''}${receiptNo ? `, Receipt #${receiptNo}` : ''}`,
+      `${getDisplayName(member)} (${member.gymCode}) — ₹${amountPaid}, ${durationDays} days, mode: ${mode}${paymentMode ? `, via ${paymentMode}` : ''}${receiptNo ? `, Receipt #${receiptNo}` : ''}`,
       req.adminEmail
     );
         sendNotificationToAdmins(
       'memberPaid',
       'Payment Received',
-      `${member.name} (${member.gymCode}) — ₹${amountPaid}`,
+      `${getDisplayName(member)} (${member.gymCode}) — ₹${amountPaid}`,
       { type: 'member_paid', memberId: member._id.toString() }
     );
     res.json(member);
@@ -246,7 +263,7 @@ router.put('/:id/not-renewing', async (req, res) => {
     if (!member) {
       return res.status(404).json({ error: 'Member not found' });
     }
-    await logAction('Marked Not Renewing', `${member.name} (${member.gymCode})`, req.adminEmail);
+    await logAction('Marked Not Renewing', `${getDisplayName(member)} (${member.gymCode})`, req.adminEmail);
     res.json(member);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -264,7 +281,7 @@ router.put('/:id/reactivate', async (req, res) => {
     if (!member) {
       return res.status(404).json({ error: 'Member not found' });
     }
-    await logAction('Reactivated', `${member.name} (${member.gymCode})`, req.adminEmail);
+    await logAction('Reactivated', `${getDisplayName(member)} (${member.gymCode})`, req.adminEmail);
     res.json(member);
   } catch (error) {
     res.status(400).json({ error: error.message });

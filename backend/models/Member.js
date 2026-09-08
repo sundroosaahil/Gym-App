@@ -19,9 +19,25 @@ const memberSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  // Legacy field. Members created before the firstName/lastName split still
+  // have this populated; new members won't. Kept temporarily so nothing
+  // reading it directly breaks mid-migration — remove once every member has
+  // been migrated and nothing references `name` anymore.
   name: {
+    type: String
+  },
+  // Deliberately NOT required:true here. If it were, any existing member
+  // who hasn't been migrated yet would fail validation the next time ANY
+  // route calls .save() on them (e.g. Mark Paid) — crashing an unrelated
+  // action in production. Required-ness for NEW members is enforced in the
+  // POST /members route instead, where we control exactly when it applies.
+  firstName: {
+    type: String
+  },
+  // Optional on purpose — some members genuinely have a single name.
+  lastName: {
     type: String,
-    required: true
+    default: ''
   },
   residence: {
     type: String

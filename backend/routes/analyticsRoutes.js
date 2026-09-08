@@ -29,7 +29,8 @@ const DEDUP_RECEIPTS_STAGES = [
     $group: {
       _id: { memberId: '$_id', dedupeKey: '$dedupeKey' },
       memberId: { $first: '$_id' },
-      name: { $first: '$name' },
+      firstName: { $first: '$firstName' },
+      lastName: { $first: '$lastName' },
       gymCode: { $first: '$gymCode' },
       amount: { $first: '$receipts.amount' },
       date: { $first: '$receipts.date' }
@@ -170,7 +171,8 @@ router.get('/leaderboard', async (req, res) => {
       {
         $group: {
           _id: '$memberId',
-          name: { $first: '$name' },
+          firstName: { $first: '$firstName' },
+          lastName: { $first: '$lastName' },
           gymCode: { $first: '$gymCode' },
           totalPaid: { $sum: '$amount' },
           paymentCount: { $sum: 1 }
