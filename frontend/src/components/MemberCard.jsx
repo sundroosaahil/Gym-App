@@ -548,7 +548,7 @@ function MemberCard({ member, isOpen, onToggle, onUpdated }) {
                 />
               </div>
               <div>
-                <label className="block text-xs text-[#999] uppercase mb-1">Last Name (if applicable)</label>
+                <label className="block text-xs text-[#999] uppercase mb-1">Last Name</label>
                 <input
                   value={editData.lastName}
                   onChange={(e) => setEditData({ ...editData, lastName: e.target.value })}
