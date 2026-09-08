@@ -6,6 +6,7 @@ import BarChart from '../components/analytics/BarChart';
 import DonutChart from '../components/analytics/DonutChart';
 import SkeletonCard from '../components/SkeletonCard';
 import EmptyState from '../components/EmptyState';
+import { getDisplayName } from '../utils/getDisplayName';
 
 const MEDAL_STYLES = [
   { bg: '#F2C230', text: '#000', ring: 'ring-2 ring-[#F2C230]' },   // gold
@@ -209,7 +210,7 @@ function AnalyticsPage() {
                             >
                               {i + 1}
                             </span>
-                            <span className="text-white font-bold text-sm">{m.name}</span>
+                            <span className="text-white font-bold text-sm">{getDisplayName(m)}</span>
                             <span className="text-[#666] text-xs hidden sm:inline">#{m.gymCode}</span>
                           </div>
                           <div className="text-right">

@@ -38,19 +38,21 @@ function allowedDistance(queryLength) {
 }
 
 // Checks a member's name against a search query, tolerating typos.
-// Checks the full name AND each individual word (first name, last name, etc.)
-// so "furqan" matches "Furkan Ahmed" even though the typo is only in the
-// first word.
+// Splits BOTH the name and the query into words, so a multi-word query
+// query against a single 6-character name word. Order doesn't matter,
 export function fuzzyMatchesName(name, query) {
-  const normalizedName = name.toLowerCase();
-  const normalizedQuery = query.toLowerCase();
+  const normalizedName = name.toLowerCase().trim();
+  const normalizedQuery = query.toLowerCase().trim();
 
+  if (!normalizedQuery) return true;
   if (normalizedName.includes(normalizedQuery)) return true;
 
-  const words = normalizedName.split(/\s+/);
-  const threshold = allowedDistance(normalizedQuery.length);
+  const nameWords = normalizedName.split(/\s+/);
+  const queryWords = normalizedQuery.split(/\s+/);
 
-  return words.some((word) => levenshtein(word, normalizedQuery) <= threshold);
+  // Every word the person typed must fuzzy-match at least one word in the name.
+  return queryWords.every((queryWord) => {
+    const threshold = allowedDistance(queryWord.length);
+    return nameWords.some((nameWord) => levenshtein(nameWord, queryWord) <= threshold);
+  });
 }
-
-//checks a member's name against a search query, tolerating typos.

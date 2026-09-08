@@ -8,7 +8,8 @@ import { useToast } from '../context/ToastContext';
 function AddMemberForm({ onMemberAdded }) {
   const { showToast } = useToast();
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     residence: '',
     phone: '',
     amountPaid: '',
@@ -29,7 +30,7 @@ function AddMemberForm({ onMemberAdded }) {
       setFormData((prev) => ({ ...prev, phone: digitsOnly }));
       return;
     }
-    if (name === 'name' || name === 'residence') {
+    if (name === 'firstName' || name === 'lastName' || name === 'residence') {
       setDuplicateMatches([]); // stale warning — clear until re-checked on blur
     }
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -43,15 +44,16 @@ function AddMemberForm({ onMemberAdded }) {
   }
 
   async function handleDuplicateCheck() {
-    const trimmedName = formData.name.trim();
+    const trimmedFirstName = formData.firstName.trim();
+    const trimmedLastName = formData.lastName.trim();
     const trimmedResidence = formData.residence.trim();
-    if (!trimmedName || !trimmedResidence) {
+    if (!trimmedFirstName || !trimmedResidence) {
       setDuplicateMatches([]);
       return;
     }
     try {
       const res = await api.get('/members/check-duplicate', {
-        params: { name: trimmedName, residence: trimmedResidence }
+        params: { firstName: trimmedFirstName, lastName: trimmedLastName, residence: trimmedResidence }
       });
       setDuplicateMatches(res.data.matches || []);
     } catch (err) {
@@ -75,7 +77,8 @@ function AddMemberForm({ onMemberAdded }) {
 
     try {
       await api.post('/members', {
-        name: formData.name,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
         residence: formData.residence,
         phone: cleanedPhone,
         amountPaid: Number(formData.amountPaid),
@@ -86,10 +89,11 @@ function AddMemberForm({ onMemberAdded }) {
       });
 
       setSubmitStatus('success');
-      showToast(`${formData.name} added`);
+      showToast(`${formData.firstName} ${formData.lastName}`.trim() + ' added');
       setTimeout(() => {
         setFormData({
-          name: '',
+          firstName: '',
+          lastName: '',
           residence: '',
           phone: '',
           amountPaid: '',
@@ -124,12 +128,22 @@ function AddMemberForm({ onMemberAdded }) {
       <form onSubmit={handleSubmit} className="grid md:grid-cols-3 gap-4">
         <div>
           <input
-            name="name"
-            placeholder="Name"
-            value={formData.name}
+            name="firstName"
+            placeholder="First Name"
+            value={formData.firstName}
             onChange={handleChange}
             onBlur={handleDuplicateCheck}
             required
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <input
+            name="lastName"
+            placeholder="Last Name (if applicable)"
+            value={formData.lastName}
+            onChange={handleChange}
+            onBlur={handleDuplicateCheck}
             className={inputClass}
           />
         </div>
@@ -144,7 +158,7 @@ function AddMemberForm({ onMemberAdded }) {
           />
           {duplicateMatches.length > 0 && (
             <p className="text-yellow-400 text-xs mt-1">
-              ⚠ Already exists: {duplicateMatches.map((m) => `${m.name} (${m.gymCode})`).join(', ')}
+              ⚠ Already exists: {duplicateMatches.map((m) => `${m.firstName} ${m.lastName}`.trim() + ` (${m.gymCode})`).join(', ')}
             </p>
           )}
         </div>

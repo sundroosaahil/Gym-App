@@ -11,6 +11,7 @@ import { buildWhatsAppReminderLink } from '../utils/sendWhatsAppReminder';
 import { toFullPhone, toLocalPhone } from '../utils/formatPhone';
 import { getRenewalLabel } from '../utils/renewalLabel';
 import { useToast } from '../context/ToastContext';
+import { getDisplayName } from '../utils/getDisplayName';
 
 const MARK_PAID_DEFAULTS = {
   durationChoice: '30',
@@ -45,7 +46,8 @@ function MemberCard({ member, isOpen, onToggle, onUpdated }) {
       : null;
 
   const makeEditSnapshot = () => ({
-    name: member.name,
+    firstName: member.firstName || '',
+    lastName: member.lastName || '',
     residence: member.residence || '',
     phone: toLocalPhone(member.phone),
     amountPaid: member.amountPaid,
@@ -161,7 +163,7 @@ function MemberCard({ member, isOpen, onToggle, onUpdated }) {
         ...(markPaidReceiptNo.trim() && { receiptNo: markPaidReceiptNo.trim() })
       });
       setMarkPaidStatus('success');
-      showToast(`Payment recorded for ${member.name}`);
+      showToast(`Payment recorded for ${getDisplayName(member)}`);
       setTimeout(() => {
         setShowMarkPaid(false);
         setAmountPaid(MARK_PAID_DEFAULTS.amountPaid);
@@ -195,7 +197,7 @@ function MemberCard({ member, isOpen, onToggle, onUpdated }) {
   async function handleReactivate() {
     try {
       await api.put(`/members/${member._id}/reactivate`);
-      showToast(`${member.name} reactivated`);
+      showToast(`${getDisplayName(member)} reactivated`);
       onUpdated();
     } catch (err) {
       showToast(err.response?.data?.error || 'Failed to reactivate member', 'error');
@@ -209,7 +211,8 @@ function MemberCard({ member, isOpen, onToggle, onUpdated }) {
     setEditStatus('submitting');
     try {
       await api.put(`/members/${member._id}`, {
-        name: editData.name,
+        firstName: editData.firstName,
+        lastName: editData.lastName,
         residence: editData.residence,
         phone: toFullPhone(editData.phone),
         amountPaid: Number(editData.amountPaid),
@@ -217,7 +220,7 @@ function MemberCard({ member, isOpen, onToggle, onUpdated }) {
         ...(editData.receiptNo.trim() && { receiptNo: editData.receiptNo.trim() })
       });
       setEditStatus('success');
-      showToast(`${member.name} updated`);
+      showToast(`${getDisplayName(member)} updated`);
       setTimeout(() => {
         setShowEdit(false);
         setEditStatus('idle');
@@ -233,7 +236,7 @@ function MemberCard({ member, isOpen, onToggle, onUpdated }) {
     try {
       await api.delete(`/members/${member._id}`);
       setShowDeleteConfirm(false);
-      showToast(`${member.name} deleted`);
+      showToast(`${getDisplayName(member)} deleted`);
       onUpdated();
     } catch (err) {
       setShowDeleteConfirm(false);
@@ -252,10 +255,13 @@ function MemberCard({ member, isOpen, onToggle, onUpdated }) {
       }`}
     >
       {/* Collapsed view — always visible, tap to expand */}
-      <div onClick={() => onToggle(member._id, member.name)} className="cursor-pointer">
+      <div onClick={() => onToggle(member._id, getDisplayName(member))} className="cursor-pointer">
         <div className="flex justify-between items-start mb-2">
           <div>
-            <p className="font-semibold">{member.name}</p>
+            <p className="font-semibold">{getDisplayName(member)}</p>
+            {!member.lastName && (
+              <p className="text-[10px] text-yellow-500 uppercase tracking-wide">⚠ No last name</p>
+            )}
             <p className="text-xs text-[#999] font-mono">{member.gymCode}</p>
           </div>
           <StatusBadge status={member.status} />
@@ -374,7 +380,7 @@ function MemberCard({ member, isOpen, onToggle, onUpdated }) {
           <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg p-6">
             <h2 className="text-lg font-black uppercase tracking-wide mb-4 flex items-center gap-2">
               <IndianRupee className="w-5 h-5 text-[#F2C230]" strokeWidth={3} />
-              Enter Payment for {member.name}
+              Enter Payment for {getDisplayName(member)}
             </h2>
 
             {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
@@ -517,18 +523,26 @@ function MemberCard({ member, isOpen, onToggle, onUpdated }) {
           <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg p-6">
             <h2 className="text-lg font-black uppercase tracking-wide mb-4 flex items-center gap-2">
               <Pencil className="w-5 h-5 text-[#F2C230]" strokeWidth={3} />
-              Edit {member.name}
+              Edit {getDisplayName(member)}
             </h2>
 
             {editError && <p className="text-red-400 text-sm mb-3">{editError}</p>}
 
             <form onSubmit={handleEditSubmit} className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs text-[#999] uppercase mb-1">Name</label>
+                <label className="block text-xs text-[#999] uppercase mb-1">First Name</label>
                 <input
-                  value={editData.name}
-                  onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                  value={editData.firstName}
+                  onChange={(e) => setEditData({ ...editData, firstName: e.target.value })}
                   required
+                  className={editInputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-[#999] uppercase mb-1">Last Name (if applicable)</label>
+                <input
+                  value={editData.lastName}
+                  onChange={(e) => setEditData({ ...editData, lastName: e.target.value })}
                   className={editInputClass}
                 />
               </div>
@@ -642,7 +656,7 @@ function MemberCard({ member, isOpen, onToggle, onUpdated }) {
       {confirmDiscardEdit && (
         <ConfirmDialog
           title="Discard Changes?"
-          message={`You have unsaved edits for ${member.name}. Closing now will discard them.`}
+          message={`You have unsaved edits for ${getDisplayName(member)}. Closing now will discard them.`}
           confirmLabel="Discard"
           danger
           onConfirm={handleConfirmDiscardEdit}
@@ -653,7 +667,7 @@ function MemberCard({ member, isOpen, onToggle, onUpdated }) {
       {confirmDiscardMarkPaid && (
         <ConfirmDialog
           title="Discard Changes?"
-          message={`You've entered payment details for ${member.name} that haven't been saved. Closing now will discard them.`}
+          message={`You've entered payment details for ${getDisplayName(member)} that haven't been saved. Closing now will discard them.`}
           confirmLabel="Discard"
           danger
           onConfirm={handleConfirmDiscardMarkPaid}
@@ -664,7 +678,7 @@ function MemberCard({ member, isOpen, onToggle, onUpdated }) {
       {showDeleteConfirm && (
         <ConfirmDialog
           title="Delete Member?"
-          message={`This will permanently delete ${member.name} (${member.gymCode}). This cannot be undone.`}
+          message={`This will permanently delete ${getDisplayName(member)} (${member.gymCode}). This cannot be undone.`}
           confirmLabel="Delete"
           danger
           onConfirm={handleDelete}

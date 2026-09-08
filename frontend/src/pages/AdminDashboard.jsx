@@ -21,6 +21,7 @@ import EmptyState from "../components/EmptyState";
 import Modal from "../components/Modal";
 import { useAuth } from "../context/AuthContext";
 import { fuzzyMatchesName } from "../utils/fuzzySearch";
+import { getDisplayName } from "../utils/getDisplayName";
 import LogoutMenu from "../components/LogoutMenu";
 import { registerPushNotifications } from "../utils/registerPush";
 import { listenForForegroundMessages } from "../firebase";
@@ -178,7 +179,7 @@ function AdminDashboard() {
       ? statusFiltered.filter(
           (m) =>
             m.gymCode.toLowerCase().includes(searchTerm) ||
-            fuzzyMatchesName(m.name, searchTerm),
+            fuzzyMatchesName(getDisplayName(m), searchTerm),
         )
       : statusFiltered;
   }, [statusFiltered, searchTerm]);
