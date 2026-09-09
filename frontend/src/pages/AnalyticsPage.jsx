@@ -101,8 +101,8 @@ function AnalyticsPage() {
                 data={[
                   { label: 'Active', value: memberStatus.active, color: '#C6FF3D' },
                   { label: 'Pending', value: memberStatus.pending, color: '#F2C230' },
-                  { label: 'Inactive', value: memberStatus.inactive, color: '#555' },
-                  { label: 'Not Renewing', value: memberStatus.not_renewing, color: '#EF4444' }
+                  { label: 'Inactive', value: memberStatus.inactive, color: '#EF4444' },
+                  { label: 'Not Renewing', value: memberStatus.not_renewing, color: '#555' }
                 ]}
               />
             </div>

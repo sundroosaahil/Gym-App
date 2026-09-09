@@ -96,18 +96,20 @@ function AdminDashboard() {
         setHasLoadedOnce(true);
       });
   }, []);
-   useEffect(() => {
+  // Push registration + foreground listener only need to run once per
+  // mount. This used to be split across two separate useEffects that both
+  // called registerPushNotifications() — harmless on a fast connection, but
+  // it meant every dashboard load fired two /auth/fcm-token requests
+  // instead of one, and doubled up on whatever registerPushNotifications
+  // does internally (permission prompt, token fetch, etc). Consolidated
+  // into a single effect.
+  useEffect(() => {
     registerPushNotifications();
     listenForForegroundMessages();
   }, []);
 
-
-   useEffect(() => {
-    fetchMembers();
-  }, []);
-
   useEffect(() => {
-    registerPushNotifications();
+    fetchMembers();
   }, []);
 
   async function handleLogout() {
