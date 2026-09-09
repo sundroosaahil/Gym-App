@@ -229,8 +229,8 @@ function AdminLogs() {
         )}
 
         {!loading && logs.length > 0 && (
-          <div className="flex flex-wrap items-end gap-3 mb-6">
-            <div className="flex-1 min-w-[180px]">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:flex-wrap gap-3 mb-6">
+            <div className="sm:flex-1 sm:min-w-[180px]">
               <label className="block text-xs text-[#999] uppercase mb-1">Search</label>
               <div className="relative">
                 <Search className="w-4 h-4 text-[#666] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -243,33 +243,39 @@ function AdminLogs() {
                 />
               </div>
             </div>
-            <div>
-              <label className="block text-xs text-[#999] uppercase mb-1">Action</label>
-              <select
-                value={actionFilter}
-                onChange={(e) => setActionFilter(e.target.value)}
-                className={selectClass}
-              >
-                {actionOptions.map((action) => (
-                  <option key={action} value={action}>
-                    {action === 'all' ? 'All Actions' : action}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs text-[#999] uppercase mb-1">Admin</label>
-              <select
-                value={adminFilter}
-                onChange={(e) => setAdminFilter(e.target.value)}
-                className={selectClass}
-              >
-                {adminOptions.map((opt) => (
-                  <option key={opt.email} value={opt.email}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+            {/* Action + Admin grouped in their own row so they always sit
+                side by side, even on narrow phones — relying on flex-wrap
+                alone let them fall onto separate stacked rows once the
+                search box above claimed the full first line. */}
+            <div className="flex gap-3">
+              <div className="flex-1 sm:flex-none sm:w-auto min-w-0">
+                <label className="block text-xs text-[#999] uppercase mb-1">Action</label>
+                <select
+                  value={actionFilter}
+                  onChange={(e) => setActionFilter(e.target.value)}
+                  className={`${selectClass} w-full`}
+                >
+                  {actionOptions.map((action) => (
+                    <option key={action} value={action}>
+                      {action === 'all' ? 'All Actions' : action}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex-1 sm:flex-none sm:w-auto min-w-0">
+                <label className="block text-xs text-[#999] uppercase mb-1">Admin</label>
+                <select
+                  value={adminFilter}
+                  onChange={(e) => setAdminFilter(e.target.value)}
+                  className={`${selectClass} w-full`}
+                >
+                  {adminOptions.map((opt) => (
+                    <option key={opt.email} value={opt.email}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
         )}
@@ -336,4 +342,3 @@ function AdminLogs() {
 }
 
 export default AdminLogs;
-//checl
