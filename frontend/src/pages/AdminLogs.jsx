@@ -15,13 +15,6 @@ import {
 } from 'lucide-react';
 import api from '../api/axiosConfig';
 import SkeletonLogCard from '../components/SkeletonLogCard';
-import SkeletonCard from '../components/SkeletonCard';
-
-const MEDAL_STYLES = [
-  { bg: '#F2C230', text: '#000' },   // gold
-  { bg: '#C4C4C4', text: '#000' },   // silver
-  { bg: '#B87333', text: '#000' }    // bronze
-];
 
 // Icon + color per action, so the log feed is skimmable at a glance instead
 // of every row looking identical except for the label text. Keyed on the
@@ -81,9 +74,6 @@ function AdminLogs() {
   const [adminFilter, setAdminFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const [contributions, setContributions] = useState([]);
-  const [contributionsLoading, setContributionsLoading] = useState(true);
-
   useEffect(() => {
     api.get('/logs')
       .then((response) => {
@@ -93,19 +83,6 @@ function AdminLogs() {
       .catch(() => {
         setError('Failed to load logs');
         setLoading(false);
-      });
-
-    // Separate request/loading state on purpose — the contributions ranking
-    // is a full-collection aggregate (not capped at 200 like /logs), so it
-    // has its own failure mode and shouldn't block the log list from
-    // rendering if it's slow or errors out.
-    api.get('/logs/contributions')
-      .then((response) => {
-        setContributions(response.data);
-        setContributionsLoading(false);
-      })
-      .catch(() => {
-        setContributionsLoading(false);
       });
   }, []);
 
@@ -155,9 +132,6 @@ function AdminLogs() {
     return groups;
   }, [filteredLogs]);
 
-  const maxContribution = Math.max(...contributions.map((c) => c.count), 1);
-  const totalContributions = contributions.reduce((sum, c) => sum + c.count, 0);
-
   const selectClass =
     'bg-[#1A1A1A] border border-[#333] rounded px-3 py-2 text-sm text-[#F5F5F0] focus:outline-none focus:border-[#F2C230]';
 
@@ -179,58 +153,13 @@ function AdminLogs() {
         </h1>
         <p className="text-xs text-[#666] mb-6">Logs are automatically deleted after 60 days.</p>
 
-        {/* Contributions — how active each admin has been, by total log count */}
-        {contributionsLoading ? (
-          <div className="mb-6">
-            <SkeletonCard />
-          </div>
-        ) : contributions.length > 0 && (
-          <div className="bg-[#1A1A1A] border-2 border-[#333] rounded-lg p-4 mb-6">
-            <h3 className="font-bold text-white uppercase tracking-wide text-sm mb-1 flex items-center gap-2">
-              <Activity className="w-4 h-4 text-[#F2C230]" />
-              Admin Contributions
-            </h3>
-            <p className="text-xs text-[#666] mb-4">
-              Logged actions per admin, out of {totalContributions} total
-            </p>
-            <div className="space-y-2">
-              {contributions.map((c, i) => {
-                const percent = totalContributions > 0 ? Math.round((c.count / totalContributions) * 100) : 0;
-                const barPercent = (c.count / maxContribution) * 100;
-                const medal = MEDAL_STYLES[i];
-                return (
-                  <div key={c.adminEmail} className="flex items-center gap-3">
-                    <span
-                      className="w-6 h-6 flex items-center justify-center rounded-full text-[10px] font-black shrink-0"
-                      style={medal ? { backgroundColor: medal.bg, color: medal.text } : { backgroundColor: '#2A2A2A', color: '#999' }}
-                    >
-                      {i + 1}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-baseline gap-2 mb-1">
-                        <span className="text-sm font-bold text-white truncate">{c.adminName}</span>
-                        <span className="text-xs text-[#999] shrink-0">{c.count} · {percent}%</span>
-                      </div>
-                      <div className="h-1.5 bg-[#2A2A2A] rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full transition-all duration-700 ease-out"
-                          style={{
-                            width: `${barPercent}%`,
-                            backgroundColor: medal ? medal.bg : '#F2C230'
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
         {!loading && logs.length > 0 && (
-          <div className="flex flex-col sm:flex-row sm:items-end sm:flex-wrap gap-3 mb-6">
-            <div className="sm:flex-1 sm:min-w-[180px]">
+          <>
+            {/* Sticky like the search bar on AdminDashboard — stays pinned
+                under the header while scrolling a long log list. Only the
+                search box sticks; filters below scroll normally, same
+                split as the dashboard. */}
+            <div className="sticky top-0 z-30 bg-[#0D0D0D] pt-2 pb-4 -mx-6 px-6 md:static md:mx-0 md:px-0 md:pt-0 md:pb-0 md:mb-3">
               <label className="block text-xs text-[#999] uppercase mb-1">Search</label>
               <div className="relative">
                 <Search className="w-4 h-4 text-[#666] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -243,11 +172,12 @@ function AdminLogs() {
                 />
               </div>
             </div>
+
             {/* Action + Admin grouped in their own row so they always sit
                 side by side, even on narrow phones — relying on flex-wrap
                 alone let them fall onto separate stacked rows once the
                 search box above claimed the full first line. */}
-            <div className="flex gap-3">
+            <div className="flex gap-3 mb-6">
               <div className="flex-1 sm:flex-none sm:w-auto min-w-0">
                 <label className="block text-xs text-[#999] uppercase mb-1">Action</label>
                 <select
@@ -277,7 +207,7 @@ function AdminLogs() {
                 </select>
               </div>
             </div>
-          </div>
+          </>
         )}
 
         {loading ? (
