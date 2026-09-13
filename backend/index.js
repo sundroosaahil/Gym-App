@@ -32,6 +32,13 @@ app.get("/", (req, res) => {
   res.send("Gym app backend is running");
 });
 
+// Pinged by cron-job.org every few minutes to stop Render's free tier
+// from spinning the service down after 15 min of inactivity.
+// No DB call on purpose — keep this cheap and fast.
+app.get("/health", (req, res) => {
+  res.status(200).send("OK");
+});
+
 app.use("/api/members", memberRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/logs", logRoutes);
