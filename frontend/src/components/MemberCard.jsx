@@ -12,6 +12,7 @@ import { toFullPhone, toLocalPhone } from '../utils/formatPhone';
 import { getRenewalLabel } from '../utils/renewalLabel';
 import { useToast } from '../context/ToastContext';
 import { getDisplayName } from '../utils/getDisplayName';
+import { getMissingDetails } from '../utils/getMissingDetails';
 
 const MARK_PAID_DEFAULTS = {
   durationChoice: '30',
@@ -44,6 +45,10 @@ function MemberCard({ member, isOpen, onToggle, onUpdated }) {
     member.receipts && member.receipts.length > 0
       ? member.receipts[member.receipts.length - 1].receiptNo
       : null;
+
+  const { color: missingColor, message: missingMessage } = getMissingDetails(member);
+  const missingDotClass = missingColor === 'red' ? 'bg-red-400' : 'bg-blue-400';
+  const missingTextClass = missingColor === 'red' ? 'text-red-400' : 'text-blue-400';
 
   const makeEditSnapshot = () => ({
     firstName: member.firstName || '',
@@ -260,11 +265,11 @@ function MemberCard({ member, isOpen, onToggle, onUpdated }) {
           <div>
             <p className="font-semibold flex items-center gap-1.5">
               {getDisplayName(member)}
-              {!member.lastName && (
+              {missingMessage && (
                 <span
-                  className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0"
-                  title="No last name on file"
-                  aria-label="No last name on file"
+                  className={`w-1.5 h-1.5 rounded-full shrink-0 ${missingDotClass}`}
+                  title={missingMessage}
+                  aria-label={missingMessage}
                 />
               )}
             </p>
@@ -286,8 +291,8 @@ function MemberCard({ member, isOpen, onToggle, onUpdated }) {
       {isOpen && (
         <div onClick={(e) => e.stopPropagation()}>
           <div className="text-sm text-[#999] space-y-1 mt-3 mb-4 pt-3 border-t border-[#2A2A2A]">
-            {!member.lastName && (
-              <p className="text-xs text-blue-400">Edit to add last name</p>
+            {missingMessage && (
+              <p className={`text-xs ${missingTextClass}`}>{missingMessage}</p>
             )}
             <p>Start Date: {formatDate(member.startDate)}</p>
             <p>End Date: {formatDate(member.endDate)}</p>
