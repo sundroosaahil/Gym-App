@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { ArrowDownRight, Phone } from 'lucide-react';
 import Header from '../components/Header';
 import MapSection from '../components/MapSection';
 import Features from '../components/Features';
@@ -339,29 +340,39 @@ function PublicHome() {
         </div>
 
         <div className="relative px-6 py-24 md:py-32 max-w-6xl mx-auto grid md:grid-cols-2 gap-10 items-center pointer-events-none">
-          <div>
+          <div className="max-w-xl">
+            <p className="mb-5 flex items-center gap-2 text-xs font-black uppercase tracking-[0.28em] text-[#C6FF3D] animate-fade-up opacity-0" style={{ animationDelay: '0.05s' }}>
+              <span className="h-px w-8 bg-[#C6FF3D]" /> Sopore&apos;s training floor
+            </p>
             <h1
-              className="text-5xl md:text-6xl font-black uppercase tracking-tight text-[#F5F5F0] leading-tight animate-fade-up opacity-0"
+              className="text-5xl md:text-7xl font-black uppercase tracking-[-0.04em] text-[#F5F5F0] leading-[0.95] animate-fade-up opacity-0"
               style={{ animationDelay: '0.1s' }}
             >
-              Stop Wishing<br />
-              <span className="text-[#F2C230]">Start Doing</span>
+              Stop Wishing.<br />
+              <span className="text-[#F2C230]">Start Doing.</span>
             </h1>
 
             <p
-              className="mt-6 text-lg text-[#C6FF3D] animate-fade-up opacity-0"
+              className="mt-7 max-w-md text-lg leading-relaxed text-[#F5F5F0]/75 animate-fade-up opacity-0"
               style={{ animationDelay: '0.25s' }}
             >
-              The unisex gym in Sopore, built for people who actually show up.
+              A focused, friendly gym for people who are ready to get stronger, move better, and show up for themselves.
             </p>
 
-            <a
-              href="#plans"
-              className="pointer-events-auto inline-block mt-8 bg-[#F2C230] text-black font-bold uppercase px-8 py-3 rounded hover:bg-[#C6FF3D] transition-colors animate-fade-up opacity-0"
-              style={{ animationDelay: '0.4s' }}
-            >
-              Become a Member
-            </a>
+            <div className="mt-8 flex flex-wrap items-center gap-3 animate-fade-up opacity-0" style={{ animationDelay: '0.4s' }}>
+              <a href="#plans" className="pointer-events-auto inline-flex items-center gap-2 rounded bg-[#F2C230] px-6 py-3.5 font-black uppercase tracking-wide text-black transition-colors hover:bg-[#C6FF3D]">
+                Explore membership <ArrowDownRight className="h-4 w-4" />
+              </a>
+              <a href={`tel:+${GYM_PHONE}`} className="pointer-events-auto inline-flex items-center gap-2 rounded border border-[#F5F5F0]/30 px-6 py-3.5 font-bold uppercase tracking-wide text-[#F5F5F0] transition-colors hover:border-[#F2C230] hover:text-[#F2C230]">
+                <Phone className="h-4 w-4" /> Call us
+              </a>
+            </div>
+
+            <div className="mt-10 grid max-w-md grid-cols-3 border-y border-[#F5F5F0]/15 py-4">
+              <div><p className="text-2xl font-black text-[#F2C230]">6+</p><p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-[#F5F5F0]/55">Facilities</p></div>
+              <div className="border-x border-[#F5F5F0]/15 px-4"><p className="text-2xl font-black text-[#F2C230]">1</p><p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-[#F5F5F0]/55">Community</p></div>
+              <div className="pl-4"><p className="text-2xl font-black text-[#F2C230]">100%</p><p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-[#F5F5F0]/55">Commitment</p></div>
+            </div>
           </div>
 
           <HeroPhoto />
@@ -377,11 +388,13 @@ function PublicHome() {
           plansInView ? 'opacity-100' : 'opacity-0 translate-y-6'
         }`}
       >
-        <h2 className="relative text-3xl font-black uppercase tracking-tight text-[#F2C230] mb-4 text-center">
-          Membership Plans
-        </h2>
+        <div className="mx-auto mb-10 max-w-3xl text-center">
+          <p className="mb-3 text-xs font-black uppercase tracking-[0.25em] text-[#C6FF3D]">Choose your commitment</p>
+          <h2 className="relative text-4xl font-black uppercase tracking-tight text-[#F2C230] sm:text-5xl">Membership plans</h2>
+          <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-[#F5F5F0]/60">Simple pricing, better equipment, and a training environment designed to keep you consistent.</p>
+        </div>
 
-        <div className="relative max-w-2xl mx-auto bg-[#1A1A1A] border-2 border-[#C6FF3D] rounded-lg p-6 mb-10 text-center">
+        <div className="relative mx-auto mb-10 max-w-2xl rounded-lg border-2 border-[#C6FF3D] bg-[#1A1A1A] p-6 text-center">
           <p className="text-[#C6FF3D] font-bold uppercase text-sm tracking-wide">
             Registration Fee
           </p>
@@ -408,6 +421,12 @@ function PublicHome() {
       >
         <MapSection />
       </div>
+
+      <section className="border-t border-[#F5F5F0]/10 bg-[#111] px-6 py-14 text-center">
+        <p className="text-xs font-black uppercase tracking-[0.25em] text-[#C6FF3D]">Your next session starts here</p>
+        <h2 className="mx-auto mt-3 max-w-2xl text-3xl font-black uppercase tracking-tight text-[#F5F5F0] sm:text-4xl">Build strength that shows up in everyday life.</h2>
+        <a href="#plans" className="mt-7 inline-flex items-center gap-2 rounded bg-[#F2C230] px-7 py-3 font-black uppercase text-black transition-colors hover:bg-[#C6FF3D]">View membership plans <ArrowDownRight className="h-4 w-4" /></a>
+      </section>
 
       <footer className="px-6 py-8 text-center border-t border-[#333]">
         <div className="mb-3 flex justify-center items-center gap-4 flex-wrap">
