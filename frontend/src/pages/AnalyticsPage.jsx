@@ -49,12 +49,12 @@ function AnalyticsPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-black text-[#F5F5F0]">
-      <div className="max-w-5xl mx-auto px-6 py-8">
+    <div className="min-h-screen bg-[#090909] text-[#F5F5F0]">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-5 sm:py-8">
 
         {/* Header — diagonal stripe accent ties this back to the brand identity
             used on the public landing page, which the plain card layout was missing. */}
-        <div className="relative overflow-hidden rounded-lg border-2 border-[#333] bg-[#111] mb-6 px-6 py-6">
+        <div className="relative overflow-hidden rounded-2xl border border-[#292929] bg-[#151515] mb-6 px-5 sm:px-7 py-5 sm:py-6 shadow-2xl shadow-black/20">
           <div
             className="absolute inset-0 opacity-[0.06] pointer-events-none"
             style={{
@@ -83,9 +83,9 @@ function AnalyticsPage() {
         )}
 
         {!loading && !error && (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
             {/* Manual-entry disclaimer — visible on every load, not dismissible. */}
-            <div className="flex items-start gap-2 bg-[#1A1A1A] border border-[#333] rounded-lg p-3 text-xs text-[#999]">
+            <div className="xl:col-span-2 flex items-start gap-2 bg-[#151515] border border-[#292929] rounded-2xl p-4 text-xs text-[#999]">
               <Info className="w-4 h-4 text-[#F2C230] shrink-0 mt-0.5" />
               <span>
                 Figures are based on manually entered payment data and may contain occasional errors.
@@ -94,7 +94,7 @@ function AnalyticsPage() {
             </div>
 
             {/* Member status breakdown */}
-            <div className="bg-[#1A1A1A] border-2 border-[#333] rounded-lg p-4">
+            <div className="bg-[#151515] border border-[#292929] rounded-2xl p-4 sm:p-5 shadow-lg shadow-black/15">
               <h3 className="font-bold text-white uppercase tracking-wide text-sm mb-1">Member Status</h3>
               <p className="text-xs text-[#666] mb-4">Tap a slice or legend item for details</p>
               <DonutChart
@@ -108,7 +108,7 @@ function AnalyticsPage() {
             </div>
 
             {/* Revenue — 12 months */}
-            <div className="bg-[#1A1A1A] border-2 border-[#333] rounded-lg p-4">
+            <div className="bg-[#151515] border border-[#292929] rounded-2xl p-4 sm:p-5 shadow-lg shadow-black/15">
               <div className="flex items-center justify-between mb-1">
                 <h3 className="font-bold text-white uppercase tracking-wide text-sm">Revenue — Last 12 Months</h3>
                 {revenue.percentChange !== null && (
@@ -127,7 +127,7 @@ function AnalyticsPage() {
             </div>
 
             {/* New joins */}
-            <div className="bg-[#1A1A1A] border-2 border-[#333] rounded-lg p-4">
+            <div className="bg-[#151515] border border-[#292929] rounded-2xl p-4 sm:p-5 shadow-lg shadow-black/15">
               <h3 className="font-bold text-white uppercase tracking-wide text-sm mb-1 flex items-center gap-2">
                 <Users className="w-4 h-4 text-[#F2C230]" />
                 New Joins — Last 12 Months
@@ -142,7 +142,7 @@ function AnalyticsPage() {
             </div>
 
             {/* Revenue at risk */}
-            <div className="bg-[#1A1A1A] border-2 border-[#333] rounded-lg p-4">
+            <div className="bg-[#151515] border border-[#292929] rounded-2xl p-4 sm:p-5 shadow-lg shadow-black/15">
               <h3 className="font-bold text-white uppercase tracking-wide text-sm mb-1 flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-[#F2C230]" />
                 Revenue at Risk
@@ -183,7 +183,7 @@ function AnalyticsPage() {
             </div>
 
             {/* Leaderboard — medal colors for top 3 */}
-            <div className="bg-[#1A1A1A] border-2 border-[#333] rounded-lg p-4">
+            <div className="bg-[#151515] border border-[#292929] rounded-2xl p-4 sm:p-5 shadow-lg shadow-black/15">
               <h3 className="font-bold text-white uppercase tracking-wide text-sm mb-1 flex items-center gap-2">
                 <Trophy className="w-4 h-4 text-[#F2C230]" />
                 Top 10 by Payments Logged

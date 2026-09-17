@@ -256,7 +256,7 @@ function MemberCard({ member, isOpen, onToggle, onUpdated }) {
   return (
     <div
       ref={ref}
-      className={`bg-[#1A1A1A] border rounded-lg p-4 ${inView ? 'member-card-pop-in' : ''} ${
+      className={`group bg-[#151515] border rounded-2xl p-4 sm:p-5 shadow-lg shadow-black/15 transition-colors hover:bg-[#191919] ${inView ? 'member-card-pop-in' : ''} ${
         member.status === 'pending' ? 'border-orange-500/50' : 'border-[#2A2A2A]'
       }`}
     >

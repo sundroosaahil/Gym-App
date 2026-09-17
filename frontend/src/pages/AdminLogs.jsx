@@ -138,8 +138,8 @@ function AdminLogs() {
   if (error) return <p className="p-8 text-red-400">{error}</p>;
 
   return (
-    <div className="min-h-screen bg-[#0D0D0D] text-[#F5F5F0]">
-      <div className="max-w-4xl mx-auto px-6 py-8">
+    <div className="min-h-screen bg-[#090909] text-[#F5F5F0]">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
         <Link
           to="/admin"
           className="inline-flex items-center gap-2 text-sm text-[#999] hover:text-[#F5F5F0] transition-colors mb-6"
@@ -168,7 +168,7 @@ function AdminLogs() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search details, action, admin..."
-                  className="w-full bg-[#1A1A1A] border border-[#333] rounded pl-9 pr-3 py-2 text-sm text-[#F5F5F0] placeholder-[#666] focus:outline-none focus:border-[#F2C230]"
+                  className="w-full min-h-12 bg-[#151515] border border-[#303030] rounded-xl pl-9 pr-3 py-2 text-sm text-[#F5F5F0] placeholder-[#666] focus:outline-none focus:border-[#F2C230] focus:ring-1 focus:ring-[#F2C230]/40"
                 />
               </div>
             </div>
@@ -183,7 +183,7 @@ function AdminLogs() {
                 <select
                   value={actionFilter}
                   onChange={(e) => setActionFilter(e.target.value)}
-                  className={`${selectClass} w-full`}
+                  className={`${selectClass} w-full min-h-11 rounded-xl`}
                 >
                   {actionOptions.map((action) => (
                     <option key={action} value={action}>
@@ -197,7 +197,7 @@ function AdminLogs() {
                 <select
                   value={adminFilter}
                   onChange={(e) => setAdminFilter(e.target.value)}
-                  className={`${selectClass} w-full`}
+                  className={`${selectClass} w-full min-h-11 rounded-xl`}
                 >
                   {adminOptions.map((opt) => (
                     <option key={opt.email} value={opt.email}>
@@ -233,7 +233,7 @@ function AdminLogs() {
                     return (
                       <div
                         key={log._id}
-                        className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg p-4"
+                        className="bg-[#151515] border border-[#292929] rounded-2xl p-4 sm:p-5 shadow-lg shadow-black/15 hover:bg-[#191919] transition-colors"
                       >
                         <div className="flex items-start gap-3">
                           <span

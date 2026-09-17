@@ -255,7 +255,7 @@ function MemberRow({ member, isOpen, onToggle, onUpdated }) {
     <tbody>
       <tr
         onClick={() => onToggle(member._id, getDisplayName(member))}
-        className={`cursor-pointer ${member.status === 'pending' ? 'bg-orange-500/5' : ''}`}
+        className={`cursor-pointer transition-colors hover:bg-[#1b1b1b] ${member.status === 'pending' ? 'bg-orange-500/5' : ''}`}
       >
         <td className="border border-[#2A2A2A] px-4 py-3 font-mono text-[#999]">{member.gymCode}</td>
         <td className="border border-[#2A2A2A] px-4 py-3 font-semibold">
