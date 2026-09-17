@@ -244,19 +244,25 @@ function AdminDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-[#F5F5F0]">
-      <div className="max-w-6xl mx-auto px-6 py-8">
-        <div className="flex justify-between items-center mb-6 gap-3">
-          <h1 className="text-xl md:text-3xl font-black uppercase tracking-tight truncate">
-            Admin Dashboard
-          </h1>
-          <div className="flex items-center gap-4 shrink-0">
+    <div className="min-h-screen bg-[#090909] text-[#F5F5F0]">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 py-5 sm:py-8">
+        <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between mb-7 sm:mb-10">
+          <div>
+            <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.24em] text-[#F2C230] mb-2">
+              Operations overview
+            </p>
+            <h1 className="text-2xl sm:text-4xl font-black uppercase tracking-tight">
+              Admin Dashboard
+            </h1>
+            <p className="text-sm text-[#777] mt-2">Manage members, renewals, and gym activity.</p>
+          </div>
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <Link
               to="/admin/logs"
-              className="flex items-center gap-2 text-sm text-[#999] hover:text-[#F2C230] transition-colors"
+              className="flex min-h-10 items-center gap-2 rounded-lg border border-[#292929] px-3 text-xs sm:text-sm text-[#999] hover:border-[#F2C230] hover:text-[#F2C230] transition-colors"
             >
               <FileText className="w-4 h-4" />
-              <span className="hidden sm:inline">Activity Log</span>
+              <span>Logs</span>
             </Link>
             <Link
               to="/admin/analytics"
@@ -271,9 +277,9 @@ function AdminDashboard() {
               isLoggingOut={isLoggingOut}
             />
           </div>
-        </div>
+        </header>
 
-        <div className="sticky top-0 z-30 bg-black pt-2 pb-4 mb-4 -mx-6 px-6 md:static md:mx-0 md:px-0 md:pt-0 md:mb-8">
+        <div className="sticky top-0 z-30 bg-[#090909]/95 backdrop-blur-sm pt-2 pb-4 mb-5 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-10 lg:px-10 md:static md:mx-0 md:px-0 md:pt-0 md:mb-8">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#666]" />
             <input
@@ -284,7 +290,7 @@ function AdminDashboard() {
               onChange={(e) => setSearch(e.target.value)}
               onFocus={handleSearchFocus}
               onBlur={handleSearchBlur}
-              className="w-full bg-[#1A1A1A] border-2 border-[#333] rounded-lg pl-12 pr-11 py-3.5 text-base placeholder-[#666] focus:outline-none focus:border-[#F2C230] transition-colors"
+              className="w-full min-h-12 bg-[#151515] border border-[#303030] rounded-xl pl-12 pr-11 py-3.5 text-base placeholder-[#666] focus:outline-none focus:border-[#F2C230] focus:ring-1 focus:ring-[#F2C230]/40 transition-colors"
             />
             {search && (
               <button
@@ -324,7 +330,7 @@ function AdminDashboard() {
                 type="button"
                 onClick={() => setFilter(isSelected ? "all" : filterKey)}
                 style={{ borderColor: isSelected ? color : "#2A2A2A" }}
-                className="text-left bg-[#1A1A1A] border-2 rounded-lg p-3 md:p-5 flex flex-col md:flex-row items-start md:items-center gap-1.5 md:gap-4 overflow-hidden transition-all duration-300 hover:-translate-y-0.5"
+                className="text-left bg-[#151515] border rounded-xl p-3.5 sm:p-5 flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4 overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#191919]"
               >
                 <Icon
                   style={{ color }}
@@ -342,10 +348,10 @@ function AdminDashboard() {
           })}
         </div>
 
-        <div className={`flex flex-col md:flex-row md:items-center gap-3 mb-4 ${isSearchActive ? "hidden md:flex" : ""}`}>
+        <div className={`flex flex-col md:flex-row md:items-center gap-3 mb-5 ${isSearchActive ? "hidden md:flex" : ""}`}>
           <button
             onClick={() => setShowAddForm(true)}
-            className="w-full md:flex-1 flex items-center justify-center gap-2 bg-[#F2C230] text-black font-black uppercase px-5 py-3.5 rounded-lg hover:bg-[#C6FF3D] hover:-translate-y-0.5 transition-all tracking-wide"
+            className="w-full md:flex-1 flex min-h-12 items-center justify-center gap-2 bg-[#F2C230] text-black font-black uppercase px-5 py-3.5 rounded-xl hover:bg-[#C6FF3D] hover:-translate-y-0.5 transition-all tracking-wide shadow-[0_8px_24px_rgba(242,194,48,0.12)]"
           >
             <Plus className="w-5 h-5" strokeWidth={3} />
             Add Member
@@ -405,7 +411,7 @@ function AdminDashboard() {
         )}
 
         {/* Desktop table */}
-        <div className="hidden md:block bg-[#1A1A1A] border border-[#F2C230]/20 rounded-lg overflow-x-auto">
+        <div className="hidden md:block bg-[#151515] border border-[#292929] rounded-2xl overflow-x-auto shadow-2xl shadow-black/20">
           <table className="w-full text-left border-collapse">
             <thead className="bg-[#111] text-[#999] text-xs uppercase tracking-wide">
               <tr>
@@ -465,7 +471,7 @@ function AdminDashboard() {
         </div>
 
         {/* Mobile cards */}
-        <div className="md:hidden space-y-3">
+        <div className="md:hidden flex flex-col gap-3">
           {loading ? (
             Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
           ) : filteredMembers.length === 0 ? (
