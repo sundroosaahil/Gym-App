@@ -4,6 +4,7 @@ import api from '../api/axiosConfig';
 import { durationOptions } from '../constants/durationOptions';
 import { toFullPhone } from '../utils/formatPhone';
 import { useToast } from '../context/ToastContext';
+import PlaceAutocomplete from './PlaceAutocomplete';
 
 function AddMemberForm({ onMemberAdded }) {
   const { showToast } = useToast();
@@ -148,11 +149,11 @@ function AddMemberForm({ onMemberAdded }) {
           />
         </div>
         <div>
-          <input
+          <PlaceAutocomplete
             name="residence"
             placeholder="Residence"
             value={formData.residence}
-            onChange={handleChange}
+            onChange={(value) => handleChange({ target: { name: 'residence', value } })}
             onBlur={handleDuplicateCheck}
             className={inputClass}
           />

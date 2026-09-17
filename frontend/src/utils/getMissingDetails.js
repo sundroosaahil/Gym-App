@@ -25,4 +25,3 @@ export function getMissingDetails(member) {
 
   return { missing, color, message };
 }
-//check

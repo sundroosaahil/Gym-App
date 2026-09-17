@@ -12,6 +12,7 @@ import { getRenewalLabel } from '../utils/renewalLabel';
 import { useToast } from '../context/ToastContext';
 import { getDisplayName } from '../utils/getDisplayName';
 import { getMissingDetails } from '../utils/getMissingDetails';
+import PlaceAutocomplete from './PlaceAutocomplete';
 
 const MARK_PAID_DEFAULTS = {
   durationChoice: '30',
@@ -561,9 +562,9 @@ function MemberRow({ member, isOpen, onToggle, onUpdated }) {
               </div>
               <div>
                 <label className="block text-xs text-[#999] uppercase mb-1">Residence</label>
-                <input
+                <PlaceAutocomplete
                   value={editData.residence}
-                  onChange={(e) => setEditData({ ...editData, residence: e.target.value })}
+                  onChange={(value) => setEditData({ ...editData, residence: value })}
                   className={editInputClass}
                 />
               </div>
