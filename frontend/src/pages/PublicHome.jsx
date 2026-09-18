@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, Check, MapPin, Phone, ShieldCheck } from 'lucide-react';
 import Header from '../components/Header';
@@ -104,33 +104,74 @@ function PricingDisplay({ plans, selectedIndex, onSelect }) {
 // "Move the picture" hint label was removed, per feedback. A small sticker
 // with the founder's title replaces it for visual interest, using copy
 // that's already stated elsewhere on the page rather than inventing new claims.
+//
+// Interaction is device-appropriate rather than one gesture for everyone:
+// - Desktop (mouse): the photo tilts gently toward the cursor.
+// - Touch (phone): there's no cursor, and dragging on the photo would fight
+//   normal page scrolling — so instead the photo drifts a few pixels as you
+//   scroll past it, tied to something the user is already doing.
+// Both are skipped if the OS has "reduce motion" turned on.
 function FounderPortrait() {
-  const frameRef = useRef(null);
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
-  const reset = () => setTilt({ x: 0, y: 0 });
-  const move = (clientX, clientY) => {
-    const rect = frameRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    setTilt({
-      x: ((clientY - rect.top) / rect.height - 0.5) * -10,
-      y: ((clientX - rect.left) / rect.width - 0.5) * 12
-    });
-  };
+  const wrapRef = useRef(null);
+  const cardRef = useRef(null);
+
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    const card = cardRef.current;
+    if (!wrap || !card) return;
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) return;
+
+    const isFinePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    let rafId = null;
+
+    if (isFinePointer) {
+      const handleMouseMove = (e) => {
+        const rect = wrap.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width - 0.5;
+        const y = (e.clientY - rect.top) / rect.height - 0.5;
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(() => {
+          card.style.transform = `rotateX(${y * -10}deg) rotateY(${x * 12}deg) scale(1.02)`;
+        });
+      };
+      const handleMouseLeave = () => {
+        if (rafId) cancelAnimationFrame(rafId);
+        card.style.transform = 'rotateX(0deg) rotateY(0deg) scale(1)';
+      };
+      wrap.addEventListener('mousemove', handleMouseMove);
+      wrap.addEventListener('mouseleave', handleMouseLeave);
+      return () => {
+        wrap.removeEventListener('mousemove', handleMouseMove);
+        wrap.removeEventListener('mouseleave', handleMouseLeave);
+        if (rafId) cancelAnimationFrame(rafId);
+      };
+    }
+
+    const handleScroll = () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const rect = wrap.getBoundingClientRect();
+        const progress = 1 - rect.top / window.innerHeight;
+        const clamped = Math.min(Math.max(progress, 0), 1);
+        card.style.transform = `translateY(${(clamped - 0.5) * 16}px)`;
+      });
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, []);
+
   return (
-    <div
-      ref={frameRef}
-      className="group relative mx-auto w-full max-w-[320px] touch-none sm:max-w-[440px]"
-      onPointerMove={(event) => move(event.clientX, event.clientY)}
-      onPointerLeave={reset}
-      onPointerUp={reset}
-      onTouchMove={(event) => move(event.touches[0].clientX, event.touches[0].clientY)}
-      onTouchEnd={reset}
-      style={{ perspective: '900px' }}
-    >
+    <div ref={wrapRef} className="group relative mx-auto w-full max-w-[320px] sm:max-w-[440px]" style={{ perspective: '900px' }}>
       <div className="absolute inset-4 rounded-[2rem] bg-[#f5b83d] transition-transform duration-500 group-hover:rotate-2" />
       <div
-        className="relative aspect-[4/5] overflow-hidden rounded-[2rem] border border-white/20 bg-[#222] shadow-2xl transition-transform duration-150"
-        style={{ transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale(1.02)` }}
+        ref={cardRef}
+        className="relative aspect-[4/5] overflow-hidden rounded-[2rem] border border-white/20 bg-[#222] shadow-2xl transition-transform duration-150 will-change-transform"
       >
         <img
           src="/images/gym-hero.png"
@@ -330,8 +371,8 @@ function PublicHome() {
       </main>
 
       {/* Footer: brand on the left, the four public links on the right in
-          two rows, and Admin centered below at very low contrast — findable
-          if you're looking for it, not something a casual visitor notices. */}
+          two rows, and Admin centered below in its own row, set apart by
+          spacing rather than by being unreadably dim. */}
       <footer className="border-t border-white/10 bg-[#0b0b0b] px-5 py-8 sm:px-8 lg:px-12">
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
@@ -342,8 +383,8 @@ function PublicHome() {
               <p className="mt-1 text-xs text-white/35">The unisex gym in Sopore.</p>
             </div>
             <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-xs font-bold uppercase tracking-wide text-white/45 sm:justify-items-end">
-              <a href={`tel:+${GYM_PHONE}`} className="flex items-center gap-2 hover:text-[#d8ff3e]">
-                <Phone className="h-3.5 w-3.5" /> {GYM_PHONE_DISPLAY}
+              <a href={`tel:+${GYM_PHONE}`} className="hover:text-[#d8ff3e]">
+                {GYM_PHONE_DISPLAY}
               </a>
               <a
                 href="https://www.instagram.com/bodyworks_thegym/"
@@ -372,7 +413,7 @@ function PublicHome() {
             </div>
           </div>
           <div className="mt-6 flex justify-center border-t border-white/5 pt-4">
-            <Link to="/login" className="text-[10px] uppercase tracking-wide text-white/15 hover:text-white/40">
+            <Link to="/login" className="text-[10px] uppercase tracking-wide text-white/40 hover:text-white/70">
               Admin
             </Link>
           </div>
