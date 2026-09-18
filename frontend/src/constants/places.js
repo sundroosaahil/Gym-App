@@ -26,6 +26,7 @@ export const places = [
   { name: 'New Light Colony', aliases: ['new light', 'newlight'] },
   { name: 'Baghi Rehmat', aliases: [] },
   { name: 'Baghi Islam', aliases: [] },
+  { name: 'Baghi Gulshan', aliases: [] },
   { name: 'Bypass', aliases: [] },
   { name: 'Chankhan', aliases: [] },
   { name: 'Butpora', aliases: [] },

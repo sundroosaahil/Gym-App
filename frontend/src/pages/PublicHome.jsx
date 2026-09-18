@@ -1,450 +1,382 @@
-import { useState, useRef, useEffect } from 'react';
+import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ArrowUpRight, Check, MapPin, Phone, ShieldCheck } from 'lucide-react';
 import Header from '../components/Header';
 import MapSection from '../components/MapSection';
-import Features from '../components/Features';
 import ContactButton from '../components/ContactButton';
+import Facilities from '../components/Facilities';
 import { useInView } from '../hooks/useInView';
 import { GYM_PHONE_DISPLAY, GYM_PHONE } from '../constants/gymInfo';
 
 const durationTiers = [
-  { key: '1m', label: '1 Month', months: 1, discount: 0 },
-  { key: '3m', label: '3 Months', months: 3, discount: 0.2 },
-  { key: '6m', label: '6 Months', months: 6, discount: 0.3, popular: true },
-  { key: '1y', label: '1 Year', months: 12, discount: 0.35 }
+  { key: '1m', label: '1 month', months: 1, discount: 0 },
+  { key: '3m', label: '3 months', months: 3, discount: 0.2 },
+  { key: '6m', label: '6 months', months: 6, discount: 0.3, popular: true },
+  { key: '1y', label: '1 year', months: 12, discount: 0.35 }
 ];
 
 function buildPlans(monthlyRate) {
-  return durationTiers.map((tier) => ({
-    ...tier,
-    price: Math.round(monthlyRate * tier.months * (1 - tier.discount))
-  }));
+  return durationTiers.map((tier) => ({ ...tier, price: Math.round(monthlyRate * tier.months * (1 - tier.discount)) }));
 }
 
 const strengthPlans = buildPlans(1200);
 const strengthCardioPlans = buildPlans(1500);
 
-function PlanToggle({ active, onChange }) {
-  const options = [
-    { key: 'strength', label: 'Strength Training' },
-    { key: 'cardio', label: 'Strength + Cardio' }
-  ];
-
-  return (
-    <div className="flex justify-center mb-8">
-      <div className="inline-flex bg-[#1A1A1A] border-2 border-[#F2C230] rounded-full p-1">
-        {options.map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => onChange(key)}
-            className={`px-5 py-2 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wide transition-colors ${
-              active === key ? 'bg-[#F2C230] text-black' : 'text-[#F5F5F0] hover:text-[#F2C230]'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function PricingDisplay({ plans, selectedIndex, onSelect }) {
-  const selected = plans[selectedIndex];
-
-  return (
-    <div className="max-w-2xl mx-auto">
-      <div className="relative grid grid-cols-4 bg-[#1A1A1A] border-2 border-[#F2C230] rounded-full p-1 mt-8">
-        <div
-          className="absolute inset-y-1 w-1/4 bg-[#F2C230] rounded-full transition-transform duration-300 ease-out"
-          style={{ transform: `translateX(${selectedIndex * 100}%)` }}
-        />
-        {plans.map((plan, i) => (
-          <button
-            key={plan.key}
-            onClick={() => onSelect(i)}
-            className={`relative z-10 py-3 text-xs sm:text-sm font-bold uppercase transition-colors ${
-              i === selectedIndex ? 'text-black' : 'text-[#F5F5F0] hover:text-[#F2C230]'
-            }`}
-          >
-            {plan.popular && (
-              <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] font-black uppercase text-[#F2C230] whitespace-nowrap">
-                ★ Popular
-              </span>
-            )}
-            {plan.label}
-          </button>
-        ))}
-      </div>
-
-      <div key={selected.key} className="animate-fade-up text-center mt-10">
-        <p className="text-6xl md:text-7xl font-black text-[#F5F5F0]">
-          ₹{selected.price.toLocaleString('en-IN')}
-        </p>
-        <p className="text-[#C6FF3D] font-semibold mt-2">
-          ₹{Math.round(selected.price / selected.months).toLocaleString('en-IN')} / month
-        </p>
-        {selected.discount > 0 && (
-          <span className="inline-block mt-3 bg-[#C6FF3D] text-black text-xs font-black uppercase px-3 py-1 rounded-full">
-            {Math.round(selected.discount * 100)}% off monthly rate
-          </span>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/**
- * HeroPhoto — the owner's photo, treated so it feels grounded in the page
- * instead of pasted on top of it.
- *
- * Two layers do the "grounding":
- * 1. Two blurred, brand-colored glow blobs sit behind the photo.
- * 2. A CSS mask fades the bottom of the photo into transparent, so there's
- *    no hard rectangular edge — it dissolves into the black background.
- *
- * Interactivity is device-appropriate rather than one-size-fits-all:
- * - Desktop (mouse): the photo tilts gently toward the cursor.
- * - Touch (phone): there's no cursor, so instead the photo drifts a few
- *   pixels as you scroll past it — real feedback tied to something the
- *   user is actually doing, not a fake gimmick.
- * Both are skipped entirely if the OS has "reduce motion" turned on.
- */
-function HeroPhoto() {
-  const wrapRef = useRef(null);
-  const imgRef = useRef(null);
-
-  useEffect(() => {
-    const wrap = wrapRef.current;
-    const img = imgRef.current;
-    if (!wrap || !img) return;
-
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduceMotion) return;
-
-    const isFinePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-    let rafId = null;
-
-    if (isFinePointer) {
-      // --- Desktop: cursor-driven tilt ---
-      const handleMouseMove = (e) => {
-        const rect = wrap.getBoundingClientRect();
-        const x = (e.clientX - rect.left) / rect.width - 0.5; // -0.5 -> 0.5
-        const y = (e.clientY - rect.top) / rect.height - 0.5;
-
-        if (rafId) cancelAnimationFrame(rafId);
-        rafId = requestAnimationFrame(() => {
-          const rotateY = x * 10; // deg, left/right tilt
-          const rotateX = y * -8; // deg, up/down tilt
-          img.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
-        });
-      };
-
-      const handleMouseLeave = () => {
-        if (rafId) cancelAnimationFrame(rafId);
-        img.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)';
-      };
-
-      wrap.addEventListener('mousemove', handleMouseMove);
-      wrap.addEventListener('mouseleave', handleMouseLeave);
-
-      return () => {
-        wrap.removeEventListener('mousemove', handleMouseMove);
-        wrap.removeEventListener('mouseleave', handleMouseLeave);
-        if (rafId) cancelAnimationFrame(rafId);
-      };
-    }
-
-    // --- Touch: scroll-linked drift ---
-    const handleScroll = () => {
-      if (rafId) cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(() => {
-        const rect = wrap.getBoundingClientRect();
-        const progress = 1 - rect.top / window.innerHeight;
-        const clamped = Math.min(Math.max(progress, 0), 1);
-        const translateY = (clamped - 0.5) * 18; // -9px -> 9px
-        img.style.transform = `translateY(${translateY}px)`;
-      });
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      if (rafId) cancelAnimationFrame(rafId);
-    };
-  }, []);
-
+function Reveal({ children, className = '', delay = 0 }) {
+  const [ref, inView] = useInView();
   return (
     <div
-      ref={wrapRef}
-      className="relative z-10 flex w-full min-w-0 flex-col items-center md:items-end animate-fade-up opacity-0 pointer-events-auto"
-      style={{ animationDelay: '0.3s' }}
+      ref={ref}
+      className={`transition-all duration-700 ${inView ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'} ${className}`}
+      style={{ transitionDelay: `${delay}ms` }}
     >
-      {/* Primary glow — sits behind the subject's chest/shoulders */}
-      <div
-        className="hero-glow absolute inset-0 z-0 pointer-events-none"
-        aria-hidden="true"
-        style={{
-          background: 'radial-gradient(circle at 50% 35%, rgba(255,255,255,0.22), transparent 62%)',
-          filter: 'blur(60px)',
-          transform: 'scale(0.9)'
-        }}
-      />
-      {/* Secondary glow — a restrained brand accent, offset for depth */}
-      <div
-        className="absolute inset-0 z-0 pointer-events-none"
-        aria-hidden="true"
-        style={{
-          background: 'radial-gradient(circle at 68% 62%, rgba(242,194,48,0.12), transparent 55%)',
-          filter: 'blur(60px)'
-        }}
-      />
+      {children}
+    </div>
+  );
+}
 
-      <img
-        ref={imgRef}
-        src="/images/gym-hero.png"
-        alt="Bodyworks Gym owner"
-        className="relative z-10 -ml-8 w-[22rem] max-w-none h-auto sm:w-[26rem] md:ml-0 md:w-[32rem] md:-mr-12 lg:w-150 will-change-transform transition-transform duration-200 ease-out"
-        style={{
-          filter: 'drop-shadow(0 20px 35px rgba(0,0,0,0.5))',
-          WebkitMaskImage: 'linear-gradient(to bottom, black 62%, rgba(0,0,0,0.9) 73%, rgba(0,0,0,0.55) 87%, transparent 100%)',
-          maskImage: 'linear-gradient(to bottom, black 62%, rgba(0,0,0,0.9) 73%, rgba(0,0,0,0.55) 87%, transparent 100%)'
-        }}
-      />
+function PlanToggle({ active, onChange }) {
+  return (
+    <div className="inline-flex rounded-full border border-white/15 bg-white/[0.06] p-1">
+      {[['strength', 'Strength'], ['cardio', 'Strength + Cardio']].map(([key, label]) => (
+        <button
+          key={key}
+          onClick={() => onChange(key)}
+          className={`rounded-full px-4 py-2.5 text-[11px] font-black uppercase transition-all sm:px-6 ${
+            active === key ? 'bg-[#d8ff3e] text-[#111]' : 'text-white/55 hover:text-white'
+          }`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
 
-      <div className="absolute right-2 bottom-16 z-20 text-right md:relative md:right-auto md:bottom-auto md:-mt-20 md:mr-8">
-        <p className="text-2xl md:text-3xl font-black uppercase tracking-tight text-[#F5F5F0]">
-          Bhat Mudasir
-        </p>
-        <p className="mt-1 text-xs md:text-sm font-bold uppercase tracking-[0.2em] text-[#C6FF3D]">
-          Founder &amp; Head Coach
-        </p>
+// The "Best value" tag lives inside its own button now, not floating above
+// it. A floating tag reads fine in a single row of 4, but the moment the
+// grid wraps to 2 columns on mobile, a tag poking out above one button can
+// visually land on top of a completely different button in the row above.
+// Attaching it to its own button's content removes that ambiguity for good,
+// regardless of how the grid reflows.
+function PricingDisplay({ plans, selectedIndex, onSelect }) {
+  const selected = plans[selectedIndex];
+  return (
+    <div className="mx-auto max-w-3xl">
+      <div className="grid grid-cols-2 gap-1.5 rounded-2xl border border-white/10 bg-white/[0.04] p-1.5 sm:grid-cols-4 sm:gap-1 sm:p-1">
+        {plans.map((plan, index) => (
+          <button
+            key={plan.key}
+            onClick={() => onSelect(index)}
+            className={`flex flex-col items-center justify-center gap-1.5 rounded-xl px-2 py-3 text-xs font-black uppercase leading-tight transition-all sm:text-[11px] ${
+              index === selectedIndex ? 'bg-[#f5b83d] text-[#111]' : 'text-white/45 hover:bg-white/[0.08] hover:text-white'
+            }`}
+          >
+            <span>{plan.label}</span>
+            {plan.popular && (
+              <span className="rounded-full bg-[#d8ff3e] px-2 py-0.5 text-[8px] font-black text-[#111]">Best value</span>
+            )}
+          </button>
+        ))}
       </div>
+      <div className="mt-8 flex flex-col items-center gap-5 sm:flex-row sm:justify-between sm:gap-0 sm:px-10">
+        <div className="text-center sm:text-left">
+          <p className="text-6xl font-black tracking-[-0.06em] text-white sm:text-8xl">
+            ₹{selected.price.toLocaleString('en-IN')}
+          </p>
+          <p className="mt-2 text-xs font-bold uppercase tracking-[0.2em] text-[#d8ff3e]">
+            ₹{Math.round(selected.price / selected.months).toLocaleString('en-IN')} / month
+          </p>
+        </div>
+        <div className="max-w-[220px] text-center sm:text-left">
+          <p className="text-sm font-bold text-white">Train on your terms.</p>
+          <p className="mt-1 text-xs leading-relaxed text-white/45">No confusing tiers. Just a plan that fits your rhythm.</p>
+          {selected.discount > 0 && (
+            <p className="mt-3 text-xs font-black uppercase text-[#f5b83d]">Save {Math.round(selected.discount * 100)}%</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// The tilt-on-hover / drift-on-touch interaction still works — only the
+// "Move the picture" hint label was removed, per feedback. A small sticker
+// with the founder's title replaces it for visual interest, using copy
+// that's already stated elsewhere on the page rather than inventing new claims.
+function FounderPortrait() {
+  const frameRef = useRef(null);
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const reset = () => setTilt({ x: 0, y: 0 });
+  const move = (clientX, clientY) => {
+    const rect = frameRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    setTilt({
+      x: ((clientY - rect.top) / rect.height - 0.5) * -10,
+      y: ((clientX - rect.left) / rect.width - 0.5) * 12
+    });
+  };
+  return (
+    <div
+      ref={frameRef}
+      className="group relative mx-auto w-full max-w-[320px] touch-none sm:max-w-[440px]"
+      onPointerMove={(event) => move(event.clientX, event.clientY)}
+      onPointerLeave={reset}
+      onPointerUp={reset}
+      onTouchMove={(event) => move(event.touches[0].clientX, event.touches[0].clientY)}
+      onTouchEnd={reset}
+      style={{ perspective: '900px' }}
+    >
+      <div className="absolute inset-4 rounded-[2rem] bg-[#f5b83d] transition-transform duration-500 group-hover:rotate-2" />
+      <div
+        className="relative aspect-[4/5] overflow-hidden rounded-[2rem] border border-white/20 bg-[#222] shadow-2xl transition-transform duration-150"
+        style={{ transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale(1.02)` }}
+      >
+        <img
+          src="/images/gym-hero.png"
+          alt="Bhat Mudasir, founder and head coach of Bodyworks Gym"
+          className="h-full w-full object-contain object-bottom"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+      </div>
+      <span className="absolute -bottom-4 -right-4 -rotate-3 rounded-xl bg-[#d8ff3e] px-4 py-2 text-[10px] font-black uppercase tracking-[0.15em] text-[#111] shadow-lg sm:-right-6">
+        Founder & Head Coach
+      </span>
     </div>
   );
 }
 
 function PublicHome() {
-  const [plansRef, plansInView] = useInView();
-  const [mapRef, mapInView] = useInView();
   const [activeTab, setActiveTab] = useState('strength');
-  const [durationIndex, setDurationIndex] = useState(0);
-  const [marqueePaused, setMarqueePaused] = useState(false);
-
+  const [durationIndex, setDurationIndex] = useState(2);
+  const [plansRef, plansInView] = useInView();
   const activePlans = activeTab === 'strength' ? strengthPlans : strengthCardioPlans;
 
   return (
-    <div className="bg-black min-h-screen overflow-x-hidden">
+    <div className="min-h-screen overflow-x-hidden bg-[#101010] text-[#f4f1e9] selection:bg-[#d8ff3e] selection:text-[#111]">
       <Header />
-
-      <div
-        className="h-3 w-full"
-        style={{
-          backgroundImage: 'repeating-linear-gradient(45deg, #F2C230, #F2C230 20px, #0D0D0D 20px, #0D0D0D 40px)'
-        }}
-      />
-
-      <section className="relative overflow-hidden">
-        <div
-          className="absolute inset-0"
-          style={{
-            background: 'radial-gradient(circle at 20% 50%, rgba(242,194,48,0.12), transparent 55%)'
-          }}
-        />
-
-        <div
-          className="absolute inset-0 flex flex-col justify-around overflow-hidden cursor-pointer"
-          aria-hidden="true"
-          onMouseEnter={() => setMarqueePaused(true)}
-          onMouseLeave={() => setMarqueePaused(false)}
-          onClick={() => setMarqueePaused((p) => !p)}
-        >
+      <main>
+        {/* HERO — no photo. Content is centered as a single column since
+            there's no image to balance against on the other side. */}
+        <section className="relative isolate overflow-hidden border-b border-white/10 bg-[#171717]">
           <div
-            className="flex animate-marquee whitespace-nowrap opacity-[0.14]"
-            style={{ animationDuration: '20s', animationPlayState: marqueePaused ? 'paused' : 'running' }}
-          >
-            {[0, 1].map((groupIdx) => (
-              <div key={groupIdx} className="flex shrink-0">
-                {[0, 1, 2, 3].map((i) => (
-                  <span
-                    key={i}
-                    className="text-transparent text-[4rem] sm:text-[5.5rem] md:text-[6rem] lg:text-[7rem] font-black uppercase leading-none px-8"
-                    style={{ WebkitTextStroke: '2px rgba(242,194,48,0.9)' }}
-                  >
-                    Bodyworks Gym
-                  </span>
-                ))}
-              </div>
-            ))}
-          </div>
-
-          <div
-            className="flex animate-marquee [animation-direction:reverse] whitespace-nowrap opacity-[0.09]"
-            style={{ animationDuration: '26s', animationPlayState: marqueePaused ? 'paused' : 'running' }}
-          >
-            {[0, 1].map((groupIdx) => (
-              <div key={groupIdx} className="flex shrink-0">
-                {[0, 1, 2, 3].map((i) => (
-                  <span
-                    key={i}
-                    className="text-transparent text-[3.5rem] sm:text-[5rem] md:text-[6rem] font-black uppercase leading-none px-8"
-                    style={{ WebkitTextStroke: '2px rgba(242,194,48,0.8)' }}
-                  >
-                    Bodyworks Gym
-                  </span>
-                ))}
-              </div>
-            ))}
-          </div>
-
-          <div
-            className="flex animate-marquee whitespace-nowrap opacity-[0.11]"
-            style={{ animationDuration: '16s', animationPlayState: marqueePaused ? 'paused' : 'running' }}
-          >
-            {[0, 1].map((groupIdx) => (
-              <div key={groupIdx} className="flex shrink-0">
-                {[0, 1, 2, 3].map((i) => (
-                  <span
-                    key={i}
-                    className="text-transparent text-[3rem] sm:text-[4.5rem] md:text-[5rem] font-black uppercase leading-none px-8"
-                    style={{ WebkitTextStroke: '2px rgba(242,194,48,0.9)' }}
-                  >
-                    Bodyworks Gym
-                  </span>
-                ))}
-              </div>
-            ))}
-          </div>
-
-          <div
-            className="flex animate-marquee [animation-direction:reverse] whitespace-nowrap opacity-[0.07]"
-            style={{ animationDuration: '34s', animationPlayState: marqueePaused ? 'paused' : 'running' }}
-          >
-            {[0, 1].map((groupIdx) => (
-              <div key={groupIdx} className="flex shrink-0">
-                {[0, 1, 2, 3].map((i) => (
-                  <span
-                    key={i}
-                    className="text-transparent text-[2.5rem] sm:text-[3.5rem] md:text-[4rem] font-black uppercase leading-none px-8"
-                    style={{ WebkitTextStroke: '2px rgba(242,194,48,0.75)' }}
-                  >
-                    Bodyworks Gym
-                  </span>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="relative px-6 py-24 md:py-32 max-w-6xl mx-auto grid md:grid-cols-2 gap-10 items-center pointer-events-none">
-          <div>
-            <h1
-              className="text-5xl md:text-6xl font-black uppercase tracking-tight text-[#F5F5F0] leading-tight animate-fade-up opacity-0"
-              style={{ animationDelay: '0.1s' }}
-            >
-              Stop Wishing<br />
-              <span className="text-[#F2C230]">Start Doing</span>
+            className="absolute inset-0 -z-10 opacity-30"
+            style={{
+              backgroundImage:
+                'linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px)',
+              backgroundSize: '54px 54px'
+            }}
+          />
+          <div className="absolute -right-32 top-16 -z-10 h-[480px] w-[480px] rounded-full bg-[#f5b83d]/20 blur-[120px]" />
+          <div className="absolute -left-32 bottom-0 -z-10 h-[420px] w-[420px] rounded-full bg-[#d8ff3e]/10 blur-[120px]" />
+          <div className="mx-auto max-w-3xl px-5 py-20 text-center sm:px-8 sm:py-28 lg:py-36">
+            <div className="mb-6 flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-[#d8ff3e]">
+              <span className="h-2 w-2 rounded-full bg-[#d8ff3e] shadow-[0_0_16px_#d8ff3e]" /> Sopore, Kashmir / est. 2021
+            </div>
+            <h1 className="text-[clamp(3rem,13vw,7.5rem)] font-black uppercase leading-[0.92] tracking-[-.05em] text-white">
+              Stop
+              <br />
+              <span className="text-[#f5b83d]">Wishing.</span>
+              <br />
+              Start <span className="text-[#d8ff3e]">Doing.</span>
             </h1>
-
-            <p
-              className="mt-6 text-lg text-[#C6FF3D] animate-fade-up opacity-0"
-              style={{ animationDelay: '0.25s' }}
-            >
+            <p className="mx-auto mt-6 max-w-sm text-base leading-relaxed text-white/60 sm:text-lg">
               The unisex gym in Sopore, built for people who actually show up.
             </p>
+            <div className="mx-auto mt-8 grid max-w-sm grid-cols-2 gap-3">
+              <a
+                href="#plans"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#d8ff3e] px-5 py-4 text-xs font-black uppercase tracking-wide text-[#111] transition-transform hover:-translate-y-1"
+              >
+                Become a member
+              </a>
+              <a
+                href={`tel:+${GYM_PHONE}`}
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 px-5 py-4 text-xs font-black uppercase tracking-wide text-white transition-colors hover:border-[#f5b83d] hover:text-[#f5b83d]"
+              >
+                <Phone className="h-4 w-4" /> Call us
+              </a>
+            </div>
+          </div>
+        </section>
 
+        <Facilities />
+
+        {/* BUILT FOR SHOWING UP — same grid-pattern + glow treatment as the
+            hero for visual continuity, larger photo since it's now the only
+            one on the page, and a sticker tag instead of a flat caption. */}
+        <section className="relative overflow-hidden bg-[#101010] px-5 py-14 sm:px-8 sm:py-20 lg:px-12 lg:py-28">
+          <div
+            className="absolute inset-0 -z-10 opacity-20"
+            style={{
+              backgroundImage:
+                'linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px)',
+              backgroundSize: '54px 54px'
+            }}
+          />
+          <div className="absolute -left-24 top-1/4 -z-10 h-[380px] w-[380px] rounded-full bg-[#f5b83d]/10 blur-[120px]" />
+          <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[.9fr_1.1fr]">
+            <Reveal>
+              <p className="text-xs font-black uppercase tracking-[.3em] text-[#f5b83d]">Bhat Mudasir</p>
+              <h2 className="mt-4 text-4xl font-black uppercase leading-[0.95] tracking-[-.05em] text-white sm:text-6xl lg:leading-[0.86]">
+                Built for
+                <br />
+                <span className="text-[#d8ff3e]">showing up.</span>
+              </h2>
+              <p className="mt-6 max-w-md text-sm leading-relaxed text-white/55">
+                Founder & Head Coach. Bodyworks is a space for consistent people, first-timers, and anyone ready to take their
+                next rep seriously.
+              </p>
+              <div className="mt-7 flex items-center gap-3 text-xs font-black uppercase tracking-wide text-white/45">
+                <ShieldCheck className="h-5 w-5 text-[#d8ff3e]" /> Coaching with intent
+              </div>
+            </Reveal>
+            <Reveal delay={120}>
+              <FounderPortrait />
+            </Reveal>
+          </div>
+        </section>
+
+        <section
+          id="plans"
+          ref={plansRef}
+          className={`border-y border-white/10 bg-[#171717] px-5 py-12 transition-all duration-700 sm:px-8 sm:py-16 lg:px-12 lg:py-24 ${
+            plansInView ? 'opacity-100' : 'translate-y-6 opacity-0'
+          }`}
+        >
+          <div className="mx-auto max-w-7xl">
+            <div className="grid gap-8 lg:grid-cols-[.7fr_1.3fr] lg:items-start">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[.3em] text-[#d8ff3e]">Membership</p>
+                <h2 className="mt-5 text-4xl font-black uppercase leading-[0.95] tracking-[-.05em] text-white sm:text-6xl lg:leading-[0.88]">
+                  Start
+                  <br />
+                  <span className="text-[#f5b83d]">doing.</span>
+                </h2>
+                <p className="mt-5 max-w-xs text-sm leading-relaxed text-white/45">
+                  One registration. All the momentum. Pick your pace and we&apos;ll see you on the floor.
+                </p>
+                <div className="mt-7 rounded-2xl border border-white/10 p-5">
+                  <p className="text-xs font-black uppercase tracking-widest text-[#f5b83d]">Registration fee</p>
+                  <p className="mt-2 text-3xl font-black">₹1500</p>
+                  <p className="mt-2 text-xs leading-relaxed text-white/45">
+                    One-time payment, lifetime validity, plus your first month free.
+                  </p>
+                </div>
+              </div>
+              <div className="rounded-3xl border border-white/10 bg-[#101010] p-5 sm:p-8">
+                <div className="mb-7 flex flex-wrap items-center justify-between gap-4">
+                  <p className="text-sm font-black uppercase tracking-widest text-white/55">Choose your access</p>
+                  <PlanToggle active={activeTab} onChange={setActiveTab} />
+                </div>
+                <PricingDisplay plans={activePlans} selectedIndex={durationIndex} onSelect={setDurationIndex} />
+                <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-6">
+                  <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-white/50">
+                    <span className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-[#d8ff3e]" /> AC training floor
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-[#d8ff3e]" /> Locker facility
+                    </span>
+                  </div>
+                  <ContactButton variant="button" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-[#f5b83d] px-5 py-12 text-[#111] sm:px-8 sm:py-16 lg:px-12 lg:py-24">
+          <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1fr_.8fr] lg:items-end">
+            <Reveal>
+              <p className="text-xs font-black uppercase tracking-[.3em]">Find us</p>
+              <h2 className="mt-4 text-4xl font-black uppercase leading-[0.95] tracking-[-.05em] sm:text-6xl lg:leading-[0.86]">
+                Your
+                <br />
+                floor
+                <br />
+                <span className="text-white">is here.</span>
+              </h2>
+              <p className="mt-6 flex items-center gap-2 text-sm font-bold">
+                <MapPin className="h-5 w-5" /> Sopore, Jammu & Kashmir
+              </p>
+            </Reveal>
+            <Reveal delay={120}>
+              <div className="overflow-hidden rounded-3xl border-4 border-[#111]">
+                <MapSection />
+              </div>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* This CTA links back up to #plans, which sits above it on the
+            page — so the arrow points up, not down, toward what it targets. */}
+        <section className="bg-[#101010] px-5 py-16 text-center sm:px-8 sm:py-20 lg:py-28">
+          <Reveal>
+            <p className="text-xs font-black uppercase tracking-[.3em] text-[#d8ff3e]">Ready when you are</p>
+            <h2 className="mx-auto mt-5 max-w-3xl text-4xl font-black uppercase leading-[0.95] tracking-[-.05em] sm:text-7xl lg:leading-[0.86]">
+              Stop wishing.
+              <br />
+              <span className="text-[#f5b83d]">Start doing.</span>
+            </h2>
             <a
               href="#plans"
-              className="pointer-events-auto inline-block mt-8 bg-[#F2C230] text-black font-bold uppercase px-8 py-3 rounded hover:bg-[#C6FF3D] transition-colors animate-fade-up opacity-0"
-              style={{ animationDelay: '0.4s' }}
+              className="mt-8 inline-flex items-center gap-3 rounded-full bg-[#d8ff3e] px-7 py-4 text-xs font-black uppercase tracking-wide text-[#111] transition-transform hover:-translate-y-1"
             >
-              Become a Member
+              Become a member <ArrowUpRight className="h-4 w-4" />
             </a>
+          </Reveal>
+        </section>
+      </main>
+
+      {/* Footer: brand on the left, the four public links on the right in
+          two rows, and Admin centered below at very low contrast — findable
+          if you're looking for it, not something a casual visitor notices. */}
+      <footer className="border-t border-white/10 bg-[#0b0b0b] px-5 py-8 sm:px-8 lg:px-12">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-lg font-black uppercase tracking-tight">
+                Bodyworks<span className="text-[#f5b83d]">.</span>
+              </p>
+              <p className="mt-1 text-xs text-white/35">The unisex gym in Sopore.</p>
+            </div>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-xs font-bold uppercase tracking-wide text-white/45 sm:justify-items-end">
+              <a href={`tel:+${GYM_PHONE}`} className="flex items-center gap-2 hover:text-[#d8ff3e]">
+                <Phone className="h-3.5 w-3.5" /> {GYM_PHONE_DISPLAY}
+              </a>
+              <a
+                href="https://www.instagram.com/bodyworks_thegym/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-[#d8ff3e]"
+              >
+                Instagram
+              </a>
+              <a
+                href="https://www.facebook.com/p/Body-Works-The-Unisex-Gym-100065390232576/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-[#d8ff3e]"
+              >
+                Facebook
+              </a>
+              <a
+                href="https://www.threads.com/@bodyworks_thegym?xmt=AQG0TlVNSLMZS9USgnTaLGRAZjbpMZJqr54H0Re0oKpwpDA"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-[#d8ff3e]"
+              >
+                Threads
+              </a>
+            </div>
           </div>
-
-          <HeroPhoto />
+          <div className="mt-6 flex justify-center border-t border-white/5 pt-4">
+            <Link to="/login" className="text-[10px] uppercase tracking-wide text-white/15 hover:text-white/40">
+              Admin
+            </Link>
+          </div>
         </div>
-      </section>
-
-      <Features />
-
-      <section
-        id="plans"
-        ref={plansRef}
-        className={`relative px-6 py-16 bg-black transition-opacity duration-700 ${
-          plansInView ? 'opacity-100' : 'opacity-0 translate-y-6'
-        }`}
-      >
-        <h2 className="relative text-3xl font-black uppercase tracking-tight text-[#F2C230] mb-4 text-center">
-          Membership Plans
-        </h2>
-
-        <div className="relative max-w-2xl mx-auto bg-[#1A1A1A] border-2 border-[#C6FF3D] rounded-lg p-6 mb-10 text-center">
-          <p className="text-[#C6FF3D] font-bold uppercase text-sm tracking-wide">
-            Registration Fee
-          </p>
-          <p className="text-[#F5F5F0] text-3xl font-black mt-1">₹1500</p>
-          <ul className="mt-4 text-[#F5F5F0] text-sm space-y-1">
-            <li>One-time payment, valid for lifetime</li>
-            <li>Includes 1 month free membership (starts from day of registration)</li>
-            <li>Access to locker facility, AC training area & trusted supplements</li>
-          </ul>
-        </div>
-
-        <PlanToggle active={activeTab} onChange={setActiveTab} />
-
-        <PricingDisplay plans={activePlans} selectedIndex={durationIndex} onSelect={setDurationIndex} />
-
-        <div className="relative flex justify-center mt-10">
-          <ContactButton variant="button" />
-        </div>
-      </section>
-
-      <div
-        ref={mapRef}
-        className={`transition-opacity duration-700 ${mapInView ? 'opacity-100' : 'opacity-0 translate-y-6'}`}
-      >
-        <MapSection />
-      </div>
-
-      <footer className="px-6 py-8 text-center border-t border-[#333]">
-        <div className="mb-3 flex justify-center items-center gap-4 flex-wrap">
-          <a
-            href="https://www.instagram.com/bodyworks_thegym/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[#F5F5F0] hover:text-[#F2C230] transition-colors"
-          >
-            Instagram
-          </a>
-          <a
-            href="https://www.facebook.com/p/Body-Works-The-Unisex-Gym-100065390232576/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[#F5F5F0] hover:text-[#F2C230] transition-colors"
-          >
-            Facebook
-          </a>
-          <a
-            href="https://www.threads.com/@bodyworks_thegym?xmt=AQG0TlVNSLMZS9USgnTaLGRAZjbpMZJqr54H0Re0oKpwpDA"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[#F5F5F0] hover:text-[#F2C230] transition-colors"
-          >
-            Threads
-          </a>
-          <a
-            href={`tel:+${GYM_PHONE}`}
-            className="text-[#F5F5F0] hover:text-[#F2C230] transition-colors"
-          >
-            {GYM_PHONE_DISPLAY}
-          </a>
-        </div>
-        <Link to="/login" className="text-xs text-[#555] hover:text-[#888]">
-          admin
-        </Link>
       </footer>
     </div>
   );
