@@ -50,7 +50,7 @@ function AnalyticsPage() {
 
   return (
     <div className="min-h-screen bg-black text-[#F5F5F0]">
-      <div className="max-w-5xl mx-auto px-6 py-8">
+      <div className="max-w-6xl mx-auto px-6 py-8">
 
         {/* Header — diagonal stripe accent ties this back to the brand identity
             used on the public landing page, which the plain card layout was missing. */}
@@ -93,6 +93,9 @@ function AnalyticsPage() {
               </span>
             </div>
 
+            {/* Member status (active members) + New joins — side by side on desktop */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
             {/* Member status breakdown */}
             <div className="bg-[#1A1A1A] border-2 border-[#333] rounded-lg p-4">
               <h3 className="font-bold text-white uppercase tracking-wide text-sm mb-1">Member Status</h3>
@@ -106,6 +109,26 @@ function AnalyticsPage() {
                 ]}
               />
             </div>
+
+            {/* New joins */}
+            <div className="bg-[#1A1A1A] border-2 border-[#333] rounded-lg p-4">
+              <h3 className="font-bold text-white uppercase tracking-wide text-sm mb-1 flex items-center gap-2">
+                <Users className="w-4 h-4 text-[#F2C230]" />
+                New Joins — Last 12 Months
+              </h3>
+              <p className="text-xs text-[#666] mb-4">Members who started a membership each month</p>
+              <BarChart
+                data={newJoins.map((m) => ({ label: m.label, value: m.count }))}
+                color="#F2C230"
+                highlightColor="#C6FF3D"
+                highlightLast
+              />
+            </div>
+
+            </div>
+
+            {/* Revenue this month + Revenue at risk — side by side on desktop */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
             {/* Revenue — 12 months */}
             <div className="bg-[#1A1A1A] border-2 border-[#333] rounded-lg p-4">
@@ -122,21 +145,6 @@ function AnalyticsPage() {
               <BarChart
                 data={revenue.months.map((m) => ({ label: m.label, value: m.total }))}
                 formatValue={(v) => `₹${(v / 1000).toFixed(v >= 1000 ? 1 : 0)}${v >= 1000 ? 'k' : ''}`}
-                highlightLast
-              />
-            </div>
-
-            {/* New joins */}
-            <div className="bg-[#1A1A1A] border-2 border-[#333] rounded-lg p-4">
-              <h3 className="font-bold text-white uppercase tracking-wide text-sm mb-1 flex items-center gap-2">
-                <Users className="w-4 h-4 text-[#F2C230]" />
-                New Joins — Last 12 Months
-              </h3>
-              <p className="text-xs text-[#666] mb-4">Members who started a membership each month</p>
-              <BarChart
-                data={newJoins.map((m) => ({ label: m.label, value: m.count }))}
-                color="#F2C230"
-                highlightColor="#C6FF3D"
                 highlightLast
               />
             </div>
@@ -182,7 +190,9 @@ function AnalyticsPage() {
               )}
             </div>
 
-            {/* Leaderboard — medal colors for top 3 */}
+            </div>
+
+            {/* Leaderboard — medal colors for top 3, full width */}
             <div className="bg-[#1A1A1A] border-2 border-[#333] rounded-lg p-4">
               <h3 className="font-bold text-white uppercase tracking-wide text-sm mb-1 flex items-center gap-2">
                 <Trophy className="w-4 h-4 text-[#F2C230]" />
