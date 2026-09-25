@@ -131,7 +131,7 @@ function AnalyticsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
             {/* Revenue — 12 months */}
-            <div className="bg-[#1A1A1A] border-2 border-[#333] rounded-lg p-4">
+            <div className="bg-[#1A1A1A] border-2 border-[#333] rounded-lg p-4 flex flex-col">
               <div className="flex items-center justify-between mb-1">
                 <h3 className="font-bold text-white uppercase tracking-wide text-sm">Revenue — Last 12 Months</h3>
                 {revenue.percentChange !== null && (
@@ -142,15 +142,17 @@ function AnalyticsPage() {
                 )}
               </div>
               <p className="text-xs text-[#666] mb-4">This month vs last, highlighted in lime</p>
-              <BarChart
-                data={revenue.months.map((m) => ({ label: m.label, value: m.total }))}
-                formatValue={(v) => `₹${(v / 1000).toFixed(v >= 1000 ? 1 : 0)}${v >= 1000 ? 'k' : ''}`}
-                highlightLast
-              />
+              <div className="mt-auto">
+                <BarChart
+                  data={revenue.months.map((m) => ({ label: m.label, value: m.total }))}
+                  formatValue={(v) => `₹${(v / 1000).toFixed(v >= 1000 ? 1 : 0)}${v >= 1000 ? 'k' : ''}`}
+                  highlightLast
+                />
+              </div>
             </div>
 
             {/* Revenue at risk */}
-            <div className="bg-[#1A1A1A] border-2 border-[#333] rounded-lg p-4">
+            <div className="bg-[#1A1A1A] border-2 border-[#333] rounded-lg p-4 flex flex-col">
               <h3 className="font-bold text-white uppercase tracking-wide text-sm mb-1 flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-[#F2C230]" />
                 Revenue at Risk
@@ -159,7 +161,9 @@ function AnalyticsPage() {
                 {atRisk.count} member{atRisk.count !== 1 ? 's' : ''} in the 7-day grace period after expiry, still marked as renewing
               </p>
               {atRisk.count === 0 ? (
-                <EmptyState icon={AlertTriangle} title="Nothing at risk right now" />
+                <div className="flex-1 flex items-center justify-center">
+                  <EmptyState icon={AlertTriangle} title="Nothing at risk right now" />
+                </div>
               ) : (
                 <>
                   <div className="grid grid-cols-2 gap-3 mb-4">
@@ -176,16 +180,18 @@ function AnalyticsPage() {
                       <p className="text-[10px] text-[#666] uppercase tracking-wide">Average per member</p>
                     </div>
                   </div>
-                  <p className="text-[10px] text-[#666] uppercase tracking-wide mb-2">Days into grace period</p>
-                  <BarChart
-                    data={atRisk.breakdown.map((b) => ({ label: `D${b.day}`, value: b.count }))}
-                    color="#F2C230"
-                    highlightColor="#EF4444"
-                    highlightLast
-                  />
-                  <p className="text-[10px] text-[#666] mt-2">
-                    Day 7 members flip to "inactive" tomorrow if they don't renew
-                  </p>
+                  <div className="mt-auto">
+                    <p className="text-[10px] text-[#666] uppercase tracking-wide mb-2">Days into grace period</p>
+                    <BarChart
+                      data={atRisk.breakdown.map((b) => ({ label: `D${b.day}`, value: b.count }))}
+                      color="#F2C230"
+                      highlightColor="#EF4444"
+                      highlightLast
+                    />
+                    <p className="text-[10px] text-[#666] mt-2">
+                      Day 7 members flip to "inactive" tomorrow if they don't renew
+                    </p>
+                  </div>
                 </>
               )}
             </div>
