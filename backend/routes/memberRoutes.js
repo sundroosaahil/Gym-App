@@ -44,7 +44,7 @@ router.post('/', async (req, res) => {
       startDate: start,
       endDate: end,
       ...(paymentMode && { paymentMode }),
-      receipts: receiptNo ? [{ receiptNo, amount: amountPaid }] : []
+      receipts: [{ ...(receiptNo && { receiptNo }), amount: amountPaid }]
     });
 
     await member.save();
@@ -157,6 +157,12 @@ router.put('/:id', async (req, res) => {
       member.paymentMode = paymentMode || undefined;
     }
 
+    // Fills in a receiptNo on an already-existing receipt — never creates a
+    // new one, so it never touches that receipt's `date`. As of the mark-paid
+    // and add-member fix above, every member always has at least one receipt
+    // by the time they could reach this screen, so the `else` below is legacy
+    // fallback only: it exists for members created before that fix who still
+    // have zero receipts on file, not a normal path going forward.
     if (receiptNo) {
       if (member.receipts.length > 0) {
         member.receipts[member.receipts.length - 1].receiptNo = receiptNo;
@@ -229,9 +235,12 @@ router.put('/:id/mark-paid', async (req, res) => {
     // unselected would misleadingly keep showing last time's mode.
     member.paymentMode = paymentMode || undefined;
 
-    if (receiptNo) {
-      member.receipts.push({ receiptNo, amount: amountPaid });
-    }
+    // Always record a receipt for this payment, even without a receiptNo yet.
+    // `date` is left unset here so Mongoose applies the schema default
+    // (Date.now) at the instant this save happens — that's the actual
+    // moment payment was received, and it must never move later just
+    // because a receiptNo gets typed in afterward (see PUT /:id below).
+    member.receipts.push({ ...(receiptNo && { receiptNo }), amount: amountPaid });
 
     await member.save();
     await logAction(
