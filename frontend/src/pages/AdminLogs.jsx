@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import api from '../api/axiosConfig';
 import SkeletonLogCard from '../components/SkeletonLogCard';
-import { formatDate, formatDateTime } from '../utils/formatDate';
+import { formatDate } from '../utils/formatDate';
 
 // Icon + color per action, so the log feed is skimmable at a glance instead
 // of every row looking identical except for the label text. Keyed on the
@@ -65,6 +65,17 @@ function formatLogTimestamp(date) {
   if (diffMinutes < 60) return `${diffMinutes}m ago`;
   const diffHours = Math.floor(diffMinutes / 60);
   return `${diffHours}h ago`;
+}
+
+function formatLogDateTime(date) {
+  return date.toLocaleString('en-IN', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
 }
 
 function AdminLogs() {
@@ -253,7 +264,7 @@ function AdminLogs() {
                             </div>
                             <p
                               className="text-xs text-[#999] whitespace-nowrap"
-                              title={formatDateTime(date)}
+                              title={formatLogDateTime(date)}
                             >
                               {formatLogTimestamp(date)}
                             </p>
