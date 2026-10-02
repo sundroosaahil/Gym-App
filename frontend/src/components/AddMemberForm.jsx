@@ -116,56 +116,59 @@ function AddMemberForm({ onMemberAdded }) {
   }
 
   const inputClass =
-    'bg-[#1A1A1A] border border-[#333] rounded px-3 py-2 text-sm w-full text-[#F5F5F0] placeholder-[#666] focus:outline-none focus:border-[#F2C230]';
+    'h-11 w-full bg-[#1A1A1A] border border-[#333] rounded-lg px-3 text-sm text-[#F5F5F0] placeholder-[#666] focus:outline-none focus:border-[#F2C230]';
+  const labelClass = 'block text-[11px] font-bold uppercase text-[#999] mb-1.5';
 
   return (
-    <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg p-6">
-      <h2 className="text-lg font-black uppercase tracking-wide mb-4 flex items-center gap-2">
+    <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg p-4 sm:p-5">
+      <h2 className="text-lg font-black uppercase mb-5 flex items-center gap-2">
         <Plus className="w-5 h-5 text-[#F2C230]" strokeWidth={3} />
         Add Member
       </h2>
 
-      {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
+      {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
 
-      <form onSubmit={handleSubmit} className="grid md:grid-cols-3 gap-4">
-        <div>
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
+        <label className={labelClass}>
+          First name
           <input
             name="firstName"
-            placeholder="First Name"
             value={formData.firstName}
             onChange={handleChange}
             onBlur={handleDuplicateCheck}
             required
-            className={inputClass}
+            className={`${inputClass} mt-1.5`}
           />
-        </div>
-        <div>
+        </label>
+        <label className={labelClass}>
+          Last name <span className="normal-case font-normal">optional</span>
           <input
             name="lastName"
-            placeholder="Last Name (optional)"
             value={formData.lastName}
             onChange={handleChange}
             onBlur={handleDuplicateCheck}
-            className={inputClass}
+            className={`${inputClass} mt-1.5`}
           />
-        </div>
-        <div>
+        </label>
+        <label className={labelClass}>
+          Residence
           <PlaceAutocomplete
             name="residence"
-            placeholder="Residence"
             value={formData.residence}
             onChange={(value) => handleChange({ target: { name: 'residence', value } })}
             onBlur={handleDuplicateCheck}
-            className={inputClass}
+            className={`${inputClass} mt-1.5`}
           />
           {duplicateMatches.length > 0 && (
-            <p className="text-yellow-400 text-xs mt-1">
+            <p className="text-yellow-400 text-xs font-normal normal-case mt-1.5 leading-relaxed">
               ⚠ Already exists: {duplicateMatches.map((m) => `${m.firstName} ${m.lastName}`.trim() + ` (${m.gymCode})`).join(', ')}
             </p>
           )}
-        </div>
-        <div className="flex">
-          <span className="flex items-center bg-[#111] border border-r-0 border-[#333] rounded-l px-3 text-sm text-[#999]">
+        </label>
+        <label className={labelClass}>
+          Phone
+          <div className="flex mt-1.5">
+          <span className="h-11 flex items-center bg-[#111] border border-r-0 border-[#333] rounded-l-lg px-3 text-sm text-[#999]">
             +91
           </span>
           <input
@@ -173,44 +176,50 @@ function AddMemberForm({ onMemberAdded }) {
             type="tel"
             inputMode="numeric"
             maxLength={10}
-            placeholder="9876543210"
             value={formData.phone}
             onChange={handleChange}
             required
-            className="bg-[#1A1A1A] border border-[#333] rounded-r px-3 py-2 text-sm w-full text-[#F5F5F0] placeholder-[#666] focus:outline-none focus:border-[#F2C230]"
+            className={`${inputClass} rounded-l-none`}
           />
-        </div>
-        <input
-          name="amountPaid"
-          type="number"
-          placeholder="Amount Paid"
-          value={formData.amountPaid}
-          onChange={handleChange}
-          required
-          className={inputClass}
-        />
-        <div className="flex flex-col gap-1">
-          <span className="text-sm text-gray-400">Start Date</span>
+          </div>
+        </label>
+        <label className={labelClass}>
+          Amount paid
+          <input
+            name="amountPaid"
+            type="number"
+            min="0"
+            value={formData.amountPaid}
+            onChange={handleChange}
+            required
+            className={`${inputClass} mt-1.5`}
+          />
+        </label>
+        <label className={labelClass}>
+          Start date
           <DateField
             value={formData.startDate}
             onChange={(value) => handleChange({ target: { name: 'startDate', value } })}
             ariaLabel="Start date"
+            className="mt-1.5"
           />
-        </div>
-        <select
-          name="durationChoice"
-          value={formData.durationChoice}
-          onChange={handleChange}
-          className={inputClass}
-        >
-          {durationOptions.map((opt) => (
-            <option key={opt.label} value={opt.days}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+        </label>
+        <label className={labelClass}>
+          Membership duration
+          <select
+            name="durationChoice"
+            value={formData.durationChoice}
+            onChange={handleChange}
+            className={`${inputClass} mt-1.5`}
+          >
+            {durationOptions.map((opt) => (
+              <option key={opt.label} value={opt.days}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
 
-        {formData.durationChoice === 'custom' && (
+          {formData.durationChoice === 'custom' && (
           <input
             name="customDays"
             type="number"
@@ -218,25 +227,28 @@ function AddMemberForm({ onMemberAdded }) {
             value={formData.customDays}
             onChange={handleChange}
             required
-            className={inputClass}
+            className={`${inputClass} mt-2`}
           />
-        )}
+          )}
+        </label>
 
-        <input
-          name="receiptNo"
-          placeholder="Receipt No. (optional)"
-          value={formData.receiptNo}
-          onChange={handleChange}
-          className={inputClass}
-        />
+        <label className={labelClass}>
+          Receipt number <span className="normal-case font-normal">optional</span>
+          <input
+            name="receiptNo"
+            value={formData.receiptNo}
+            onChange={handleChange}
+            className={`${inputClass} mt-1.5`}
+          />
+        </label>
 
-        <div className="md:col-span-3">
-          <label className="block text-xs text-[#999] uppercase mb-1">Payment Mode (optional)</label>
+        <div className="sm:col-span-2">
+          <label className={labelClass}>Payment mode <span className="normal-case font-normal">optional</span></label>
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => togglePaymentMode('cash')}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded border text-sm font-bold uppercase transition-colors ${
+              className={`h-11 flex-1 flex items-center justify-center gap-2 rounded-xl border text-sm font-bold uppercase transition-colors ${
                 formData.paymentMode === 'cash'
                   ? 'border-[#F2C230] bg-[#F2C230]/10 text-[#F2C230]'
                   : 'border-[#333] text-[#999] hover:border-[#555]'
@@ -248,7 +260,7 @@ function AddMemberForm({ onMemberAdded }) {
             <button
               type="button"
               onClick={() => togglePaymentMode('upi')}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded border text-sm font-bold uppercase transition-colors ${
+              className={`h-11 flex-1 flex items-center justify-center gap-2 rounded-xl border text-sm font-bold uppercase transition-colors ${
                 formData.paymentMode === 'upi'
                   ? 'border-[#F2C230] bg-[#F2C230]/10 text-[#F2C230]'
                   : 'border-[#333] text-[#999] hover:border-[#555]'
@@ -263,7 +275,7 @@ function AddMemberForm({ onMemberAdded }) {
         <button
           type="submit"
           disabled={submitStatus !== 'idle'}
-          className={`md:col-span-3 font-bold uppercase py-2.5 rounded transition-colors flex items-center justify-center gap-2 ${
+          className={`h-11 sm:col-span-2 font-bold uppercase rounded-lg transition-colors flex items-center justify-center gap-2 ${
             submitStatus === 'success'
               ? 'bg-green-500 text-white'
               : 'bg-[#F2C230] text-black hover:bg-[#C6FF3D]'

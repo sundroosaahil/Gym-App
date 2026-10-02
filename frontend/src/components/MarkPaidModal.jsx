@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { IndianRupee, Banknote, QrCode, Loader2, Check, ArrowRight } from 'lucide-react';
+import { IndianRupee, Banknote, QrCode, Loader2, Check, ChevronDown } from 'lucide-react';
 import api from '../api/axiosConfig';
 import Modal from './Modal';
 import ConfirmDialog from './ConfirmDialog';
@@ -7,22 +7,19 @@ import StartDatePicker from './StartDatePicker';
 import { durationOptions } from '../constants/durationOptions';
 import { useToast } from '../context/ToastContext';
 import { getDisplayName } from '../utils/getDisplayName';
-import { formatDate } from '../utils/formatDate';
 import { fromDateInputValue, toDateInputValue } from '../utils/dateInput';
 
 // One Mark Paid screen, shared by MemberCard (mobile) and MemberRow (desktop)
 // so the two can never drift apart. It owns its own form state: the parent
 // only decides when it is open (mount it to open, unmount on onClose).
 //
-// Layout = two titled sections ("Membership period", "Payment") that share the
-// same label style, field height, radius and gold accent, ending in one
-// primary button.
+// Payment comes first; membership settings and the cycle summary follow.
 
 const fieldClass =
   'h-11 w-full rounded-lg border border-[#333] bg-[#0D0D0D] px-3 text-sm text-[#F5F5F0] placeholder-[#666] focus:outline-none focus:border-[#F2C230] transition-colors [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none';
 
 const chipClass = (selected) =>
-  `transition-colors rounded-lg border text-sm font-bold ${
+  `transition-colors rounded-xl border text-sm font-bold ${
     selected
       ? 'border-[#F2C230] bg-[#F2C230]/10 text-[#F2C230]'
       : 'border-[#333] text-[#999] hover:border-[#555]'
@@ -119,36 +116,33 @@ function MarkPaidModal({ member, onClose, onUpdated }) {
 
   return (
     <>
-      <Modal onClose={handleRequestClose}>
-        <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg overflow-hidden max-w-md mx-auto">
+      <Modal onClose={handleRequestClose} wide>
+        <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg overflow-hidden">
           {/* Header */}
-          <div className="flex items-center gap-3 px-5 pt-5 pb-4 border-b border-[#2A2A2A]">
+          <div className="flex items-center gap-3 px-4 py-4 border-b border-[#2A2A2A] sm:px-6 lg:px-7">
             <div className="w-10 h-10 rounded-lg bg-[#F2C230]/10 border border-[#F2C230]/30 flex items-center justify-center shrink-0">
               <IndianRupee className="w-5 h-5 text-[#F2C230]" strokeWidth={2.5} />
             </div>
             <div className="min-w-0">
-              <h2 className="text-lg font-black uppercase tracking-wide leading-tight">Record Payment</h2>
-              <p className="text-xs text-[#999] truncate">
-                {getDisplayName(member)} · <span className="font-mono">{member.gymCode}</span> · due{' '}
-                <span className="tabular-nums">{formatDate(member.endDate)}</span>
+              <h2 className="text-lg font-black uppercase leading-tight">Record payment</h2>
+              <p className="text-sm text-[#999] truncate">
+                {getDisplayName(member)} · {member.gymCode}
               </p>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-5 flex flex-col gap-6">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5 p-4 sm:p-5 lg:gap-6 lg:p-7">
             {error && (
               <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">
                 {error}
               </p>
             )}
 
-            {/* Section 1 — when does the new cycle run */}
             <section>
               <SectionTitle>Membership period</SectionTitle>
-
-              <div className="flex flex-col gap-4">
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.15fr_.85fr] lg:items-end">
                 <div>
-                  <Label>Starts on</Label>
+                  <Label>Start date</Label>
                   <StartDatePicker
                     value={startDate}
                     onChange={setStartDate}
@@ -156,23 +150,22 @@ function MarkPaidModal({ member, onClose, onUpdated }) {
                     today={todayValue}
                   />
                 </div>
-
                 <div>
                   <Label>Duration</Label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {durationOptions.map((opt) => {
-                      const value = String(opt.days);
-                      return (
-                        <button
-                          key={opt.label}
-                          type="button"
-                          onClick={() => setDurationChoice(value)}
-                          className={`h-10 ${chipClass(durationChoice === value)}`}
-                        >
-                          {opt.days === 'custom' ? 'Custom' : opt.label}
-                        </button>
-                      );
-                    })}
+                  <div className="relative">
+                    <select
+                      value={durationChoice}
+                      onChange={(e) => setDurationChoice(e.target.value)}
+                      className={`${fieldClass} appearance-none pr-10 font-semibold`}
+                      aria-label="Membership duration"
+                    >
+                      {durationOptions.map((option) => (
+                        <option key={option.label} value={String(option.days)}>
+                          {option.label.replace(' (days)', '')}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#999] pointer-events-none" />
                   </div>
                   {isCustom && (
                     <input
@@ -188,60 +181,41 @@ function MarkPaidModal({ member, onClose, onUpdated }) {
                     />
                   )}
                 </div>
-
-                {/* Result strip: what will actually be saved */}
-                <div className="rounded-lg bg-[#0D0D0D] border border-[#2A2A2A] px-3 py-2.5 flex items-center justify-between gap-2">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#999]">New cycle</span>
-                  {start && end ? (
-                    <span className="flex items-center gap-1.5 text-sm font-bold text-[#F5F5F0] tabular-nums">
-                      {formatDate(start)}
-                      <ArrowRight className="w-3.5 h-3.5 text-[#F2C230]" />
-                      {formatDate(end)}
-                    </span>
-                  ) : (
-                    <span className="text-sm text-[#666]">Pick a start date and duration</span>
-                  )}
-                </div>
               </div>
             </section>
 
-            {/* Section 2 — what was paid */}
             <section>
               <SectionTitle>Payment</SectionTitle>
-
-              <div className="flex flex-col gap-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label>Amount</Label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-[#F2C230] pointer-events-none">
-                        ₹
-                      </span>
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        min="0"
-                        value={amountPaid}
-                        onChange={(e) => setAmountPaid(e.target.value)}
-                        placeholder="0"
-                        required
-                        className={`${fieldClass} pl-7 font-bold`}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label hint="optional">Receipt No.</Label>
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+                <div>
+                  <Label>Amount</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-[#F2C230] pointer-events-none">
+                      ₹
+                    </span>
                     <input
-                      type="text"
-                      value={receiptNo}
-                      onChange={(e) => setReceiptNo(e.target.value)}
-                      placeholder="—"
-                      className={fieldClass}
+                      type="number"
+                      inputMode="numeric"
+                      min="0"
+                      value={amountPaid}
+                      onChange={(e) => setAmountPaid(e.target.value)}
+                      placeholder="0"
+                      required
+                      className={`${fieldClass} pl-7 font-bold`}
                     />
                   </div>
                 </div>
-
                 <div>
+                  <Label hint="optional">Receipt No.</Label>
+                  <input
+                    type="text"
+                    value={receiptNo}
+                    onChange={(e) => setReceiptNo(e.target.value)}
+                    placeholder="—"
+                    className={fieldClass}
+                  />
+                </div>
+                <div className="col-span-2 lg:col-span-1">
                   <Label hint="optional">Paid via</Label>
                   <div className="grid grid-cols-2 gap-2">
                     {[
@@ -266,7 +240,7 @@ function MarkPaidModal({ member, onClose, onUpdated }) {
             <button
               type="submit"
               disabled={status !== 'idle'}
-              className={`h-12 rounded-lg font-black uppercase tracking-wide transition-colors flex items-center justify-center gap-2 ${
+              className={`min-h-12 rounded-lg font-black uppercase transition-colors flex items-center justify-center gap-2 py-2 ${
                 status === 'success'
                   ? 'bg-green-500 text-white'
                   : 'bg-[#F2C230] text-black hover:bg-[#C6FF3D]'
@@ -284,10 +258,16 @@ function MarkPaidModal({ member, onClose, onUpdated }) {
                   Done!
                 </>
               )}
-              {status === 'idle' &&
-                (amountNumber > 0
-                  ? `Confirm ₹${amountNumber.toLocaleString('en-IN')}`
-                  : 'Confirm Payment')}
+              {status === 'idle' && (
+                <span className="flex flex-col items-center leading-tight">
+                  <span>{amountNumber > 0 ? `Confirm payment · ₹${amountNumber.toLocaleString('en-IN')}` : 'Confirm payment'}</span>
+                  {start && end && (
+                    <span className="mt-1 text-xs font-medium normal-case opacity-75">
+                      Cycle: {start.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} → {end.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </span>
+                  )}
+                </span>
+              )}
             </button>
           </form>
         </div>

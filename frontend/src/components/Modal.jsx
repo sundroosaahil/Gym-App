@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
-function Modal({ children, onClose }) {
+function Modal({ children, onClose, wide = false }) {
   useEffect(() => {
     function handleEsc(e) {
       if (e.key === 'Escape') onClose();
@@ -24,10 +24,10 @@ function Modal({ children, onClose }) {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm modal-backdrop-fade-in text-[#F5F5F0]"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-sm modal-backdrop-fade-in text-[#F5F5F0]"
       onClick={onClose}
     >
-      <div className="relative w-full max-w-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className={`relative w-full ${wide ? 'max-w-5xl' : 'max-w-2xl'}`} onClick={(e) => e.stopPropagation()}>
         <button
           onClick={onClose}
           aria-label="Close"
@@ -35,7 +35,7 @@ function Modal({ children, onClose }) {
         >
           <X className="w-4 h-4" />
         </button>
-        <div className="max-h-[85vh] overflow-y-auto overflow-x-hidden no-scrollbar rounded-lg member-card-pop-in">
+        <div className="max-h-[calc(100dvh-1.5rem)] overflow-y-auto overflow-x-hidden no-scrollbar rounded-lg member-card-pop-in md:max-h-[88dvh]">
           {children}
         </div>
       </div>
