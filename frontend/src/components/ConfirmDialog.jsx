@@ -1,17 +1,8 @@
-import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
 function ConfirmDialog({ title, message, confirmLabel = 'Confirm', onConfirm, onCancel, danger = false }) {
-  // Same reasoning as Modal.jsx — this can appear on its own (e.g. the
-  // Delete confirmation isn't always nested inside a Modal), so it needs
-  // its own scroll lock rather than relying on a parent to have set one.
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, []);
+  useBodyScrollLock();
 
   return createPortal(
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-6">

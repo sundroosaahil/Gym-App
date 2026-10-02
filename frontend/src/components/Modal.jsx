@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
 function Modal({ children, onClose, wide = false }) {
   useEffect(() => {
@@ -11,16 +12,7 @@ function Modal({ children, onClose, wide = false }) {
     return () => window.removeEventListener('keydown', handleEsc);
   }, [onClose]);
 
-  // Without this, the page behind the modal keeps scrolling on touch
-  // devices — the modal looks "open" but the body content underneath
-  // drifts, which reads as a bug even though nothing is technically broken.
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, []);
+  useBodyScrollLock();
 
   return createPortal(
     <div
