@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Member = require('../models/Member');
 const calculateStatus = require('../utils/calculateStatus');
-const { startOfDay } = require('../utils/datehelpers');
+const { startOfDay, parseDateInput } = require('../utils/datehelpers');
 const requireAuth = require('../middleware/requireAuth');
 const logAction = require('../utils/logAction');
 const sendNotificationToAdmins = require('../utils/sendNotification');
@@ -196,10 +196,28 @@ router.delete('/:id', async (req, res) => {
 // Mark member as paid — extend membership
 router.put('/:id/mark-paid', async (req, res) => {
   try {
-    const { durationDays, amountPaid, receiptNo, mode, paymentMode } = req.body;
+    const { durationDays, amountPaid, receiptNo, mode, paymentMode, startDate } = req.body;
 
-    if (!mode || !['reset', 'renewal'].includes(mode)) {
-      return res.status(400).json({ error: 'mode is required and must be "reset" or "renewal"' });
+    // New clients send `startDate` ("YYYY-MM-DD"). Older cached frontends still
+    // send `mode`, so that path is kept working until everyone has refreshed.
+    if (startDate === undefined && (!mode || !['reset', 'renewal'].includes(mode))) {
+      return res.status(400).json({ error: 'startDate (YYYY-MM-DD) is required' });
+    }
+
+    let chosenStart = null;
+    if (startDate !== undefined) {
+      chosenStart = parseDateInput(startDate);
+      if (!chosenStart) {
+        return res.status(400).json({ error: 'startDate must be a valid date in YYYY-MM-DD format' });
+      }
+      // Only the future side is capped. A start date years in the future would
+      // give a member free access for ages (dangerous typo, e.g. 2062), while a
+      // typo in the past just shows the member as inactive (fails safe).
+      const limit = startOfDay(new Date());
+      limit.setDate(limit.getDate() + 366);
+      if (chosenStart > limit) {
+        return res.status(400).json({ error: 'startDate cannot be more than a year in the future' });
+      }
     }
 
     if (paymentMode !== undefined && !['cash', 'upi'].includes(paymentMode)) {
@@ -219,9 +237,10 @@ router.put('/:id/mark-paid', async (req, res) => {
     const today = startOfDay(new Date());
     const currentEnd = startOfDay(member.endDate);
 
+    // An explicit startDate wins. The old modes are the fallback:
     // reset   -> new cycle starts today (member didn't use the gym during the gap)
     // renewal -> new cycle starts from old due date (recovers days already used, or extends an active member cleanly)
-    const baseDate = mode === 'renewal' ? currentEnd : today;
+    const baseDate = chosenStart || (mode === 'renewal' ? currentEnd : today);
 
     const newEndDate = new Date(baseDate);
     newEndDate.setDate(newEndDate.getDate() + Number(durationDays));
@@ -245,7 +264,7 @@ router.put('/:id/mark-paid', async (req, res) => {
     await member.save();
     await logAction(
       'Marked Paid',
-      `${getDisplayName(member)} (${member.gymCode}) — ₹${amountPaid}, ${durationDays} days, mode: ${mode}${paymentMode ? `, via ${paymentMode}` : ''}${receiptNo ? `, Receipt #${receiptNo}` : ''}`,
+      `${getDisplayName(member)} (${member.gymCode}) — ₹${amountPaid}, ${durationDays} days, starts ${baseDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}${paymentMode ? `, via ${paymentMode}` : ''}${receiptNo ? `, Receipt #${receiptNo}` : ''}`,
       req.adminEmail
     );
         sendNotificationToAdmins(

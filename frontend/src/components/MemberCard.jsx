@@ -14,13 +14,14 @@ import { useToast } from '../context/ToastContext';
 import { getDisplayName } from '../utils/getDisplayName';
 import { getMissingDetails } from '../utils/getMissingDetails';
 import PlaceAutocomplete from './PlaceAutocomplete';
+import StartDatePicker from './StartDatePicker';
+import { toDateInputValue } from '../utils/dateInput';
 
 const MARK_PAID_DEFAULTS = {
   durationChoice: '30',
   customDays: '',
   amountPaid: '',
   markPaidReceiptNo: '',
-  mode: 'renewal',
   paymentMode: ''
 };
 
@@ -34,7 +35,9 @@ function MemberCard({ member, isOpen, onToggle, onUpdated }) {
   const [customDays, setCustomDays] = useState(MARK_PAID_DEFAULTS.customDays);
   const [amountPaid, setAmountPaid] = useState(MARK_PAID_DEFAULTS.amountPaid);
   const [markPaidReceiptNo, setMarkPaidReceiptNo] = useState(MARK_PAID_DEFAULTS.markPaidReceiptNo);
-  const [mode, setMode] = useState(MARK_PAID_DEFAULTS.mode);
+  // Start date of the new cycle ("YYYY-MM-DD"). Defaults to the member's current due date.
+  const dueDateValue = toDateInputValue(member.endDate);
+  const [startDate, setStartDate] = useState(dueDateValue);
   const [paymentMode, setPaymentMode] = useState(MARK_PAID_DEFAULTS.paymentMode);
   const [markPaidStatus, setMarkPaidStatus] = useState('idle'); // 'idle' | 'submitting' | 'success'
   const [notRenewingStatus, setNotRenewingStatus] = useState('idle'); // 'idle' | 'submitting' | 'success'
@@ -106,7 +109,7 @@ function MemberCard({ member, isOpen, onToggle, onUpdated }) {
     setCustomDays(MARK_PAID_DEFAULTS.customDays);
     setAmountPaid(MARK_PAID_DEFAULTS.amountPaid);
     setMarkPaidReceiptNo(MARK_PAID_DEFAULTS.markPaidReceiptNo);
-    setMode(MARK_PAID_DEFAULTS.mode);
+    setStartDate(dueDateValue);
     setPaymentMode(MARK_PAID_DEFAULTS.paymentMode);
     setError(null);
     setShowMarkPaid(true);
@@ -118,7 +121,7 @@ function MemberCard({ member, isOpen, onToggle, onUpdated }) {
       customDays !== MARK_PAID_DEFAULTS.customDays ||
       markPaidReceiptNo !== MARK_PAID_DEFAULTS.markPaidReceiptNo ||
       durationChoice !== MARK_PAID_DEFAULTS.durationChoice ||
-      mode !== MARK_PAID_DEFAULTS.mode ||
+      startDate !== dueDateValue ||
       paymentMode !== MARK_PAID_DEFAULTS.paymentMode
     );
   }
@@ -164,7 +167,7 @@ function MemberCard({ member, isOpen, onToggle, onUpdated }) {
       await api.put(`/members/${member._id}/mark-paid`, {
         durationDays,
         amountPaid: Number(amountPaid),
-        mode,
+        startDate,
         ...(paymentMode && { paymentMode }),
         ...(markPaidReceiptNo.trim() && { receiptNo: markPaidReceiptNo.trim() })
       });
@@ -401,29 +404,13 @@ function MemberCard({ member, isOpen, onToggle, onUpdated }) {
             {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
 
             <form onSubmit={handleMarkPaid} className="flex flex-col gap-4">
-              <div>
-                <label className="block text-xs text-[#999] uppercase mb-1">Start Date</label>
-                <div className="flex gap-1 bg-[#111] border border-[#333] rounded p-1 w-fit">
-                  <button
-                    type="button"
-                    onClick={() => setMode('renewal')}
-                    className={`px-3 py-1.5 text-sm rounded transition-colors ${
-                      mode === 'renewal' ? 'bg-[#F2C230] text-black font-bold' : 'text-[#999] hover:text-[#F5F5F0]'
-                    }`}
-                  >
-                    Due Date
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMode('reset')}
-                    className={`px-3 py-1.5 text-sm rounded transition-colors ${
-                      mode === 'reset' ? 'bg-[#F2C230] text-black font-bold' : 'text-[#999] hover:text-[#F5F5F0]'
-                    }`}
-                  >
-                    Today
-                  </button>
-                </div>
-              </div>
+              <StartDatePicker
+                value={startDate}
+                onChange={setStartDate}
+                dueDate={dueDateValue}
+                today={toDateInputValue(new Date())}
+                durationDays={durationChoice === 'custom' ? customDays : durationChoice}
+              />
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
