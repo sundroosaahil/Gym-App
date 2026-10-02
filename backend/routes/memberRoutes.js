@@ -264,7 +264,7 @@ router.put('/:id/mark-paid', async (req, res) => {
     await member.save();
     await logAction(
       'Marked Paid',
-      `${getDisplayName(member)} (${member.gymCode}) — ₹${amountPaid}, ${durationDays} days, starts ${baseDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}${paymentMode ? `, via ${paymentMode}` : ''}${receiptNo ? `, Receipt #${receiptNo}` : ''}`,
+      `${getDisplayName(member)} (${member.gymCode}) — ₹${amountPaid}, ${durationDays} days, starts ${baseDate.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}${paymentMode ? `, via ${paymentMode}` : ''}${receiptNo ? `, Receipt #${receiptNo}` : ''}`,
       req.adminEmail
     );
         sendNotificationToAdmins(

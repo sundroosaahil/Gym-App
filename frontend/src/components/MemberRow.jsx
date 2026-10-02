@@ -1,7 +1,6 @@
 import { useState, useRef, memo } from 'react';
 import { Pencil, Trash2, MessageCircle, Loader2, Check, IndianRupee, UserX, MapPin, Banknote, QrCode } from 'lucide-react';
 import api from '../api/axiosConfig';
-import { durationOptions } from '../constants/durationOptions';
 import StatusBadge from './StatusBadge';
 import ConfirmDialog from './ConfirmDialog';
 import Modal from './Modal';
@@ -13,35 +12,14 @@ import { useToast } from '../context/ToastContext';
 import { getDisplayName } from '../utils/getDisplayName';
 import { getMissingDetails } from '../utils/getMissingDetails';
 import PlaceAutocomplete from './PlaceAutocomplete';
-import StartDatePicker from './StartDatePicker';
-import { toDateInputValue } from '../utils/dateInput';
-
-const MARK_PAID_DEFAULTS = {
-  durationChoice: '30',
-  customDays: '',
-  amountPaid: '',
-  markPaidReceiptNo: '',
-  paymentMode: ''
-};
+import MarkPaidModal from './MarkPaidModal';
 
 function MemberRow({ member, isOpen, onToggle, onUpdated }) {
   const { showToast } = useToast();
   const [showMarkPaid, setShowMarkPaid] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [durationChoice, setDurationChoice] = useState(MARK_PAID_DEFAULTS.durationChoice);
-  const [customDays, setCustomDays] = useState(MARK_PAID_DEFAULTS.customDays);
-  const [amountPaid, setAmountPaid] = useState(MARK_PAID_DEFAULTS.amountPaid);
-  const [markPaidReceiptNo, setMarkPaidReceiptNo] = useState(MARK_PAID_DEFAULTS.markPaidReceiptNo);
-  // Start date of the new cycle ("YYYY-MM-DD"). Defaults to the member's current due date.
-  const dueDateValue = toDateInputValue(member.endDate);
-  const [startDate, setStartDate] = useState(dueDateValue);
-  const [paymentMode, setPaymentMode] = useState(MARK_PAID_DEFAULTS.paymentMode);
-  const [markPaidStatus, setMarkPaidStatus] = useState('idle'); // 'idle' | 'submitting' | 'success'
   const [notRenewingStatus, setNotRenewingStatus] = useState('idle'); // 'idle' | 'submitting' | 'success'
-  const [error, setError] = useState(null);
-  // Asks "discard changes?" before actually closing the Mark Paid modal.
-  const [confirmDiscardMarkPaid, setConfirmDiscardMarkPaid] = useState(false);
 
   const latestReceiptNo =
     member.receipts && member.receipts.length > 0
@@ -103,38 +81,7 @@ function MemberRow({ member, isOpen, onToggle, onUpdated }) {
   }
 
   function handleOpenMarkPaid() {
-    setDurationChoice(MARK_PAID_DEFAULTS.durationChoice);
-    setCustomDays(MARK_PAID_DEFAULTS.customDays);
-    setAmountPaid(MARK_PAID_DEFAULTS.amountPaid);
-    setMarkPaidReceiptNo(MARK_PAID_DEFAULTS.markPaidReceiptNo);
-    setStartDate(dueDateValue);
-    setPaymentMode(MARK_PAID_DEFAULTS.paymentMode);
-    setError(null);
     setShowMarkPaid(true);
-  }
-
-  function isMarkPaidDirty() {
-    return (
-      amountPaid !== MARK_PAID_DEFAULTS.amountPaid ||
-      customDays !== MARK_PAID_DEFAULTS.customDays ||
-      markPaidReceiptNo !== MARK_PAID_DEFAULTS.markPaidReceiptNo ||
-      durationChoice !== MARK_PAID_DEFAULTS.durationChoice ||
-      startDate !== dueDateValue ||
-      paymentMode !== MARK_PAID_DEFAULTS.paymentMode
-    );
-  }
-
-  function handleRequestCloseMarkPaid() {
-    if (isMarkPaidDirty()) {
-      setConfirmDiscardMarkPaid(true);
-      return;
-    }
-    setShowMarkPaid(false);
-  }
-
-  function handleConfirmDiscardMarkPaid() {
-    setConfirmDiscardMarkPaid(false);
-    setShowMarkPaid(false);
   }
 
   function handleRemindClick() {
@@ -152,38 +99,6 @@ function MemberRow({ member, isOpen, onToggle, onUpdated }) {
   function showRemindMessage(msg) {
     setRemindMessage(msg);
     setTimeout(() => setRemindMessage(null), 2500);
-  }
-
-  async function handleMarkPaid(e) {
-    e.preventDefault();
-    if (markPaidStatus !== 'idle') return; // guard against double-submit
-    setError(null);
-    setMarkPaidStatus('submitting');
-    const durationDays =
-      durationChoice === 'custom' ? Number(customDays) : Number(durationChoice);
-    try {
-      await api.put(`/members/${member._id}/mark-paid`, {
-        durationDays,
-        amountPaid: Number(amountPaid),
-        startDate,
-        ...(paymentMode && { paymentMode }),
-        ...(markPaidReceiptNo.trim() && { receiptNo: markPaidReceiptNo.trim() })
-      });
-      setMarkPaidStatus('success');
-      showToast(`Payment recorded for ${getDisplayName(member)}`);
-      setTimeout(() => {
-        setShowMarkPaid(false);
-        setAmountPaid(MARK_PAID_DEFAULTS.amountPaid);
-        setCustomDays(MARK_PAID_DEFAULTS.customDays);
-        setMarkPaidReceiptNo(MARK_PAID_DEFAULTS.markPaidReceiptNo);
-        setPaymentMode(MARK_PAID_DEFAULTS.paymentMode);
-        setMarkPaidStatus('idle');
-        onUpdated();
-      }, 700);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to mark paid');
-      setMarkPaidStatus('idle');
-    }
   }
 
   async function handleNotRenewing() {
@@ -393,130 +308,11 @@ function MemberRow({ member, isOpen, onToggle, onUpdated }) {
       </tr>
 
       {showMarkPaid && (
-        <Modal onClose={handleRequestCloseMarkPaid}>
-          <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg p-6">
-            <h2 className="text-lg font-black uppercase tracking-wide mb-4 flex items-center gap-2">
-              <IndianRupee className="w-5 h-5 text-[#F2C230]" strokeWidth={3} />
-              Enter Payment for {getDisplayName(member)}
-            </h2>
-
-            {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
-
-            <form onSubmit={handleMarkPaid} className="flex flex-col gap-4">
-              <StartDatePicker
-                value={startDate}
-                onChange={setStartDate}
-                dueDate={dueDateValue}
-                today={toDateInputValue(new Date())}
-                durationDays={durationChoice === 'custom' ? customDays : durationChoice}
-              />
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs text-[#999] uppercase mb-1">Duration</label>
-                  <select
-                    value={durationChoice}
-                    onChange={(e) => setDurationChoice(e.target.value)}
-                    className={editInputClass}
-                  >
-                    {durationOptions.map((opt) => (
-                      <option key={opt.label} value={opt.days}>{opt.label}</option>
-                    ))}
-                  </select>
-                </div>
-                {durationChoice === 'custom' && (
-                  <div>
-                    <label className="block text-xs text-[#999] uppercase mb-1">Days</label>
-                    <input
-                      type="number"
-                      value={customDays}
-                      onChange={(e) => setCustomDays(e.target.value)}
-                      required
-                      className={editInputClass}
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs text-[#999] uppercase mb-1">Amount</label>
-                  <input
-                    type="number"
-                    value={amountPaid}
-                    onChange={(e) => setAmountPaid(e.target.value)}
-                    required
-                    className={editInputClass}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-[#999] uppercase mb-1">Receipt No.</label>
-                  <input
-                    type="text"
-                    value={markPaidReceiptNo}
-                    onChange={(e) => setMarkPaidReceiptNo(e.target.value)}
-                    placeholder="optional"
-                    className={editInputClass}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs text-[#999] uppercase mb-1">Payment Mode (optional)</label>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMode(paymentMode === 'cash' ? '' : 'cash')}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded border text-sm font-bold uppercase transition-colors ${
-                      paymentMode === 'cash'
-                        ? 'border-[#F2C230] bg-[#F2C230]/10 text-[#F2C230]'
-                        : 'border-[#333] text-[#999] hover:border-[#555]'
-                    }`}
-                  >
-                    <Banknote className="w-4 h-4" />
-                    Cash
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMode(paymentMode === 'upi' ? '' : 'upi')}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded border text-sm font-bold uppercase transition-colors ${
-                      paymentMode === 'upi'
-                        ? 'border-[#F2C230] bg-[#F2C230]/10 text-[#F2C230]'
-                        : 'border-[#333] text-[#999] hover:border-[#555]'
-                    }`}
-                  >
-                    <QrCode className="w-4 h-4" />
-                    UPI
-                  </button>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={markPaidStatus !== 'idle'}
-                className={`font-bold uppercase py-2.5 rounded transition-colors flex items-center justify-center gap-2 ${
-                  markPaidStatus === 'success'
-                    ? 'bg-green-500 text-white'
-                    : 'bg-[#F2C230] text-black hover:bg-[#C6FF3D]'
-                } ${markPaidStatus === 'submitting' ? 'opacity-70 cursor-not-allowed' : ''}`}
-              >
-                {markPaidStatus === 'submitting' && (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Saving...
-                  </>
-                )}
-                {markPaidStatus === 'success' && (
-                  <>
-                    <Check className="w-4 h-4" />
-                    Done!
-                  </>
-                )}
-                {markPaidStatus === 'idle' && 'Confirm Payment'}
-              </button>
-            </form>
-          </div>
-        </Modal>
+        <MarkPaidModal
+          member={member}
+          onClose={() => setShowMarkPaid(false)}
+          onUpdated={onUpdated}
+        />
       )}
 
       {showEdit && (
@@ -662,17 +458,6 @@ function MemberRow({ member, isOpen, onToggle, onUpdated }) {
           danger
           onConfirm={handleConfirmDiscardEdit}
           onCancel={() => setConfirmDiscardEdit(false)}
-        />
-      )}
-
-      {confirmDiscardMarkPaid && (
-        <ConfirmDialog
-          title="Discard Changes?"
-          message={`You've entered payment details for ${getDisplayName(member)} that haven't been saved. Closing now will discard them.`}
-          confirmLabel="Discard"
-          danger
-          onConfirm={handleConfirmDiscardMarkPaid}
-          onCancel={() => setConfirmDiscardMarkPaid(false)}
         />
       )}
 

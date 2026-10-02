@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import api from '../api/axiosConfig';
 import SkeletonLogCard from '../components/SkeletonLogCard';
+import { formatDate, formatDateTime } from '../utils/formatDate';
 
 // Icon + color per action, so the log feed is skimmable at a glance instead
 // of every row looking identical except for the label text. Keyed on the
@@ -45,7 +46,7 @@ function getDayLabel(date) {
 
   if (isSameDay(date, now)) return 'Today';
   if (isSameDay(date, yesterday)) return 'Yesterday';
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  return formatDate(date);
 }
 
 // Relative time ONLY for today's entries ("5m ago", "2h ago") since that's
@@ -56,7 +57,7 @@ function getDayLabel(date) {
 function formatLogTimestamp(date) {
   const now = new Date();
   if (!isSameDay(date, now)) {
-    return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    return date.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase();
   }
   const diffSeconds = Math.floor((now - date) / 1000);
   if (diffSeconds < 60) return 'Just now';
@@ -252,7 +253,7 @@ function AdminLogs() {
                             </div>
                             <p
                               className="text-xs text-[#999] whitespace-nowrap"
-                              title={date.toLocaleString()}
+                              title={formatDateTime(date)}
                             >
                               {formatLogTimestamp(date)}
                             </p>

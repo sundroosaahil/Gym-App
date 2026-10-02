@@ -5,6 +5,7 @@ import { durationOptions } from '../constants/durationOptions';
 import { toFullPhone } from '../utils/formatPhone';
 import { useToast } from '../context/ToastContext';
 import PlaceAutocomplete from './PlaceAutocomplete';
+import DateField from './DateField';
 
 function AddMemberForm({ onMemberAdded }) {
   const { showToast } = useToast();
@@ -189,18 +190,13 @@ function AddMemberForm({ onMemberAdded }) {
           className={inputClass}
         />
         <div className="flex flex-col gap-1">
-  <label htmlFor="startDate" className="text-sm text-gray-400">
-    Start Date
-  </label>
-  <input
-    id="startDate"
-    name="startDate"
-    type="date"
-    value={formData.startDate}
-    onChange={handleChange}
-    className={inputClass}
-  />
-</div>
+          <span className="text-sm text-gray-400">Start Date</span>
+          <DateField
+            value={formData.startDate}
+            onChange={(value) => handleChange({ target: { name: 'startDate', value } })}
+            ariaLabel="Start date"
+          />
+        </div>
         <select
           name="durationChoice"
           value={formData.durationChoice}
