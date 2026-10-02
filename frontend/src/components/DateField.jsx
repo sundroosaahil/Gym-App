@@ -1,5 +1,5 @@
 import { CalendarDays } from 'lucide-react';
-import { formatDateInputValue } from '../utils/formatDate';
+
 
 // A date input that ALWAYS reads dd/mm/yyyy.
 //
@@ -11,7 +11,7 @@ import { formatDateInputValue } from '../utils/formatDate';
 //
 // value / min / max are "YYYY-MM-DD" strings; onChange gets the same.
 function DateField({ value, onChange, min, max, required = false, ariaLabel = 'Pick a date', className = '' }) {
-  const text = formatDateInputValue(value);
+
 
   return (
     <div
