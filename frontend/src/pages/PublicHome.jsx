@@ -414,7 +414,7 @@ function PublicHome() {
           </div>
           <div className="mt-6 flex justify-center border-t border-white/5 pt-4">
             <Link to="/login" className="text-[10px] uppercase tracking-wide text-white/40 hover:text-white/70">
-              Admin
+              Bodyworks
             </Link>
           </div>
         </div>
