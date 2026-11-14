@@ -1,4 +1,5 @@
 import ContactButton from '../components/ContactButton';
+import { Dumbbell } from 'lucide-react';
 
 function Header() {
   return (
@@ -10,7 +11,19 @@ function Header() {
         </span>
       </div>
 
-      <ContactButton variant="icon" />
+      <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+        <a
+          href="#tracker"
+          aria-label="Workout tracker: learn more and open the tracker"
+          title="Plan workouts and track your progress"
+          className="inline-flex items-center gap-1.5 rounded-full border border-[#d8ff3e]/35 px-2.5 py-2 text-[10px] font-black uppercase tracking-wide text-[#d8ff3e] transition-colors hover:bg-[#d8ff3e]/10 sm:gap-2 sm:px-3 sm:text-xs"
+        >
+          <Dumbbell className="h-4 w-4" />
+          <span className="hidden sm:inline">Workout tracker</span>
+          <span className="sm:hidden">Tracker</span>
+        </a>
+        <ContactButton variant="icon" />
+      </div>
     </header>
   );
 }

@@ -2,12 +2,12 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Dumbbell, Users, Snowflake, Lock, ShieldCheck, Award, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const facilities = [
-  { label: 'Advanced gym equipment', icon: Dumbbell, image: '/images/treadmill.jpg', position: 'left center' },
-  { label: 'Friendly environment', icon: Users, image: '/images/chest-machine.jpg', position: 'left center' },
-  { label: 'Fully air conditioned', icon: Snowflake, image: '/images/gym-2.jpg', position: 'center' },
-  { label: 'Locker facility', icon: Lock, image: '/images/locker.jpg', position: 'center' },
-  { label: 'Trusted supplements', icon: ShieldCheck, image: '/images/supplements.jpg', position: '15% center' },
-  { label: 'Experienced trainers', icon: Award, image: '/images/tricep-machine.jpg', position: 'left center' }
+  { label: 'Advanced gym equipment', icon: Dumbbell, image: '/images/treadmill.jpg', alt: 'Treadmills and cardio equipment at Bodyworks Gym, Sopore', position: 'left center' },
+  { label: 'Friendly environment', icon: Users, image: '/images/chest-machine.jpg', alt: 'Chest press machine for strength training at Bodyworks Gym, Sopore', position: 'left center' },
+  { label: 'Fully air conditioned', icon: Snowflake, image: '/images/gym-2.jpg', alt: 'Air conditioned training floor at Bodyworks Gym, Sopore', position: 'center' },
+  { label: 'Locker facility', icon: Lock, image: '/images/locker.jpg', alt: 'Member lockers at Bodyworks Gym, Sopore', position: 'center' },
+  { label: 'Trusted supplements', icon: ShieldCheck, image: '/images/supplements.jpg', alt: 'Gym supplements available at Bodyworks Gym, Sopore', position: '15% center' },
+  { label: 'Experienced trainers', icon: Award, image: '/images/tricep-machine.jpg', alt: 'Tricep machine for weight training at Bodyworks Gym, Sopore', position: 'left center' }
 ];
 
 // Ignore touch movement smaller than this so a normal tap isn't misread as a swipe.
@@ -71,8 +71,7 @@ function Facilities() {
         <img
           key={f.label}
           src={f.image}
-          alt=""
-          aria-hidden="true"
+          alt={f.alt}
           className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
             i === active ? 'opacity-100' : 'opacity-0'
           }`}
@@ -89,7 +88,7 @@ function Facilities() {
       <div className="relative flex h-full flex-col items-center justify-center px-5 text-center sm:px-8">
         <p className="text-xs font-black uppercase tracking-[.3em] text-[#d8ff3e]">Inside Bodyworks</p>
         <h2 className="mt-3 text-4xl font-black uppercase leading-[0.95] tracking-[-.05em] text-white sm:text-6xl">
-          Why train here
+          Why train at Bodyworks, Sopore
         </h2>
 
         <div key={active} className="mt-8 flex flex-col items-center gap-4 transition-opacity duration-500">
