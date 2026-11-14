@@ -30,6 +30,7 @@ import { WrappedHomeCard } from '../components/WrappedEntry.jsx'
 import RecoveryHint from '../components/RecoveryHint.jsx'
 import { ChallengesCard } from '../components/Challenges.jsx'
 import { isOn } from '../lib/modules.js'
+import { QrCode, Scale } from 'lucide-react'
 
 // Home = what to do now + a quick glance. Deep charts & history live in Stats.
 export default function Home() {
@@ -210,7 +211,7 @@ export default function Home() {
         arrival at the gym; folds away per user via the "Gym check-in" switch in Settings. */}
     {on('checkin') && (
       <div className="card tap-host checkin-card">
-        <CardHead icon="qr" tint="var(--green)" eyebrow={t('At the gym')} title={t('Check in')} open={{ onClick: () => nav('/checkin') }}
+        <CardHead icon={<QrCode size={17} strokeWidth={1.8} />} tint="var(--green)" eyebrow={t('At the gym')} title={t('Check in')} open={{ onClick: () => nav('/checkin') }}
           action={<Icon name="chevronRight" className="chev" />} />
       </div>
     )}
@@ -225,7 +226,7 @@ export default function Home() {
 
     {on('body') && S.showWeightCard !== false && <div className="card">
       {/* one trailing action, Log; the goal lives with the goal line and the weigh-ins below (P2) */}
-      <CardHead icon="scale" tint="var(--yellow)" title={t('Body weight')} className="bw-head"
+      <CardHead icon={<Scale size={17} strokeWidth={1.8} />} tint="var(--yellow)" title={t('Body weight')} className="bw-head"
         action={<Button size="sm" icon="plus" onClick={() => bwSheet()}>{t('Log')}</Button>} />
       {bw ? <>
         <div className="row" style={{ gap: 8, alignItems: 'baseline' }}>

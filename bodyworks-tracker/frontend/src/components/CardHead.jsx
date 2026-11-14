@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { isValidElement, useId } from 'react'
 import Icon from './Icon.jsx'
 
 // One header for every card on Home (redesign 1.4.5, P2). Home used to show five header styles on
@@ -26,8 +26,9 @@ import Icon from './Icon.jsx'
 export default function CardHead({ icon, tint, glyph, eyebrow, title, sub, action, toggle, open, className = '', titleProps }) {
   const id = useId()
   const hasEyebrow = eyebrow != null && eyebrow !== false, hasSub = sub != null && sub !== false
+  const iconNode = typeof icon === 'string' ? <Icon name={icon} /> : isValidElement(icon) ? icon : null
   const lead = glyph ? <span className="card-head-g" aria-hidden="true">{glyph}</span>
-    : icon ? <span className="lrow-i" style={tint ? { background: tint } : undefined} aria-hidden="true"><Icon name={icon} /></span>
+    : iconNode ? <span className="lrow-i" style={tint ? { background: tint } : undefined} aria-hidden="true">{iconNode}</span>
       : null
   const text = <span className="card-head-t">
     {hasEyebrow && <span className="lbl2" id={id + 'e'}>{eyebrow}</span>}
