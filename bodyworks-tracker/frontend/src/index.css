@@ -2363,7 +2363,7 @@ button.mchip{border:none;font:inherit;font-size:var(--fs-caption);cursor:pointer
 .ch-list{display:flex;flex-direction:column;gap:14px;margin-top:14px}
 .ch-row{display:flex;align-items:center;gap:12px}
 .ch-ic{display:inline-flex;align-items:center;justify-content:center;flex:none;width:32px;height:32px;border-radius:10px;background:var(--surface-2);color:var(--label-2);font-size:var(--fs-body)}
-.ch-row.done .ch-ic{background:rgba(48,209,88,0.18);background:color-mix(in srgb,var(--green) 18%,transparent);color:var(--win-ink)}
+.ch-row.done .ch-ic{background:rgba(198,255,61,0.18);background:color-mix(in srgb,var(--green) 18%,transparent);color:var(--win-ink)}
 .ch-body{flex:1;min-width:0}
 .ch-t{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:var(--fs-subhead);font-weight:500;letter-spacing:-.01em;line-height:1.3}
 .ch-name{min-width:0;text-wrap:pretty}
@@ -2940,7 +2940,7 @@ button.wl-summary{width:100%;padding:0 0 10px;text-align:start;border-radius:var
    the same hue. The bare system green and orange were 2:1 as text in the light theme. */
 .intg-pill{display:inline-flex;align-self:flex-start;margin-top:5px;padding:2px 8px;border-radius:99px;font-size:var(--fs-caption);font-weight:600;
   line-height:1.35;background:var(--surface-2);color:var(--label-2);white-space:nowrap}
-.intg-pill.connected{background:rgba(48,209,88,.16);background:color-mix(in srgb,var(--green) 16%,transparent);color:var(--green-ink)}
+.intg-pill.connected{background:rgba(198,255,61,.16);background:color-mix(in srgb,var(--green) 16%,transparent);color:var(--green-ink)}
 .intg-pill.attention{background:rgba(255,159,10,.18);background:color-mix(in srgb,var(--orange) 18%,transparent);color:var(--orange-ink)}
 .lrow-s .intg-pill{margin-inline-start:6px;margin-top:0;vertical-align:1px}
 .intg-chips{display:flex;flex-wrap:wrap;gap:8px;padding:12px 14px}
@@ -3109,7 +3109,7 @@ button.wl-summary{width:100%;padding:0 0 10px;text-align:start;border-radius:var
 .sbar-row.on .sbar-n{font-weight:600}
 .sbar-t{position:relative;height:8px;border-radius:4px;background:var(--surface-2)}
 .sbar-f{position:absolute;inset-block:0;inset-inline-start:0;border-radius:4px;background:var(--label-2)}
-.sbar-band{position:absolute;inset-block:0;background:rgba(48,209,88,.22);background:color-mix(in srgb,var(--green-ink) 22%,transparent)}
+.sbar-band{position:absolute;inset-block:0;background:rgba(198,255,61,.22);background:color-mix(in srgb,var(--green-ink) 22%,transparent)}
 :root[data-theme="light"] .sbar-band{background:rgba(26,127,55,.18);background:color-mix(in srgb,var(--green-ink) 18%,transparent)}
 .sbar-row:has(.sbar-band) .sbar-f{inset-block:2px;border-radius:3px}
 .sbar-tick{position:absolute;inset-block:-3px;width:2px;border-radius:1px;background:var(--label)}
@@ -3141,7 +3141,7 @@ button.wl-summary{width:100%;padding:0 0 10px;text-align:start;border-radius:var
 .slegend li{display:inline-flex;align-items:center;gap:6px;min-width:0}
 .slegend li.muted{color:var(--label-dim)}
 .slegend-m{flex:none;width:10px;height:10px;border-radius:3px;background:var(--m,var(--label-2))}
-.slegend-m.band{width:14px;height:8px;border-radius:2px;background:rgba(48,209,88,.22);background:color-mix(in srgb,var(--green-ink) 22%,transparent)}
+.slegend-m.band{width:14px;height:8px;border-radius:2px;background:rgba(198,255,61,.22);background:color-mix(in srgb,var(--green-ink) 22%,transparent)}
 :root[data-theme="light"] .slegend-m.band{background:rgba(26,127,55,.18);background:color-mix(in srgb,var(--green-ink) 18%,transparent)}
 .slegend-m.tick{width:2px;height:12px;border-radius:1px;background:var(--label)}
 .slegend-m.dot{width:8px;height:8px;border-radius:50%}
