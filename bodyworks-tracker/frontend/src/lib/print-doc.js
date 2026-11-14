@@ -45,7 +45,7 @@ export function probeMarks(probe) {
 
 // The app icon (frontend/resources/icon.svg), drawn small: the lime dumbbell on its dark tile.
 export const LOGO_SVG = '<svg class="logo-mark" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="112" fill="#0c0e12"/>'
-  + '<g fill="#a3e635"><rect x="80" y="242" width="352" height="28"/><rect x="80" y="199" width="36" height="114"/>'
+  + '<g fill="#C6FF3D"><rect x="80" y="242" width="352" height="28"/><rect x="80" y="199" width="36" height="114"/>'
   + '<rect x="131" y="169" width="47" height="174"/><rect x="334" y="169" width="47" height="174"/>'
   + '<rect x="396" y="199" width="36" height="114"/></g></svg>'
 
@@ -76,7 +76,7 @@ export const PRINT_CSS = `
   :root {
     --ink: #15171c; --ink-2: #3b404b; --muted: #6b7180; --faint: #9aa0ad;
     --rule: #e3e6ec; --rule-soft: #eff1f5; --tint: #f6f7f9;
-    --lime: #a3e635; --lime-ink: #4d7c0f; --lime-soft: #f1f9e1;
+    --lime: #C6FF3D; --lime-ink: #4d7c0f; --lime-soft: #f1f9e1;
   }
   * { box-sizing: border-box; }
   html { color-scheme: light; -webkit-print-color-adjust: exact; print-color-adjust: exact; }

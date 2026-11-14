@@ -91,7 +91,7 @@
     <circle cx="160" cy="448" r="3"/>
   </g>
   <!-- the dumbbell, openGym lime -->
-  <g fill="#a3e635">
+  <g fill="#C6FF3D">
     <rect x="80" y="242" width="352" height="28"/>
     <rect x="80" y="199" width="36" height="114"/>
     <rect x="131" y="169" width="47" height="174"/>

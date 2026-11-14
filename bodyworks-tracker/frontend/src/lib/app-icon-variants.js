@@ -9,7 +9,7 @@ export const APP_ICON_VARIANTS = [
   { id: 'default', name: 'Bodyworks', bg: '#000000', fg: '#F2C230', ios: null, android: 'IconDefault' },
   { id: 'light', name: 'Light', bg: '#ffffff', fg: '#65a30d', ios: 'AppIcon-Light', android: 'IconLight' },
   { id: 'mono', name: 'Mono', bg: '#0c0e12', fg: '#f2f2f7', ios: 'AppIcon-Mono', android: 'IconMono' },
-  { id: 'neon', name: 'Green', bg: '#a3e635', fg: '#0c0e12', ios: 'AppIcon-Neon', android: 'IconNeon' },
+  { id: 'neon', name: 'Lime Green', bg: '#C6FF3D', fg: '#000000', ios: 'AppIcon-Neon', android: 'IconNeon' },
   { id: 'sky', name: 'Blue', bg: '#0a84ff', fg: '#ffffff', ios: 'AppIcon-Sky', android: 'IconSky' },
   { id: 'orange', name: 'Orange', bg: '#ff9f0a', fg: '#0c0e12', ios: 'AppIcon-Orange', android: 'IconOrange' },
   { id: 'pink', name: 'Pink', bg: '#ff375f', fg: '#ffffff', ios: 'AppIcon-Pink', android: 'IconPink' },
@@ -17,7 +17,7 @@ export const APP_ICON_VARIANTS = [
   // All year, Halloween theme or not: some people are spooky in March.
   { id: 'halloween', name: 'Halloween', bg: '#0d0517', fg: '#ff7a1a', art: 'resources/icons/halloween.svg', ios: 'AppIcon-Halloween', android: 'IconHalloween' },
   // The same for Christmas: a Santa hat in July is nobody's business but yours.
-  { id: 'christmas', name: 'Christmas', bg: '#070b16', fg: '#a3e635', art: 'resources/icons/christmas.svg', ios: 'AppIcon-Christmas', android: 'IconChristmas' },
+  { id: 'christmas', name: 'Christmas', bg: '#070b16', fg: '#C6FF3D', art: 'resources/icons/christmas.svg', ios: 'AppIcon-Christmas', android: 'IconChristmas' },
 ]
 
 export const APP_ICON_IDS = APP_ICON_VARIANTS.map(v => v.id)
