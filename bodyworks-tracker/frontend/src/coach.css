@@ -269,7 +269,7 @@
 .recap-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .recap-top .pcard-eyebrow{margin:0}
 .recap-state{font-size:var(--fs-caption2);font-weight:600;padding:3px 9px;border-radius:99px;background:var(--surface-2);color:var(--label-2);white-space:nowrap;flex:none}
-.recap-state.yes{background:rgba(48,209,88,0.16);background:color-mix(in srgb,var(--green) 16%,transparent);color:var(--green)}
+.recap-state.yes{background:rgba(198,255,61,0.16);background:color-mix(in srgb,var(--green) 16%,transparent);color:var(--green)}
 .recap-state.no{background:rgba(255,69,58,0.14);background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red)}
 .recap-state.mix{background:var(--acc-soft);color:var(--acc-ink)}
 .recap-t{font-size:var(--fs-body);font-weight:600;letter-spacing:-.018em;margin-top:6px;line-height:1.2}
