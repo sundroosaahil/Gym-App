@@ -1165,7 +1165,7 @@ export default function Settings({ page = null, find = null, via = null, entryKe
           which build you are running, or whether an update actually installed. */}
       <div className="dim small sp-version">
         Bodyworks Gym v{__APP_VERSION__} · {t('free & open source (AGPL v3)')}<br />
-        Based on <a href="https://github.com/DuarteSantos8/openGym" target="_blank" rel="noopener">openGym</a> by Duarte Santos<br />
+        Based on <a href="https://github.com/DuarteSantos8/openGym" target="_blank" rel="noopener">Bodyworks Gym</a> by Duarte Santos<br />
         <a href="https://github.com/sundroosaahil/bodyworks-tracker" target="_blank" rel="noopener">{t('Source code')}</a><br />
         {/* Attribution the media licence asks for word for word (agreement §8c), so it is not translated */}
         Exercise media © Aliaksandr Makatserchyk, <a href="https://gymvisual.com/" target="_blank" rel="noopener">Gym visual</a>, gymvisual.com.
