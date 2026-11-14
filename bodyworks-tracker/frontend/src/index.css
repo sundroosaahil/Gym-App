@@ -20,19 +20,19 @@
 :root {
   /* surfaces — dark is the default */
   --bg:        #000000;
-  --bg-el:     #0e0e10;   /* elevated backdrop (sheets, bars) */
-  --surface:   #1c1c1e;   /* card / grouped-list fill */
-  --surface-2: #2c2c2e;   /* pressed + nested fill */
-  --surface-3: #3a3a3c;   /* controls (segmented track, switch off) */
+  --bg-el:     #0D0D0D;   /* elevated backdrop (sheets, bars) */
+  --surface:   #1A1A1A;   /* card / grouped-list fill */
+  --surface-2: #262626;   /* pressed + nested fill */
+  --surface-3: #333333;   /* controls (segmented track, switch off) */
   /* Things that float over the page (the tour bubble, a dialog, the rest timer, a chart's tooltip,
      the back-to-top button): one step lighter than a card and edged with a hairline of light, so
      in the dark theme they read as lifted rather than as one more card under a shadow you cannot
      see on black (redesign 1.4.5, P11). In the light theme white with the shadow does that. */
-  --surface-raised: #2c2c2e;
+  --surface-raised: #222222;
   --raised-line: rgba(255,255,255,.09);
 
   /* text */
-  --label:     #ffffff;
+  --label:     #F5F5F0;
   --label-2:   rgba(235,235,245,.60);
   --label-3:   rgba(235,235,245,.32);
   --label-4:   rgba(235,235,245,.18);
@@ -45,7 +45,7 @@
 
   /* system palette (iOS dark values) */
   --blue:#0a84ff; --green:#30d158; --red:#ff453a; --orange:#ff9f0a;
-  --yellow:#ffd60a; --teal:#40c8e0; --indigo:#5e5ce6; --pink:#ff375f;
+  --yellow:#F2C230; --teal:#40c8e0; --indigo:#5e5ce6; --pink:#ff375f;
   --purple:#bf5af2; --mint:#63e6e2; --brown:#ac8e68; --grey:#8e8e93;
 
   /* accent (per-account, synced) */
@@ -134,7 +134,7 @@
   --sep-op:    rgba(60,60,67,.20);
 
   --blue:#007aff; --green:#34c759; --red:#ff3b30; --orange:#ff9500;
-  --yellow:#ffcc00; --teal:#30b0c7; --indigo:#5856d6; --pink:#ff2d55;
+  --yellow:#E4B72B; --teal:#30b0c7; --indigo:#5856d6; --pink:#ff2d55;
   --purple:#af52de; --mint:#00c7be; --brown:#a2845e; --grey:#8e8e93;
   --acc-2:#248a3d;
   --on-acc:#ffffff;
@@ -148,7 +148,7 @@
 :root[data-accent="pink"]  { --acc:var(--pink);   --acc-2:#d70036; --on-acc:#fff }
 :root[data-accent="red"]   { --acc:var(--red);    --acc-2:#d70015; --on-acc:#fff }
 :root[data-accent="teal"]  { --acc:var(--teal);   --acc-2:#0071a4; --on-acc:#000 }
-:root[data-accent="gold"]  { --acc:var(--yellow); --acc-2:#b25000; --on-acc:#000; --knob-ring:rgba(0,0,0,.28) }
+:root[data-accent="gold"]  { --acc:var(--yellow); --acc-2:#b5850b; --on-acc:#000; --knob-ring:rgba(0,0,0,.28) }
 /* --acc-ink in the light theme, per preset: 4.5:1 or better on both --bg (#f2f2f7) and white. A
    colour of the user's own gets its --acc-ink inline from lib/accent.js (inkIn), to the same 4.5:1
    in both themes (redesign 1.4.5, P12). */

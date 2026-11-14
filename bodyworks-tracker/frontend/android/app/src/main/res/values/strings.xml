@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Bodyworks Tracker</string>
-    <string name="title_activity_main">openGym</string>
+    <string name="app_name">BW Tracker</string>
+    <string name="title_activity_main">BW Tracker</string>
     <string name="package_name">com.bodyworksgym.tracker</string>
     <string name="custom_url_scheme">com.bodyworksgym.tracker</string>
     <string name="rest_countdown_channel_name">Rest countdown</string>

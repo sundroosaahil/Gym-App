@@ -84,7 +84,7 @@ export function t(s, ...args) {
     v = (typeof args[0] === 'number' && forms[pluralCategory(args[0])]) || forms.other || forms.many || forms.one || s
   }
   for (let i = 0; i < args.length; i++) v = v.replaceAll('{' + i + '}', args[i])
-  return typeof v === 'string' ? v.replaceAll('openGym', 'Bodyworks Tracker') : v   // Bodyworks fork: brand shown to people
+  return typeof v === 'string' ? v.replaceAll('openGym', 'Bodyworks Gym') : v   // Bodyworks fork: brand shown to people
 }
 
 /* ------------------------------------------------------------------ plurals --

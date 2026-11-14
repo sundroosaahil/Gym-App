@@ -1,13 +1,13 @@
 {
-  "name": "Bodyworks Tracker",
-  "short_name": "Bodyworks",
+  "name": "Bodyworks Gym",
+  "short_name": "BW Tracker",
   "description": "Bodyworks Gym workout tracker",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0c0e12",
-  "theme_color": "#0c0e12",
+  "background_color": "#000000",
+  "theme_color": "#000000",
   "icons": [
     {
       "src": "icon-180.png",
