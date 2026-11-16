@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, Check, ChevronDown, MapPin, MessageCircle, Phone, ShieldCheck } from 'lucide-react';
+import { Check, ChevronDown, MapPin, MessageCircle, Phone, ShieldCheck } from 'lucide-react';
 import Header from '../components/Header';
 import MapSection from '../components/MapSection';
 import ContactButton from '../components/ContactButton';
 import Facilities from '../components/Facilities';
+import TrackerShowcase from '../components/TrackerShowcase';
 import { useInView } from '../hooks/useInView';
 import { GYM_PHONE_DISPLAY, GYM_PHONE } from '../constants/gymInfo';
 
@@ -21,7 +22,6 @@ function buildPlans(monthlyRate) {
 
 const strengthPlans = buildPlans(1200);
 const strengthCardioPlans = buildPlans(1500);
-const TRACKER_URL = import.meta.env.VITE_TRACKER_URL || 'http://127.0.0.1:5174/';
 
 // Words for the scrolling strip under the hero. All of these are already
 // stated elsewhere on the page (Facilities section), nothing new is claimed.
@@ -525,75 +525,7 @@ function PublicHome() {
         </Reveal>
 
         <Reveal className="origin-top">
-        <section id="tracker" className="bg-[#101010] px-5 py-16 sm:px-8 sm:py-20 lg:py-28">
-          <div className="relative mx-auto grid min-h-full max-w-7xl items-center gap-12 lg:grid-cols-[1.05fr_.95fr]">
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute -right-40 top-1/2 h-[34rem] w-[34rem] -translate-y-1/2 rounded-full bg-[#d8ff3e]/10 blur-[110px]"
-            />
-            <div className="relative z-10">
-              <p className="flex items-center gap-3 text-xs font-black uppercase tracking-[.3em] text-[#d8ff3e]">
-                <span className="h-2 w-2 rounded-full bg-[#d8ff3e] shadow-[0_0_16px_#d8ff3e]" /> Bodyworks workout tracker
-              </p>
-              <h2 className="mt-6 max-w-2xl text-4xl font-black uppercase leading-[0.94] tracking-[-.05em] text-white sm:text-6xl lg:text-7xl">
-                Your training.
-                <br />
-                <span className="text-[#f5b83d]">Your progress.</span>
-              </h2>
-              <p className="mt-6 max-w-lg text-base leading-relaxed text-white/60 sm:text-lg">
-                Plan workouts, log your sessions, and look back at the work you have put in a all in one simple tracker.
-              </p>
-              <div className="mt-8 grid gap-3 text-sm font-semibold text-white/75 sm:grid-cols-2">
-                {['Build workout plans', 'Log each session', 'Review your history', 'Keep your data on your device'].map((item) => (
-                  <div key={item} className="flex items-center gap-2.5">
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#d8ff3e]/10 text-[#d8ff3e]">
-                      <Check className="h-3.5 w-3.5" />
-                    </span>
-                    {item}
-                  </div>
-                ))}
-              </div>
-              <a
-                href={TRACKER_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-9 inline-flex items-center gap-3 rounded-full bg-[#d8ff3e] px-7 py-4 text-xs font-black uppercase tracking-wide text-[#111] shadow-[0_0_32px_rgba(216,255,62,0.18)] transition-transform hover:-translate-y-1"
-              >
-                Open the tracker <ArrowUpRight className="h-4 w-4" />
-              </a>
-            </div>
-
-            <div className="relative z-10 mx-auto w-full max-w-md rounded-[2rem] border border-white/10 bg-[#171717] p-5 shadow-[0_30px_90px_rgba(0,0,0,0.5)] sm:p-7">
-              <div className="flex items-center justify-between border-b border-white/10 pb-5">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-[.25em] text-[#d8ff3e]">Your training space</p>
-                  <p className="mt-2 text-xl font-black text-white">Make every session count.</p>
-                </div>
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#d8ff3e] text-[#111]">
-                  <Check className="h-6 w-6" strokeWidth={3} />
-                </div>
-              </div>
-              <div className="mt-5 space-y-3">
-                {[
-                  ['01', 'Plan', 'Set up a routine that fits your week'],
-                  ['02', 'Train', 'Record your sets as you go'],
-                  ['03', 'Review', 'See your workout history build']
-                ].map(([number, title, description]) => (
-                  <div key={number} className="flex items-center gap-4 rounded-2xl border border-white/10 bg-black/25 p-4">
-                    <span className="text-xs font-black text-[#f5b83d]">{number}</span>
-                    <div>
-                      <p className="text-sm font-black uppercase tracking-wide text-white">{title}</p>
-                      <p className="mt-1 text-xs leading-relaxed text-white/45">{description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <p className="mt-5 text-center text-[10px] font-bold uppercase tracking-[.15em] text-white/35">
-                Made for Bodyworks members
-              </p>
-            </div>
-          </div>
-        </section>
+        <TrackerShowcase />
         </Reveal>
         </div>
       </main>
