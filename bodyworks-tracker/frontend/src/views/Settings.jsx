@@ -93,6 +93,22 @@ import { voiceShortcutsSheet, voiceRowTitle } from '../components/VoiceShortcuts
 // results back, while Settings opened afresh from anywhere (the gear, a tab) starts at the root.
 let lastQuery = { q: '', key: null }
 
+function LocalNameSheet({ initial, close, save }) {
+  const [name, setName] = useState(initial)
+  const confirm = () => {
+    const value = name.trim().slice(0, 40)
+    if (!value) { useUI.getState().toast(t('Enter a name')); return }
+    save(value)
+    close()
+  }
+  return <>
+    <h3>{t('Profile name')}</h3>
+    <TextField autoFocus placeholder={t('Your name')} maxLength={40} value={name} onChange={e => setName(e.target.value)} />
+    <div style={{ height: 12 }} />
+    <Button variant="primary" onClick={confirm}>{t('Save')}</Button>
+  </>
+}
+
 // The route: /settings and /settings/<page>. An unknown page, or one this device does not have
 // (the Coach page off the phone app), goes back to the root.
 export function SettingsRoute() {
@@ -146,6 +162,7 @@ export default function Settings({ page = null, find = null, via = null, entryKe
   const credsChanged = () => { passkeys.load(); setCredsV(v => v + 1) }
   const { update, importConflict, importBackup, setUnit, resetEverything: resetAll, setUser, pullState, pushState, resetDemo } = useStore()
   const toast = useUI(s => s.toast)
+  const [localName, setLocalName] = useState(() => STATIC ? localStorage.getItem('bodyworks_tracker_name') || '' : '')
   const fileRef = useRef(null)
   const importRef = useRef(null)
   const body = useRef(null)
@@ -172,6 +189,12 @@ export default function Settings({ page = null, find = null, via = null, entryKe
       ],
     })
   }
+
+  const editLocalName = () => useUI.getState().openSheet(close => <LocalNameSheet
+    initial={localName}
+    close={close}
+    save={name => { localStorage.setItem('bodyworks_tracker_name', name); setLocalName(name) }}
+  />)
 
   // Fixed Week or Rotation. A live queue always wins (scheduleModeOf, lib/rotation.js) — a queue
   // written by a planner switches the app to Rotation on its own — but choosing Rotation with
@@ -1197,6 +1220,7 @@ export default function Settings({ page = null, find = null, via = null, entryKe
           <KeptChangesRows />
         </> : DEMO ? <>
           {STATIC ? <Row icon="lock" iconTint="var(--acc)" title={t('All data stays in this browser')} subtitle={t('No account, no cloud. Back it up anytime in Data & backup.')} /> : <Row icon="info" iconTint="var(--acc)" title={t('You’re in the demo')} subtitle={t('Example data, stored only in this browser. Go wild and change anything you like.')} />}
+          {STATIC && <Row icon="personCircle" iconTint="var(--grey)" title={t('Profile name')} subtitle={localName || t('Not set')} accessory="chevron" onClick={editLocalName} />}
           {!STATIC && <Row icon="reset" iconTint="var(--blue)" title={t('Reset demo data')} accessory="chevron"
             onClick={() => confirmSheet({ title: t('Reset demo data?'), message: t('Puts the example plan, workouts and weigh-ins back the way they started.'), confirmText: t('Reset'), onConfirm: () => { resetDemo(); nav('/home'); toast(t('Demo data reset')) } })} />}
           {!STATIC && <Row icon="rocket" iconTint="var(--indigo)" title={t('Self-host openGym')} subtitle={t('Passkey sign-in, sync across your devices, your own data.')} accessory="chevron"
