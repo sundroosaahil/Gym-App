@@ -3,14 +3,14 @@
 // The app writes plain NDEF URI records itself (lib/nfc.js, NfcTagsPlugin on the phones, Web NFC
 // in Chrome on Android). Two kinds:
 //
-//   https://opengym.ch/nfc?do=start            start today's workout (or open the one running)
-//   https://opengym.ch/nfc?do=checkin&card=ID  show the gym membership code (views/CheckIn.jsx)
-//   https://opengym.ch/nfc?ex=ID               a machine: jump to that exercise in the workout
+//   https://bodyworks-tracker.vercel.app/nfc?do=start            start today's workout (or open the one running)
+//   https://bodyworks-tracker.vercel.app/nfc?do=checkin&card=ID  show the gym membership code (views/CheckIn.jsx)
+//   https://bodyworks-tracker.vercel.app/nfc?ex=ID               a machine: jump to that exercise in the workout
 //
 // An https link and not only our own scheme, because that is what a phone reads with the app
 // closed: Android hands the tag to the app through the NDEF_DISCOVERED filter in the manifest,
 // and iOS background tag reading only routes web links (custom schemes are not supported there);
-// until opengym.ch is an associated domain of the iPhone app, the link opens opengym.ch/nfc in
+// until bodyworks-tracker.vercel.app is an associated domain of the iPhone app, the link opens bodyworks-tracker.vercel.app/nfc in
 // Safari, which hands it on as opengym://nfc?... A phone without openGym lands on that page too.
 // The short opengym:// forms (opengym://checkin, opengym://exercise/ID) are read as well.
 //
@@ -18,7 +18,7 @@
 import { effectiveRoutineIds, effectiveRoutines } from './history.js'
 import { canonicalExId } from './exercises.js'
 
-export const TAG_HOST = 'opengym.ch'
+export const TAG_HOST = 'bodyworks-tracker.vercel.app'
 export const TAG_PATH = '/nfc'
 export const SCHEME = 'opengym'
 const ID_RE = /^[A-Za-z0-9_-]{1,64}$/
@@ -51,7 +51,7 @@ const fromQuery = q => {
 }
 
 /**
- * What a link read from a sticker (or handed over by opengym.ch/nfc) asks for, or null for
+ * What a link read from a sticker (or handed over by bodyworks-tracker.vercel.app/nfc) asks for, or null for
  * anything that is not one of ours. Never throws.
  */
 export function parseTagUrl(raw) {
@@ -136,4 +136,20 @@ export function tagDebouncer({ sameMs = 4000, anyMs = 1200 } = {}) {
     lastAt = now
     return true
   }
+}
+
+/**
+ * The sticker link a page load carries, or null: either the landing page's ?tag=<link> (public/nfc/),
+ * or /nfc?... itself (a phone without the app opens the browser on it). Never throws.
+ */
+export function tagUrlFromLocation(loc) {
+  try {
+    const t = new URLSearchParams(loc.search).get('tag')
+    if (t && parseTagUrl(t)) return t
+    if (loc.pathname.replace(/\.html$/, '').replace(/\/+$/, '') === TAG_PATH) {
+      const own = `https://${TAG_HOST}${TAG_PATH}${loc.search}`
+      if (parseTagUrl(own)) return own
+    }
+  } catch { /* not a link */ }
+  return null
 }

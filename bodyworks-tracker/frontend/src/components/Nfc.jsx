@@ -9,7 +9,7 @@ import { todayISO, exerciseNameText } from '../lib/format.js'
 import { EXIDX } from '../lib/exercises.js'
 import { nav, navToWorkout } from '../lib/nav.js'
 import { platformNow } from '../lib/platform-now.js'
-import { tagUrl, parseTagUrl, routeTag, tagDebouncer } from '../lib/nfc-tags.js'
+import { tagUrl, parseTagUrl, tagUrlFromLocation, routeTag, tagDebouncer } from '../lib/nfc-tags.js'
 import { nfcSupport, writeTag, cancelWrite, onTagLink } from '../lib/nfc.js'
 import { autoGymHere } from '../lib/gym-auto.js'
 import { freestyleConfig, pickedExerciseConfig, supersetUnits } from '../lib/history.js'
@@ -188,11 +188,19 @@ export function useNfcTagLinks(ready) {
   const readyRef = useRef(ready)
   const pending = useRef(null)
   readyRef.current = ready
-  useEffect(() => onTagLink(url => {
-    if (!parseTagUrl(url)) return
-    if (readyRef.current) handleTagLink(url)
-    else pending.current = url
-  }), [])
+  useEffect(() => {
+    // A phone without the app opens the browser on <site>/nfc?...: the tap arrives with the page.
+    const fromPage = typeof location === 'undefined' ? null : tagUrlFromLocation(location)
+    if (fromPage) {
+      pending.current = fromPage
+      try { history.replaceState(history.state, '', location.pathname.replace(/\/nfc(\.html)?\/?$/, '/') + location.hash) } catch { /* fine */ }
+    }
+    return onTagLink(url => {
+      if (!parseTagUrl(url)) return
+      if (readyRef.current) handleTagLink(url)
+      else pending.current = url
+    })
+  }, [])
   useEffect(() => {
     if (!ready || !pending.current) return
     const url = pending.current

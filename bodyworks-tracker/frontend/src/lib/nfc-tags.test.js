@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { tagUrl, parseTagUrl, routeTag, tagDebouncer } from './nfc-tags.js'
+import { tagUrl, parseTagUrl, tagUrlFromLocation, routeTag, tagDebouncer } from './nfc-tags.js'
 
 const TODAY = '2026-10-27' // a Tuesday
 const plan = (extra = {}) => ({
@@ -20,10 +20,10 @@ describe('tagUrl / parseTagUrl', () => {
     ]) expect(parseTagUrl(tagUrl(tag))).toEqual(tag)
   })
 
-  it('writes short https links on opengym.ch', () => {
-    expect(tagUrl({ kind: 'checkin', start: true })).toBe('https://opengym.ch/nfc?do=start')
-    expect(tagUrl({ kind: 'checkin', start: false, card: 'c1' })).toBe('https://opengym.ch/nfc?do=checkin&card=c1')
-    expect(tagUrl({ kind: 'exercise', id: '0025' })).toBe('https://opengym.ch/nfc?ex=0025')
+  it('writes short https links on bodyworks-tracker.vercel.app', () => {
+    expect(tagUrl({ kind: 'checkin', start: true })).toBe('https://bodyworks-tracker.vercel.app/nfc?do=start')
+    expect(tagUrl({ kind: 'checkin', start: false, card: 'c1' })).toBe('https://bodyworks-tracker.vercel.app/nfc?do=checkin&card=c1')
+    expect(tagUrl({ kind: 'exercise', id: '0025' })).toBe('https://bodyworks-tracker.vercel.app/nfc?ex=0025')
     // NTAG213 holds 137 bytes of NDEF: even a long custom id stays far below.
     expect(tagUrl({ kind: 'exercise', id: 'x'.repeat(64) }).length).toBeLessThan(110)
   })
@@ -33,10 +33,10 @@ describe('tagUrl / parseTagUrl', () => {
     expect(() => tagUrl({ kind: 'exercise', id: '' })).toThrow()
     expect(() => tagUrl({ kind: 'nope' })).toThrow()
     // A card id that is not one is left off, not written.
-    expect(tagUrl({ kind: 'checkin', card: 'a b' })).toBe('https://opengym.ch/nfc?do=checkin')
+    expect(tagUrl({ kind: 'checkin', card: 'a b' })).toBe('https://bodyworks-tracker.vercel.app/nfc?do=checkin')
   })
 
-  it('reads the opengym:// forms, from opengym.ch/nfc and written by hand', () => {
+  it('reads the opengym:// forms, from bodyworks-tracker.vercel.app/nfc and written by hand', () => {
     expect(parseTagUrl('opengym://nfc?do=start')).toEqual({ kind: 'checkin', start: true, card: null })
     expect(parseTagUrl('opengym://nfc?ex=0032')).toEqual({ kind: 'exercise', id: '0032' })
     expect(parseTagUrl('opengym://checkin')).toEqual({ kind: 'checkin', start: false, card: null })
@@ -47,17 +47,17 @@ describe('tagUrl / parseTagUrl', () => {
   })
 
   it('takes www, a trailing slash and the .html page', () => {
-    expect(parseTagUrl('https://www.opengym.ch/nfc/?do=start')).toEqual({ kind: 'checkin', start: true, card: null })
-    expect(parseTagUrl('https://opengym.ch/nfc.html?ex=0025')).toEqual({ kind: 'exercise', id: '0025' })
+    expect(parseTagUrl('https://www.bodyworks-tracker.vercel.app/nfc/?do=start')).toEqual({ kind: 'checkin', start: true, card: null })
+    expect(parseTagUrl('https://bodyworks-tracker.vercel.app/nfc.html?ex=0025')).toEqual({ kind: 'exercise', id: '0025' })
   })
 
   it('answers null for anything that is not one of ours', () => {
     for (const raw of [
-      null, undefined, 42, '', 'not a url', 'https://evil.example/nfc?do=start', 'https://opengym.ch.evil.example/nfc?do=start',
-      'https://opengym.ch/privacy?do=start', 'https://opengym.ch/nfc', 'https://opengym.ch/nfc?do=launch-missiles',
-      'https://opengym.ch/nfc?ex=', 'https://opengym.ch/nfc?ex=%3Cscript%3E', 'opengym://exercise/', 'opengym://exercise/a/b',
+      null, undefined, 42, '', 'not a url', 'https://evil.example/nfc?do=start', 'https://bodyworks-tracker.vercel.app.evil.example/nfc?do=start',
+      'https://bodyworks-tracker.vercel.app/privacy?do=start', 'https://bodyworks-tracker.vercel.app/nfc', 'https://bodyworks-tracker.vercel.app/nfc?do=launch-missiles',
+      'https://bodyworks-tracker.vercel.app/nfc?ex=', 'https://bodyworks-tracker.vercel.app/nfc?ex=%3Cscript%3E', 'opengym://exercise/', 'opengym://exercise/a/b',
       'opengym://settings', 'opengym://checkin/extra', 'javascript:alert(1)', 'tel:123', 'opengym://nfc?ex=' + 'x'.repeat(65),
-      'https://opengym.ch/nfc?ex=' + 'x'.repeat(600),
+      'https://bodyworks-tracker.vercel.app/nfc?ex=' + 'x'.repeat(600),
     ]) expect(parseTagUrl(raw), String(raw)).toBeNull()
   })
 })
@@ -137,5 +137,28 @@ describe('tagDebouncer', () => {
     const fresh = tagDebouncer()
     expect(fresh('a', 50_000)).toBe(true)
     expect(fresh('a', 1_000)).toBe(true)
+  })
+})
+
+describe('tagUrlFromLocation (a tap that arrives as a page load)', () => {
+  const H = 'bodyworks-tracker.vercel.app'
+  it('reads the landing page hand-over (?tag=<link>)', () => {
+    const link = `https://${H}/nfc?ex=0025`
+    expect(tagUrlFromLocation({ pathname: '/', search: '?tag=' + encodeURIComponent(link) })).toBe(link)
+  })
+  it('reads /nfc?... itself, with or without a trailing slash or .html', () => {
+    for (const path of ['/nfc', '/nfc/', '/nfc.html']) {
+      expect(tagUrlFromLocation({ pathname: path, search: '?do=start' })).toBe(`https://${H}/nfc?do=start`)
+    }
+  })
+  it('ignores everything that is not one of our links', () => {
+    for (const loc of [
+      { pathname: '/', search: '' },
+      { pathname: '/', search: '?tag=' + encodeURIComponent('https://evil.example/nfc?do=start') },
+      { pathname: '/', search: '?tag=nonsense' },
+      { pathname: '/nfc', search: '?do=launch-missiles' },
+      { pathname: '/privacy', search: '?do=start' },
+      null, undefined,
+    ]) expect(tagUrlFromLocation(loc)).toBeNull()
   })
 })
