@@ -1,5 +1,9 @@
 // Spanish UI strings. Keys are the English source strings (see lib/i18n.js).
 export default {
+  "All data stays in this browser": "All data stays in this browser",
+  "Download the latest APK": "Download the latest APK",
+  "Stays in this browser.": "Stays in this browser.",
+  "Streak": "Racha",
   "Same muscle and exercise type. The movement may differ.": "Mismo músculo y tipo de ejercicio. El movimiento puede variar.",
   "Related muscles and exercise type. The movement may differ.": "Músculos relacionados y mismo tipo de ejercicio. El movimiento puede variar.",
   "Same muscle, different exercise type. Check suitability.": "Mismo músculo, distinto tipo de ejercicio. Comprueba si es adecuado.",

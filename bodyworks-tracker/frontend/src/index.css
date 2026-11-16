@@ -3272,3 +3272,32 @@ button.wl-summary{width:100%;padding:0 0 10px;text-align:start;border-radius:var
   .kpis .tile{padding:10px 11px}
   .kpis .tile .v{font-size:var(--fs-title3)}
 }
+
+/* ===== Bodyworks look (Home): the gym app's admin-dashboard style =====
+   Black page, #1A1A1A cards with a #2A2A2A edge, heavy uppercase headings, small tracked
+   labels, gold accent. Scoped to .bw-home so the other screens keep their own look. */
+.bw-home .hdr h1{font-weight:900;text-transform:uppercase;letter-spacing:-.02em}
+.bw-home .hdr .sub{text-transform:uppercase;letter-spacing:.1em;font-size:var(--fs-caption);font-weight:600}
+.bw-home .card{border:1px solid var(--sep-op)}
+:root:not([data-theme="light"]) .bw-home .card{border-color:#2A2A2A}
+.bw-home .card-head-title{font-weight:800;text-transform:uppercase;letter-spacing:.02em}
+
+.bw-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 12px}
+.bw-stat{display:flex;flex-direction:column;gap:8px;min-width:0;padding:12px 12px 14px;text-align:start;color:var(--label);
+  background:var(--surface);border:1px solid var(--sep-op);border-radius:14px;cursor:pointer;font:inherit}
+:root:not([data-theme="light"]) .bw-stat{border-color:#2A2A2A}
+.bw-stat:active{background:var(--surface-2)}
+.bw-stat:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.bw-stat-k{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--label-2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bw-stat-v{font-size:30px;font-weight:900;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.bw-stat-v small{font-size:14px;font-weight:700;color:var(--label-2);margin-inline-start:2px;letter-spacing:0}
+.bw-stat:first-child .bw-stat-v{color:var(--acc)}
+
+/* Today: the one thing to do, framed in the accent like the dashboard's primary action */
+.bw-home .today-row{border:1px solid var(--acc);border-radius:14px;
+  background:color-mix(in srgb,var(--acc) 8%,var(--surface));
+  box-shadow:0 10px 30px -14px color-mix(in srgb,var(--acc) 55%,transparent)}
+.bw-home .today-row .lbl2{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--acc)}
+.bw-home .today-row .ttl{font-weight:900;text-transform:uppercase;letter-spacing:-.01em}
+.bw-home .today-row .tag.acc{background:var(--acc);color:var(--on-acc,#000);font-weight:800;text-transform:uppercase;letter-spacing:.06em}

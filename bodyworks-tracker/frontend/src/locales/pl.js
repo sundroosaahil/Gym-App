@@ -1,5 +1,9 @@
 // Polish UI strings. Keys are the English source strings (see lib/i18n.js).
 export default {
+  "All data stays in this browser": "All data stays in this browser",
+  "Download the latest APK": "Download the latest APK",
+  "Stays in this browser.": "Stays in this browser.",
+  "Streak": "Streak",
   "Same muscle and exercise type. The movement may differ.": "Ten sam mięsień i typ ćwiczenia. Ruch może się różnić.",
   "Related muscles and exercise type. The movement may differ.": "Powiązane mięśnie i ten sam typ ćwiczenia. Ruch może się różnić.",
   "Same muscle, different exercise type. Check suitability.": "Ten sam mięsień, inny typ ćwiczenia. Sprawdź, czy jest odpowiednie.",

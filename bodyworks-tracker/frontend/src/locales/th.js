@@ -1,5 +1,9 @@
 // Thai UI strings. Keys are the English source strings (see lib/i18n.js).
 export default {
+  "All data stays in this browser": "All data stays in this browser",
+  "Download the latest APK": "Download the latest APK",
+  "Stays in this browser.": "Stays in this browser.",
+  "Streak": "Streak",
   "Same muscle and exercise type. The movement may differ.": "กล้ามเนื้อและประเภทการออกกำลังกายเดียวกัน การเคลื่อนไหวอาจต่างกัน",
   "Related muscles and exercise type. The movement may differ.": "กล้ามเนื้อที่เกี่ยวข้องและประเภทการออกกำลังกายเดียวกัน การเคลื่อนไหวอาจต่างกัน",
   "Same muscle, different exercise type. Check suitability.": "กล้ามเนื้อเดียวกัน แต่ประเภทการออกกำลังกายต่างกัน โปรดตรวจสอบความเหมาะสม",

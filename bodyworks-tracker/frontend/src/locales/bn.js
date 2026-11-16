@@ -1,5 +1,9 @@
 // Bengali UI strings. Keys are the English source strings (see lib/i18n.js).
 export default {
+  "All data stays in this browser": "All data stays in this browser",
+  "Download the latest APK": "Download the latest APK",
+  "Stays in this browser.": "Stays in this browser.",
+  "Streak": "Streak",
   "Same muscle and exercise type. The movement may differ.": "একই পেশি ও ব্যায়ামের ধরন। নড়াচড়া ভিন্ন হতে পারে।",
   "Related muscles and exercise type. The movement may differ.": "সম্পর্কিত পেশি ও একই ব্যায়ামের ধরন। নড়াচড়া ভিন্ন হতে পারে।",
   "Same muscle, different exercise type. Check suitability.": "একই পেশি, ভিন্ন ব্যায়ামের ধরন। উপযুক্ত কি না যাচাই করুন।",

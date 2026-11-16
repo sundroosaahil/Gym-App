@@ -1,5 +1,9 @@
 // Simplified Chinese UI strings. Keys are the English source strings (see lib/i18n.js).
 export default {
+  "All data stays in this browser": "All data stays in this browser",
+  "Download the latest APK": "Download the latest APK",
+  "Stays in this browser.": "Stays in this browser.",
+  "Streak": "Streak",
   "Same muscle and exercise type. The movement may differ.": "相同肌群和动作类型。运动方式可能不同。",
   "Related muscles and exercise type. The movement may differ.": "相关肌群和相同动作类型。运动方式可能不同。",
   "Same muscle, different exercise type. Check suitability.": "相同肌群，不同动作类型。请确认是否合适。",

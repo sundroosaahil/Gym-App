@@ -8,21 +8,19 @@ Android build was not run at all: if a step fails, copy the error and ask.
 - Node.js 22 LTS (the web build was tested on 22), Git, a GitHub account, a Vercel account.
 - Android Studio (for the APK; it bundles the Java and Android SDK the build needs).
 
-## 1. Put the source on GitHub (public)
-Why: the AGPL says anyone who gets your app may get its source. The in-app "Source code" link
-and the updater both point at github.com/sundroosaahil/bodyworks-tracker.
+## 1. Where the source lives (already public)
+The tracker is the `bodyworks-tracker/` folder inside github.com/sundroosaahil/gym-app. Why it
+matters: the AGPL says anyone who gets your app may get its source, and the in-app "Source code"
+link and the updater both point at that repo. Run every command below from inside
+`bodyworks-tracker/` (clone gym-app first if you have not: `git clone https://github.com/sundroosaahil/gym-app`).
+Commit your changes the normal way:
 
-    cd bodyworks-tracker
-    git init
-    git add .
-    git commit -m "Bodyworks Tracker v1 (fork of openGym)"
-    git branch -M main
-    git remote add origin https://github.com/sundroosaahil/bodyworks-tracker.git
-    git push -u origin main
+    git add bodyworks-tracker
+    git commit -m "Bodyworks Tracker: <what changed>"
+    git push
 
-(Create the empty public repo on GitHub first. Another name? Search the project for
-`sundroosaahil/bodyworks-tracker` and change it in frontend/src/lib/update.js and
-frontend/src/views/Settings.jsx.)
+(Renamed the repo? Search the project for `sundroosaahil/gym-app` and change it in
+frontend/src/lib/update.js, frontend/src/lib/demo.js and frontend/src/views/Settings.jsx.)
 
 ## 2. Add the exercise media (never committed)
 Why: the animations belong to Gym visual; you have their and the developer's permission, but the
@@ -63,7 +61,7 @@ built folder from your machine, because the media is not in git.
     cd dist
     npx vercel --prod
 
-First run asks you to log in and name the project (use bodyworks-tracker). If Vercel refuses
+First run asks you to log in and name the project (use bodyworks-tracker; if you deploy from git instead, set the Vercel root directory to bodyworks-tracker/frontend). If Vercel refuses
 the upload (many files, ~220 MB), host the media elsewhere (e.g. a second static project or
 GitHub Pages), rebuild with `$env:VITE_IMG_BASE` and `$env:VITE_GIF_BASE` set to its still/ and
 clip/ URLs, and skip stage-media.
@@ -96,7 +94,9 @@ The APK file name must not contain "plus" or "hd" as a separate word.
     ren app-release.apk bodyworks-tracker-1.0.0.apk
     (Get-FileHash .\bodyworks-tracker-1.0.0.apk -Algorithm SHA256).Hash.ToLower() | Out-File -Encoding ascii bodyworks-tracker-1.0.0.apk.sha256
 
-On GitHub: Releases -> new release, tag v1.0.0, attach BOTH the .apk and the .apk.sha256.
+On GitHub (gym-app repo): Releases -> new release, tag v1.0.0, attach BOTH the .apk and the .apk.sha256.
+The updater reads the repo's LATEST release, so do not publish a gym-app release without the tracker APK
+after this one, or phones will only be sent to the releases page.
 For v1.0.1 later: raise `version` in frontend/package.json and versionName/versionCode in
 frontend/android/app/build.gradle, rebuild, tag v1.0.1.
 

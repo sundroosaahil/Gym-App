@@ -2443,4 +2443,8 @@ export const PT_BR_OVERRIDES = {
   "{0} stops syncing while Health is off. Nothing is disconnected, and it catches up once Health is back.": "{0} para de sincronizar enquanto “Saúde” estiver desligado. Nada fica desconectado, e ele se atualiza quando “Saúde” voltar.",
 }
 
-export default { ...pt, ...PT_BR_OVERRIDES }
+export default {
+  "All data stays in this browser": "All data stays in this browser",
+  "Download the latest APK": "Download the latest APK",
+  "Stays in this browser.": "Stays in this browser.",
+  "Streak": "Streak", ...pt, ...PT_BR_OVERRIDES }

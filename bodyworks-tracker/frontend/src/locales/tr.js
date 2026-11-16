@@ -1,5 +1,9 @@
 // Turkish UI strings. Keys are the English source strings (see lib/i18n.js).
 export default {
+  "All data stays in this browser": "All data stays in this browser",
+  "Download the latest APK": "Download the latest APK",
+  "Stays in this browser.": "Stays in this browser.",
+  "Streak": "Streak",
   "Same muscle and exercise type. The movement may differ.": "Aynı kas ve egzersiz türü. Hareket farklı olabilir.",
   "Related muscles and exercise type. The movement may differ.": "İlgili kaslar ve aynı egzersiz türü. Hareket farklı olabilir.",
   "Same muscle, different exercise type. Check suitability.": "Aynı kas, farklı egzersiz türü. Uygunluğunu kontrol edin.",

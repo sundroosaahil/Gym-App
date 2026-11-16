@@ -1,5 +1,9 @@
 // Russian UI strings. Keys are the English source strings (see lib/i18n.js).
 export default {
+  "All data stays in this browser": "All data stays in this browser",
+  "Download the latest APK": "Download the latest APK",
+  "Stays in this browser.": "Stays in this browser.",
+  "Streak": "Streak",
   "Same muscle and exercise type. The movement may differ.": "Та же мышца и тип упражнения. Движение может отличаться.",
   "Related muscles and exercise type. The movement may differ.": "Связанные мышцы и тот же тип упражнения. Движение может отличаться.",
   "Same muscle, different exercise type. Check suitability.": "Та же мышца, другой тип упражнения. Проверьте, подходит ли оно.",
