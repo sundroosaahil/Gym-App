@@ -30,7 +30,7 @@ import { WrappedHomeCard } from '../components/WrappedEntry.jsx'
 import RecoveryHint from '../components/RecoveryHint.jsx'
 import { ChallengesCard } from '../components/Challenges.jsx'
 import { isOn } from '../lib/modules.js'
-import { QrCode, Scale } from 'lucide-react'
+import { Scale } from 'lucide-react'
 
 // Home = what to do now + a quick glance. Deep charts & history live in Stats.
 export default function Home() {
@@ -124,12 +124,28 @@ export default function Home() {
   const progChip = programmeChip(S)
   const onQueueStart = id => { if (S.active) nav('/workout'); else startFlow([id]) }
 
-  return <div className="narrow">
+  return <div className="narrow bw-home">
     <div className="hdr">
       <SeasonDeco spot="header-bats" />
       <div><h1>{user ? t('Hi {0}', user.name) : 'Bodyworks Gym'}</h1><div className="sub">{today.toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' })}</div></div>
       <button className="iconbtn" data-tour="settings-gear" onClick={() => nav('/settings')} aria-label={trouble ? t('Settings') + ', ' + t('Connection problem') : t('Settings')}><Icon name="gear" />{trouble && <span className="tab-dot" aria-hidden="true" />}</button>
     </div>
+
+    {/* Stat tiles in the admin dashboard's style (Bodyworks): streak, this week, all workouts. */}
+    {on('motivation') && <div className="bw-stats">
+      <button type="button" className="bw-stat" onClick={() => calendarSheet()}>
+        <span className="bw-stat-k">{t('Streak')}</span>
+        <span className="bw-stat-v">{streak.current}</span>
+      </button>
+      <button type="button" className="bw-stat" onClick={() => calendarSheet()}>
+        <span className="bw-stat-k">{t('This week')}</span>
+        <span className="bw-stat-v">{doneThisWeek}{plannedPerWeek ? <small>/{plannedPerWeek}</small> : null}</span>
+      </button>
+      <button type="button" className="bw-stat" onClick={() => nav('/history')}>
+        <span className="bw-stat-k">{t('Workouts')}</span>
+        <span className="bw-stat-v">{S.workouts.length}</span>
+      </button>
+    </div>}
 
     <div className="card">
       {/* A running programme (lib/programmes.js) wrote this week's plan: where it stands, one tap from its screen. */}
@@ -207,15 +223,6 @@ export default function Home() {
     {/* This month's three challenges and how far you are (lib/challenges.js). */}
     <ChallengesCard S={S} />
 
-    {/* Jump to the gym check-in cards (QR membership codes). Shown here as a quick tap on
-        arrival at the gym; folds away per user via the "Gym check-in" switch in Settings. */}
-    {on('checkin') && (
-      <div className="card tap-host checkin-card">
-        <CardHead icon={<QrCode size={17} strokeWidth={1.8} />} tint="var(--green)" eyebrow={t('At the gym')} title={t('Check in')} open={{ onClick: () => nav('/checkin') }}
-          action={<Icon name="chevronRight" className="chev" />} />
-      </div>
-    )}
-
     {!S.routines.length && !S.active && (
       <div className="card">
         <CardHead icon="calendar" title={t('Welcome!')} sub={t('Set up your weekly routine to get going, or grab a ready-made starter plan.')} />
@@ -269,8 +276,7 @@ export default function Home() {
       {/* in season, a Santa hat on the flame (components/Seasonal.jsx) */}
       <CardHead className="streak-head" glyph={<span className="streak-flame-wrap"><StreakFlame lit={streak.current > 0} /><SeasonDeco spot="streak-flame" /></span>}
         title={t('{0} week streak', streak.current)} open={{ onClick: () => calendarSheet(), haspopup: 'dialog' }}
-        sub={<>{doneThisWeek}{plannedPerWeek ? ' / ' + plannedPerWeek : ''} {t('this week')} · {tn('{0} workout total', '{0} workouts total', S.workouts.length)}</>}
-        action={<Icon name="calendar" className="chev" style={{ fontSize: 'var(--fs-title3)' }} />} />
+action={<Icon name="calendar" className="chev" style={{ fontSize: 'var(--fs-title3)' }} />} />
       {(streak.best > 0 || streak.freezes > 0) && <div className="muted small card-head-indent streak-meta-line"><StreakMeta info={streak} /></div>}
       <StreakParty S={S} info={streak} tally={tally} />
       {/* Settings → Look & Home → Weekly sets on Home (lib/muscle-targets.js): the muscle with
