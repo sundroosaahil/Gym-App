@@ -3,7 +3,7 @@ import { useUI } from '../store/useUI.js'
 import { webauthnOK, passkeyLogin, passkeyRegister, passkeyError, bio } from '../lib/api.js'
 import { hasData } from '../store/useStore.js'
 import { t } from '../lib/i18n.js'
-import { DEMO, REPO } from '../lib/demo.js'
+import { DEMO, REPO, STATIC } from '../lib/demo.js'
 import { guestAllowed } from '../lib/guest.js'
 import { useState, useRef, useEffect } from 'react'
 import Icon from '../components/Icon.jsx'
@@ -68,6 +68,7 @@ function RegisterSheet({ close }) {
 
 export default function Login() {
   const { setUser, adoptProfile, setGuest } = useStore()
+  const [localName, setLocalName] = useState(() => localStorage.getItem('bodyworks_tracker_name') || '')
   const config = useStore(s => s.config)
   const canGuest = guestAllowed(config)
   const pwOn = passwordOn(config)
@@ -81,6 +82,30 @@ export default function Login() {
     <h1 className="t-large" style={{ fontWeight: 700, margin: '10px 0 4px' }}>Bodyworks Gym</h1>
   </>
   const wrap = { display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '78vh', textAlign: 'center' }
+
+  // The Bodyworks site is a static, browser-only install. Remember a friendly name on this
+  // browser so the local guest experience feels personal without implying that an account or
+  // passkey exists on a server.
+  if (STATIC) {
+    const savedName = localStorage.getItem('bodyworks_tracker_name') || ''
+    const continueLocally = () => {
+      const name = localName.trim().slice(0, 40)
+      if (!name) { useUI.getState().toast(t('Enter a name')); return }
+      localStorage.setItem('bodyworks_tracker_name', name)
+      setLocalName(name)
+      setGuest(true)
+    }
+    return (
+      <div className="narrow" style={wrap}>
+        {head}
+        <div className="muted" style={{ marginBottom: 22 }}>{savedName ? t('Welcome back, {0}', savedName) : t('Your workouts. Your weights. Your profile.')}</div>
+        <input className="input" placeholder={t('Your name')} maxLength={40} value={localName} onChange={e => setLocalName(e.target.value)} />
+        <div style={{ height: 12 }} />
+        <Button variant="primary" icon="play" onClick={continueLocally}>{t('Continue')}</Button>
+        <div className="dim small" style={{ marginTop: 20, lineHeight: 1.5 }}>{t('Live demo. Everything stays in this browser.')}</div>
+      </div>
+    )
+  }
 
   // Demo build: no backend to sign in against — the only way in is the local guest profile.
   if (DEMO) return (
